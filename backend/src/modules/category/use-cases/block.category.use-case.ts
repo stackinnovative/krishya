@@ -1,0 +1,36 @@
+import { inject, injectable } from "tsyringe";
+import { CustomError } from "../../../core/errors/custom.error.js";
+import { ResponseMessages } from "../../../core/constants/response.message.js";
+import { HttpStatusCode } from "../../../core/constants/http.status.codes.js";
+
+import type { ICategoryRepository } from "../repositories/category.repository.interface.js";
+import type { IBlockCategoryUseCase } from "./interfaces/block.category.use-case.interface.js";
+
+@injectable()
+export class BlockCategoryUseCase implements IBlockCategoryUseCase {
+  constructor(
+    @inject("ICategoryRepository")
+    private readonly _categoryRepository: ICategoryRepository
+  ) {}
+
+  async execute(id: string): Promise<void> {
+    const category = await this._categoryRepository.findById(id);
+
+    if (!category) {
+      throw new CustomError(
+        ResponseMessages.CATEGORY_NOT_FOUND,
+        HttpStatusCode.NOT_FOUND
+      );
+    }
+
+    if (!category.isActive) {
+      throw new CustomError(
+        ResponseMessages.CATEGORY_ALREADY_INACTIVE,
+        HttpStatusCode.BAD_REQUEST
+      );
+    }
+
+    const deactivated = category.deactivate();
+    await this._categoryRepository.save(deactivated);
+  }
+}

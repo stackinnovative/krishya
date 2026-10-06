@@ -1,0 +1,35 @@
+{
+  "name": "frontend-next",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.16",
+    "axios": "^1.13.2",
+    "lucide-react": "^0.563.0",
+    "next": "^15.5.4",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "react-easy-crop": "^6.2.3",
+    "react-hot-toast": "^2.6.0",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
+    "@tailwindcss/postcss": "^4.1.18",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.5",
+    "@types/react-dom": "^19.2.3",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9.39.1",
+    "eslint-config-next": "^15.5.4",
+    "tailwindcss": "^4.1.18",
+    "typescript": "~5.9.3"
+  }
+}

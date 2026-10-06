@@ -1,0 +1,60 @@
+{
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cloudinary": "^2.9.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.1.1",
+    "node-cron": "^4.2.1",
+    "openai": "^6.48.0",
+    "pdfkit": "^0.17.2",
+    "razorpay": "^2.9.6",
+    "reflect-metadata": "^0.2.2",
+    "resend": "^6.9.3",
+    "tsyringe": "^4.10.0",
+    "twilio": "^5.12.2",
+    "zod": "^4.3.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/mongoose": "^5.11.96",
+    "@types/node": "^25.0.3",
+    "@types/pdfkit": "^0.17.5",
+    "copyfiles": "^2.4.1",
+    "eslint": "^9.39.5",
+    "globals": "^16.5.0",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1"
+  },
+  "scripts": {
+    "lint": "eslint . --max-warnings=0",
+    "dev": "tsx watch src/main.ts",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "copyfiles -u 1 src/assets/**/* dist",
+    "start": "node dist/main.js",
+    "create:secrets": "tsx src/scripts/create-env-secrets.ts",
+    "seed:admin": "tsx src/scripts/seed-admin.ts",
+    "seed:categories": "tsx src/scripts/seed-categories.ts",
+    "seed:tags": "tsx src/scripts/seed-tags.ts",
+    "migrate:colors": "tsx src/scripts/migrate-color-options.ts",
+    "migrate:product-images": "tsx src/scripts/migrate-product-card-feature-image.ts",
+    "migrate:default-variant": "tsx src/scripts/migrate-default-variant.ts",
+    "migrate:tote-bag-child-names": "tsx src/scripts/migrate-tote-bag-child-names.ts"
+  },
+  "type": "module",
+  "allowScripts": {
+    "bcrypt@6.0.0": true,
+    "esbuild@0.27.2": true
+  }
+}

@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/* Matches the imported admin design's own 960px sidebar/drawer breakpoint
+   (".om-side" etc. in design/Admin Dashboard.dc.html) so the port keeps
+   the exact same collapse point instead of Tailwind's default lg (1024px). */
+@theme {
+  --breakpoint-xs: 35rem;
+  --breakpoint-om: 60rem;
+  --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-serif: var(--font-lora), Georgia, "Times New Roman", serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Plain text (headings, labels, table cells, etc.) defaults to the I-beam
+   cursor everywhere because it's selectable — with how text-dense the admin
+   UI is, that made the text cursor appear almost anywhere you hovered.
+   Set the baseline once on body and let it inherit (cursor is an inherited
+   property) instead of a universal `* { cursor }` reset — a universal
+   selector matches every descendant individually, including the icon/text
+   nodes *inside* a link or button, which stomps the pointer cursor those
+   children should be inheriting from their clickable ancestor. */
+body {
+  margin: 0;
+  padding: 0;
+  cursor: default;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+textarea,
+[contenteditable="true"] {
+  cursor: text;
+}
+input:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled) {
+  cursor: pointer;
+}
+
+/* Native <button>/<a> default to the plain arrow cursor in some browsers
+   (Tailwind's reset deliberately doesn't change that), so every clickable
+   element needs this to actually look clickable. The `*` descendant part
+   forces every child (icons, text spans) to inherit the same pointer
+   instead of falling back to the body's default. */
+button:not(:disabled),
+button:not(:disabled) *,
+a[href],
+a[href] *,
+[role="button"]:not([aria-disabled="true"]),
+[role="button"]:not([aria-disabled="true"]) *,
+[role="link"],
+[role="link"] *,
+label[for],
+label[for] *,
+select {
+  cursor: pointer;
+}
+button:disabled,
+button:disabled *,
+[role="button"][aria-disabled="true"],
+[role="button"][aria-disabled="true"] * {
+  cursor: not-allowed;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Thin, unobtrusive scrollbar for admin modals - only appears if a form
+   genuinely overflows the viewport, and stays out of the way otherwise. */
+.admin-modal-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #d9d9d5 transparent;
+}
+.admin-modal-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-modal-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.admin-modal-scroll::-webkit-scrollbar-thumb {
+  background: #d9d9d5;
+  border-radius: 999px;
+}
+.admin-modal-scroll::-webkit-scrollbar-thumb:hover {
+  background: #bdbdb8;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-fade-up {
+  animation: fade-up 0.2s ease;
+}
