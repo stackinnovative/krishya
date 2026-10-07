@@ -12,7 +12,9 @@ import {
   updateCartCountApi,
 } from "../api/cart.api";
 import type { ActionType } from "../types/cart.type";
-import { cartKeys } from "@/shared/query-keys";
+import { getProductByIdForUserApi } from "@/modules/products/api/storefront-product.api";
+import { showStoreToast } from "@/modules/storefront-shell/components/StoreToast";
+import { cartKeys, productKeys } from "@/shared/query-keys";
 
 export const useCart = () => {
   const guestId = getGuestId();
@@ -35,18 +37,54 @@ const invalidateCartViews = (queryClient: ReturnType<typeof useQueryClient>) => 
   queryClient.invalidateQueries({ queryKey: cartKeys.checkoutItems });
 };
 
+/** `name`/`size` are display-only - they label the "Added to cart" toast. */
+type AddToCartVars = { productId: string; variantId: string; quantity: number; name?: string; size?: string; silent?: boolean };
+
 export const useAddToCart = () => {
   const queryClient = useQueryClient();
   const guestId = getGuestId();
   return useMutation({
-    mutationFn: ({ productId, variantId, quantity }: { productId: string; variantId: string; quantity: number }) =>
-      addItemToCartApi({ guestId, productId, variantId, quantity }),
-    onSuccess: () => {
-      toast.success("Added to cart");
+    mutationFn: ({ productId, variantId, quantity }: AddToCartVars) => addItemToCartApi({ guestId, productId, variantId, quantity }),
+    onSuccess: (_res, vars) => {
+      if (!vars.silent) {
+        const detail = [vars.name, vars.size].filter(Boolean).join(" · ") + (vars.quantity > 1 ? ` × ${vars.quantity}` : "");
+        showStoreToast({ title: "Added to cart", detail, showCartLink: true });
+      }
       invalidateCartViews(queryClient);
     },
     onError: () => toast.error("Could not add to cart."),
   });
+};
+
+/**
+ * Add-to-cart from a product card, where only the list item (id/name/price/
+ * image) is known: loads the product (reusing the detail page's cache key)
+ * and adds its default in-stock variant.
+ */
+export const useQuickAddToCart = () => {
+  const queryClient = useQueryClient();
+  const { mutateAsync, isPending, variables } = useAddToCart();
+
+  const quickAdd = async (productId: string, name: string, options?: { silent?: boolean }) => {
+    try {
+      const res = await queryClient.fetchQuery({
+        queryKey: [...productKeys.userDetails, productId],
+        queryFn: () => getProductByIdForUserApi(productId),
+      });
+      const variants = res.data?.variants ?? [];
+      const variant = variants.find((v) => v.isDefault && v.stock > 0) ?? variants.find((v) => v.stock > 0);
+      if (!variant) {
+        toast.error(`${name} is out of stock.`);
+        return false;
+      }
+      await mutateAsync({ productId, variantId: variant.variantId, quantity: 1, name, size: variant.size, silent: options?.silent });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  return { quickAdd, isPending, pendingProductId: isPending ? variables?.productId : undefined };
 };
 
 export const useUpdateCartCount = () => {
@@ -63,9 +101,9 @@ export const useRemoveCartItem = () => {
   const queryClient = useQueryClient();
   const guestId = getGuestId();
   return useMutation({
-    mutationFn: ({ cartId, itemId }: { cartId: string; itemId: string }) => removeCartItemApi({ guestId, cartId, itemId }),
-    onSuccess: () => {
-      toast.success("Removed from cart");
+    mutationFn: ({ cartId, itemId }: { cartId: string; itemId: string; name?: string }) => removeCartItemApi({ guestId, cartId, itemId }),
+    onSuccess: (_res, vars) => {
+      showStoreToast({ title: "Removed from cart", detail: vars.name });
       invalidateCartViews(queryClient);
     },
   });

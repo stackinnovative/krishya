@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
-import { getFeaturedProductsApi } from "@/modules/products/api/storefront-product.api";
-import { getBannerUserApi, getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/api/home-content.api";
-import { getSignatureCategoriesApi } from "@/modules/categories/api/category.api";
+import { getAllProductsForUserApi, getFeaturedProductsApi } from "@/modules/products/api/storefront-product.api";
+import { getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/api/home-content.api";
+import { getActiveCategoriesApi, getSignatureCategoriesApi } from "@/modules/categories/api/category.api";
 import { categoryKeys, homeContentKeys, productKeys } from "@/shared/query-keys";
 import HomeContent from "./HomeContent";
 
@@ -12,13 +12,19 @@ import HomeContent from "./HomeContent";
 // non-JS crawler saw an empty shell.
 export default async function LandingPage() {
   const queryClient = new QueryClient();
+  const newestFilters = { search: "", sort: "newest" };
 
   await Promise.all([
     queryClient.prefetchQuery({ queryKey: homeContentKeys.heroUser, queryFn: getHeroUserApi }),
-    queryClient.prefetchQuery({ queryKey: homeContentKeys.bannerUser, queryFn: getBannerUserApi }),
     queryClient.prefetchQuery({ queryKey: productKeys.featured, queryFn: getFeaturedProductsApi }),
+    queryClient.prefetchQuery({ queryKey: categoryKeys.active, queryFn: getActiveCategoriesApi }),
     queryClient.prefetchQuery({ queryKey: categoryKeys.signature, queryFn: getSignatureCategoriesApi }),
     queryClient.prefetchQuery({ queryKey: homeContentKeys.testimonialsUser, queryFn: getTestimonialUserApi }),
+    queryClient.prefetchInfiniteQuery({
+      queryKey: [...productKeys.userList, newestFilters],
+      queryFn: ({ pageParam }: { pageParam: number }) => getAllProductsForUserApi({ ...newestFilters, page: pageParam }),
+      initialPageParam: 1,
+    }),
   ]);
 
   return (

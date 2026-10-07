@@ -10,15 +10,9 @@ export type StorefrontButtonVariant = "primary" | "outline" | "ghost";
 // (a borderless quantity stepper vs. a small text link) to bake in a size/
 // weight without fighting the caller's own className on one of them.
 const VARIANT_CLASS: Record<StorefrontButtonVariant, string> = {
-  primary: "rounded-full py-3 text-sm font-semibold uppercase tracking-wide text-white",
-  outline: "rounded-full border px-4 py-2 text-sm font-medium",
+  primary: "h-[52px] rounded-lg border border-ka-green bg-ka-green px-6 text-[15px] font-semibold text-ka-cream hover:bg-ka-green-dark",
+  outline: "h-[52px] rounded-lg border border-ka-gold bg-transparent px-6 text-[15px] font-semibold text-ka-green hover:bg-ka-gold/[.12]",
   ghost: "",
-};
-
-const variantStyle = (variant: StorefrontButtonVariant): CSSProperties => {
-  if (variant === "primary") return { background: "var(--accent)" };
-  if (variant === "outline") return { borderColor: "var(--border)", background: "transparent" };
-  return {};
 };
 
 type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "style"> & {
@@ -32,7 +26,7 @@ type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, "style"> & {
 /**
  * Storefront's counterpart to admin's AdminButton - same loading/disabled/
  * aria-busy kernel (via the shared useButtonState hook), themed with the
- * storefront's CSS-variable palette instead of admin's hardcoded hex.
+ * Krishay palette (green primary, gold-outlined secondary).
  */
 export default function Button({
   variant = "primary",
@@ -57,8 +51,8 @@ export default function Button({
       {...rest}
       disabled={isDisabled}
       aria-busy={ariaBusy}
-      className={`inline-flex items-center justify-center gap-2 disabled:opacity-50 ${VARIANT_CLASS[variant]} ${className ?? ""}`}
-      style={{ ...variantStyle(variant), ...style }}
+      className={`inline-flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 ${VARIANT_CLASS[variant]} ${className ?? ""}`}
+      style={style}
     >
       {content}
     </button>
