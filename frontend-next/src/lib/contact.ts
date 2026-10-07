@@ -17,8 +17,6 @@ export const STORE_ADDRESS = env.storeAddress || "Kochi, Kerala";
 export const AYUSH_DISCLAIMER =
   "Use as directed by a qualified Ayurvedic physician. This product is not intended to diagnose, treat, cure or prevent any disease.";
 
-export const INSTAGRAM_HANDLE = "krishayayurveda";
-export const INSTAGRAM_URL = `https://instagram.com/${INSTAGRAM_HANDLE}`;
 
 /** wa.me needs the full international number with digits only; a bare
  * 10-digit Indian mobile number gets the 91 country code prefixed. */

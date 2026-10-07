@@ -12,6 +12,8 @@ import { isPendingImage, type ImageFieldValue } from "@/modules/admin-shell/comp
 import { tab, whitePillButton } from "@/modules/admin-shell/style-helpers";
 import { useSettings, useUpdateSettings } from "@/modules/settings/hooks/useSettings";
 import PolicySectionsEditor from "@/modules/settings/components/PolicySectionsEditor";
+import SocialLinksEditor from "@/modules/settings/components/SocialLinksEditor";
+import { validateSocialUrl } from "@/modules/settings/constants/social-icons";
 import type { SettingsView } from "@/modules/settings/types/settings.type";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 
@@ -23,12 +25,16 @@ function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
   );
 }
 
+/** A backend that predates a field (e.g. socialLinks) omits it - fill it so the form never reads undefined. */
+const withDefaults = (s: SettingsView): SettingsView => ({ ...s, socialLinks: s.socialLinks ?? [] });
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const TABS = [
   { key: "company", label: "Company" },
   { key: "returns", label: "Return & Refund Policy" },
   { key: "privacy", label: "Privacy Policy" },
+  { key: "social", label: "Social Media" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -39,6 +45,7 @@ function SettingsSkeleton() {
         <Skeleton className="h-8 w-24 rounded-full" />
         <Skeleton className="h-8 w-40 rounded-full" />
         <Skeleton className="h-8 w-32 rounded-full" />
+        <Skeleton className="h-8 w-28 rounded-full" />
       </div>
       <div className="grid grid-cols-1 items-start gap-4 om:grid-cols-2">
         <AdminCard padding="22px">
@@ -83,7 +90,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (data?.data) {
-      setDraft(data.data);
+      setDraft(withDefaults(data.data));
       setLogoValue(data.data.logo);
     }
   }, [data]);
@@ -104,15 +111,27 @@ export default function SettingsPage() {
     else if (containsSpecialChars(d.storeName)) next.storeName = "Store name can only contain letters, numbers, and basic punctuation.";
     if (!d.email.trim()) next.email = "Support email is required.";
     else if (!EMAIL_RE.test(d.email.trim())) next.email = "Enter a valid email address.";
+    d.socialLinks.forEach((link, i) => {
+      const urlError = validateSocialUrl(link.url);
+      if (urlError) next[`socialLinks.${i}`] = urlError;
+    });
     return next;
   };
+
+  /** Row index -> URL error for the Social Media tab (errors are keyed "socialLinks.<i>"). */
+  const socialErrors = Object.fromEntries(
+    Object.entries(errors)
+      .filter(([key]) => key.startsWith("socialLinks."))
+      .map(([key, message]) => [Number(key.split(".")[1]), message]),
+  );
 
   const handleSave = async () => {
     if (!draft) return;
     const validationErrors = validate(draft);
     if (Object.keys(validationErrors).length > 0) {
       setErrors(validationErrors);
-      setTab("company");
+      // Jump to the tab that holds the first problem.
+      setTab(validationErrors.storeName || validationErrors.email ? "company" : "social");
       toast.error("Fix the highlighted fields.");
       return;
     }
@@ -144,12 +163,13 @@ export default function SettingsPage() {
       maintenance: draft.maintenance,
       refundReturnSections: draft.refundReturnSections,
       privacyPolicySections: draft.privacyPolicySections,
+      socialLinks: draft.socialLinks.map((l) => ({ ...l, label: l.label.trim(), url: l.url.trim() })),
     };
     updateSettings.mutate(payload);
   };
 
   return (
-    <AdminPageShell title="Business Settings" subtitle="Company info, delivery, returns and privacy policy">
+    <AdminPageShell title="Business Settings" subtitle="Company info, delivery, policies and social media">
       <AdminAsyncState
         isLoading={isLoading || (!isError && !draft)}
         isError={isError}
@@ -237,6 +257,22 @@ export default function SettingsPage() {
               </AdminCard>
             )}
 
+            {tab_ === "social" && (
+              <AdminCard padding="22px">
+                <div className="mb-1 text-sm font-bold">Social media</div>
+                <div className="mb-4 text-xs text-[#8a8a8e]">Pick a platform and paste the full link. Links show, in this order, in the storefront footer, contact page and mobile menu.</div>
+                <SocialLinksEditor
+                  value={draft.socialLinks}
+                  errors={socialErrors}
+                  onChange={(next) => {
+                    set("socialLinks", next);
+                    // Row positions shift on add/remove/reorder, so stale per-row errors no longer line up.
+                    setErrors((prev) => Object.fromEntries(Object.entries(prev).filter(([key]) => !key.startsWith("socialLinks."))));
+                  }}
+                />
+              </AdminCard>
+            )}
+
             {/* Sticky so Save is always reachable without hunting through a long
              * (possibly scrolled) page - especially once a policy tab has several
              * sections. */}
@@ -245,7 +281,7 @@ export default function SettingsPage() {
                 style={whitePillButton}
                 onClick={() => {
                   if (data?.data) {
-                    setDraft(data.data);
+                    setDraft(withDefaults(data.data));
                     setLogoValue(data.data.logo);
                     setErrors({});
                   }

@@ -1,6 +1,6 @@
 import { CONTACT_EMAIL, CONTACT_PHONE, DEFAULT_STORE_NAME } from "@/lib/contact";
 import { formatCurrency } from "@/lib/format";
-import type { SettingsView } from "./types/settings.type";
+import type { SettingsView, SocialLink } from "./types/settings.type";
 
 /**
  * Everything the storefront shows about the store itself, resolved from
@@ -17,6 +17,8 @@ export type StoreInfo = {
   logoUrl: string | null;
   deliveryCharge: number;
   freeAbove: number;
+  /** Admin-managed social media links, in display order. */
+  socialLinks: SocialLink[];
 };
 
 export const toStoreInfo = (settings: SettingsView | null | undefined): StoreInfo => ({
@@ -26,6 +28,7 @@ export const toStoreInfo = (settings: SettingsView | null | undefined): StoreInf
   logoUrl: settings?.logo?.url || null,
   deliveryCharge: settings?.deliveryCharge ?? 0,
   freeAbove: settings?.freeAbove ?? 0,
+  socialLinks: settings?.socialLinks ?? [],
 });
 
 /** The delivery-charge rule in words, from the admin's delivery charge and free-delivery threshold. */

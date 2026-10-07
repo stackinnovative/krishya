@@ -8,6 +8,7 @@ import { NAV_LINKS } from "../navigation";
 import { useStoreContact } from "../hooks/useStoreContact";
 import { useStorefrontUI } from "./StorefrontUIProvider";
 import { BrandMark } from "./BrandLogo";
+import SocialLinks from "./SocialLinks";
 import { ChevronRightIcon, CloseIcon } from "./icons";
 
 /** Left slide-in menu opened from the mobile tab bar's "More". */
@@ -15,7 +16,7 @@ export default function MenuDrawer() {
   const { overlay, close } = useStorefrontUI();
   const { data: cartCount } = useCartCount();
   const { data: wishIds } = useWishlistIds();
-  const { whatsapp, logoUrl } = useStoreContact();
+  const { whatsapp, logoUrl, socialLinks } = useStoreContact();
 
   if (overlay !== "menu") return null;
 
@@ -60,6 +61,7 @@ export default function MenuDrawer() {
         >
           Chat on WhatsApp
         </a>
+        <SocialLinks links={socialLinks} variant="light" className="mt-5 justify-center" />
 
         <span className="mt-auto pt-7 font-display text-lg italic text-ka-green">{STORE_TAGLINE}</span>
       </div>

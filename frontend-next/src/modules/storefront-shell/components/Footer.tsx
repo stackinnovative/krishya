@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { AYUSH_DISCLAIMER, AYUSH_LICENSE_NO, INSTAGRAM_HANDLE, INSTAGRAM_URL, STORE_ADDRESS } from "@/lib/contact";
+import { AYUSH_DISCLAIMER, AYUSH_LICENSE_NO, STORE_ADDRESS } from "@/lib/contact";
 import { getStoreInfo } from "@/modules/settings/server";
 import { getActiveCategories } from "@/modules/categories/server";
 import { NAV_LINKS, POLICY_LINKS } from "../navigation";
 import BrandLogo from "./BrandLogo";
 import FooterWave from "./FooterWave";
 import { SectionDecor } from "./decor";
-import { InstagramIcon, LockIcon } from "./icons";
+import { LockIcon } from "./icons";
+import SocialLinks from "./SocialLinks";
 
 const LINK_CLASS = "self-start text-left text-sm text-ka-cream/80 transition-colors hover:text-ka-gold";
 const HEADING_CLASS = "mb-1 text-xs font-bold tracking-[.2em] text-ka-gold";
@@ -26,9 +27,7 @@ export default async function Footer() {
             <div className="flex max-w-[340px] flex-[1_1_280px] flex-col gap-[18px]">
               <BrandLogo storeName={storeName} logoUrl={logoUrl} tone="dark" />
               <p className="m-0 leading-[1.7]">Rooted in Ayurveda, crafted for today. Classical Kerala preparations from the House of Cochin Arya Vaidyasala.</p>
-              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2.5 self-start font-medium text-ka-cream hover:text-ka-gold">
-                <InstagramIcon size={20} strokeWidth={1.5} />@{INSTAGRAM_HANDLE}
-              </a>
+              <SocialLinks links={store.socialLinks} />
             </div>
 
             <nav aria-label="Quick links" className="flex flex-[1_1_140px] flex-col gap-3">
