@@ -1,31 +1,134 @@
-/* Ported from the current frontend/'s theme.css - same brand tokens, same
-   look. Scoped under .user-theme so it never leaks into the admin zone. */
+/* Krishay Ayurveda storefront theme (claude-design/Krishay Ayurveda.html).
+   Scoped under .user-theme so it never leaks into the admin zone. The
+   variable names are the ones storefront components already read, now
+   pointing at the Krishay palette. */
 :root {
-  --bg: #ffffff;
-  --bg-secondary: #f7f2e2;
+  --bg: #faf6ee;
+  --bg-secondary: #efe6d8;
   --card: #ffffff;
-  --text: #2e2a20;
-  --muted: #7b7464;
-  --accent: #5e6c3c;
-  --accent-strong: #47552c;
-  --accent-soft: #d7d0a4;
-  --on-accent: #f7f1e8;
-  --nav: #5e6c3c;
-  --border: rgba(94, 108, 60, 0.12);
-  --footer-bg: #f7f2e2;
+  --text: #2e2e2e;
+  --muted: #5e6b5a;
+  --accent: #1f4d3a;
+  --accent-strong: #163a2b;
+  --accent-soft: #e8f0e4;
+  --on-accent: #faf6ee;
+  --nav: #1f4d3a;
+  --border: #d9cfbe;
+  --footer-bg: #1f4d3a;
 }
 
 .user-theme {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background-color: var(--bg);
   color: var(--text);
+  font-family: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-.section-tint {
-  background: linear-gradient(135deg, var(--bg) 0%, var(--bg-secondary) 100%);
+/* In the base layer so Tailwind's text-colour utilities on links still win
+   (an unlayered rule would beat every layered utility). */
+@layer base {
+  .user-theme a {
+    color: inherit;
+    text-decoration: none;
+  }
 }
 
-.user-theme a {
-  color: inherit;
-  text-decoration: none;
+.user-theme ::selection {
+  background: #dce8d6;
+  color: #1f4d3a;
+}
+
+.user-theme input[type="range"] {
+  accent-color: #1f4d3a;
+}
+
+.user-theme :focus-visible {
+  outline: 2px solid #a9c4a0;
+  outline-offset: 2px;
+}
+
+@keyframes ka-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes ka-sheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+@keyframes ka-panel {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes ka-drawer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+@keyframes ka-toast {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-ka-fade {
+  animation: ka-fade 0.2s ease;
+}
+.animate-ka-drawer {
+  animation: ka-drawer 0.28s ease;
+}
+.animate-ka-toast {
+  animation: ka-toast 0.25s ease;
+}
+/* Filter sheet: bottom sheet on phones, right-hand panel on desktop -
+   matches the prototype's sheetUI switch at the same 820px breakpoint. */
+.animate-ka-sheet {
+  animation: ka-sheet 0.3s ease;
+}
+@media (min-width: 820px) {
+  .animate-ka-sheet {
+    animation: ka-panel 0.3s ease;
+  }
+}
+
+/* The prototype's gently curved section joins. */
+.ka-wave {
+  height: clamp(36px, 5vw, 80px);
+  line-height: 0;
+  margin-bottom: -1px;
+}
+
+/* Clears the fixed mobile tab bar (and the product page's add-to-cart bar
+   above it) so the footer's last line is never hidden behind them. */
+.ka-tabbar-spacer {
+  height: calc(76px + env(safe-area-inset-bottom));
+}
+.ka-tabbar-spacer[data-tall="true"] {
+  height: calc(146px + env(safe-area-inset-bottom));
+}
+@media (min-width: 820px) {
+  .ka-tabbar-spacer {
+    display: none;
+  }
 }

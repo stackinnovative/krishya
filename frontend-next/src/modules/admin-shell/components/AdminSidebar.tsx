@@ -11,9 +11,8 @@ import { useAuthUser } from "@/modules/auth/hooks/useAuthUser";
 import { useLogout } from "@/modules/auth/hooks/useAdminLogin";
 import { useSettings } from "@/modules/settings/hooks/useSettings";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { DEFAULT_STORE_NAME } from "@/lib/contact";
 import ConfirmModal from "./ConfirmModal";
-
-const DEFAULT_STORE_NAME = "Artspace";
 
 export default function AdminSidebar({ open, onNavigate }: { open: boolean; onNavigate: () => void }) {
   const pathname = usePathname();

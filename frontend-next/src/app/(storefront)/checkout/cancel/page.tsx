@@ -1,17 +1,19 @@
 import Link from "next/link";
-import { XCircle } from "lucide-react";
+import { SectionDecor } from "@/modules/storefront-shell/components/decor";
+import { CloseIcon } from "@/modules/storefront-shell/components/icons";
 
 export default function CheckoutCancelPage() {
   return (
-    <div className="mx-auto max-w-xl px-4 py-16 text-center">
-      <XCircle size={56} className="mx-auto" style={{ color: "#b8412f" }} />
-      <h1 className="mt-4 font-serif text-3xl font-semibold">Payment cancelled</h1>
-      <p className="mt-2 text-sm" style={{ color: "var(--muted)" }}>
-        No charge was made. Your cart is still saved.
-      </p>
-      <Link href="/cart" className="mt-8 inline-block rounded-full px-6 py-3 text-sm font-semibold text-white" style={{ background: "var(--accent)" }}>
+    <section className="relative isolate mx-auto flex max-w-xl flex-col items-center gap-4 overflow-clip px-4 py-[clamp(48px,6vw,96px)] text-center">
+      <SectionDecor variant="d" />
+      <span className="grid h-[84px] w-[84px] place-items-center rounded-full border border-ka-line bg-ka-sand text-[#B8412F]">
+        <CloseIcon size={34} strokeWidth={1.6} />
+      </span>
+      <h1 className="m-0 font-display text-[clamp(36px,4.4vw,52px)] font-medium text-ka-green">Payment cancelled</h1>
+      <p className="m-0 text-base text-ka-body">No charge was made. Your cart is still saved.</p>
+      <Link href="/cart" className="mt-4 flex h-[52px] items-center rounded-lg bg-ka-green px-8 text-[15px] font-semibold text-ka-cream">
         Back to cart
       </Link>
-    </div>
+    </section>
   );
 }
