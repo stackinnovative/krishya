@@ -13,5 +13,7 @@ export const env = {
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",
   contactPhone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "",
   facebookUrl: process.env.NEXT_PUBLIC_FACEBOOK_URL ?? "",
+  ayushLicenseNo: process.env.NEXT_PUBLIC_AYUSH_LICENSE_NO ?? "",
+  storeAddress: process.env.NEXT_PUBLIC_STORE_ADDRESS ?? "",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
 } as const;

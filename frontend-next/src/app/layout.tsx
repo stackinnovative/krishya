@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import Providers from "./providers";
 import { getSettings } from "@/modules/settings/server";
+import { DEFAULT_STORE_NAME } from "@/lib/contact";
 import "./globals.css";
-
-const DEFAULT_STORE_NAME = "Artspace";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();
@@ -13,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: storeName,
       template: `%s | ${storeName}`,
     },
-    description: "Handcrafted tote bags, flower bouquets, and curated gifts, delivering across India.",
+    description: "Authentic Kerala Ayurveda - classical thailams, churnams, arishtams and hair oils, made by hand in small batches and delivered across India.",
   };
 }
 

@@ -8,6 +8,42 @@
   --breakpoint-om: 60rem;
   --font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-serif: var(--font-lora), Georgia, "Times New Roman", serif;
+
+  /* Storefront (Krishay Ayurveda) - tokens from claude-design/Krishay
+     Ayurveda.html. "ka" = 820px, the prototype's own desktop/mobile switch
+     (its `winW < 820` check), so the port collapses at the same width. */
+  --breakpoint-ka: 51.25rem;
+  --color-ka-green: #1f4d3a;
+  --color-ka-green-dark: #163a2b;
+  --color-ka-gold: #c9a24a;
+  --color-ka-gold-deep: #b8902f;
+  --color-ka-gold-text: #9a7a2e;
+  --color-ka-sage: #a9c4a0;
+  --color-ka-mint: #e8f0e4;
+  --color-ka-mint-deep: #dce8d6;
+  --color-ka-sand: #efe6d8;
+  --color-ka-cream: #faf6ee;
+  --color-ka-ivory: #fffdf8;
+  --color-ka-ink: #2e2e2e;
+  --color-ka-body: #4a4d45;
+  --color-ka-body-deep: #3f4a40;
+  --color-ka-muted: #5e6b5a;
+  --color-ka-grey: #6b7266;
+  --color-ka-tab: #7a8076;
+  --color-ka-line: #d9cfbe;
+  --color-ka-line-soft: #e2d8c6;
+  --color-ka-on-gold: #1b2b20;
+  --color-ka-wa: #168f4a;
+  --color-ka-wa-dark: #127a3f;
+}
+
+/* `inline` so font-display / font-body emit var(--font-cormorant) etc.
+   directly on the element. next/font defines those variables on the
+   storefront wrapper, not :root, so a non-inline token (resolved at :root)
+   would fall back to the browser default font. */
+@theme inline {
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-dm-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
 * {

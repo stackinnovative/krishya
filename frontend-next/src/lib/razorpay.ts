@@ -1,5 +1,6 @@
 import toast from "react-hot-toast";
 import { env } from "./env";
+import { DEFAULT_STORE_NAME } from "./contact";
 import type { IRazorpayOptions, IRazorpayOrder } from "@/modules/orders/types/order.type";
 
 declare global {
@@ -23,7 +24,7 @@ export const openRazorpayCheckoutFunction = (order: IRazorpayOrder, onHandle: (o
     key: env.razorpayKeyId,
     amount: order.amount,
     currency: order.currency,
-    name: "Artspace",
+    name: DEFAULT_STORE_NAME,
     description: "Payment for order",
     order_id: order.id,
     notes: order.notes as Record<string, string>,
@@ -44,7 +45,7 @@ export const openRazorpayCheckoutTestFunction = (
     key: env.razorpayTestKeyId,
     amount: order.amount,
     currency: order.currency,
-    name: "Artspace [TEST]",
+    name: `${DEFAULT_STORE_NAME} [TEST]`,
     description: "Payment for order",
     order_id: order.id,
     notes: order.notes as Record<string, string>,
