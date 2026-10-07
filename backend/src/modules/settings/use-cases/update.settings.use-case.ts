@@ -39,6 +39,7 @@ export class UpdateSettingsUseCase implements IUpdateSettingsUseCase {
             maintenance: dto.maintenance,
             refundReturnSections: dto.refundReturnSections,
             privacyPolicySections: dto.privacyPolicySections,
+            socialLinks: dto.socialLinks,
         });
 
         const saved = await this._settingsRepository.updateSettings(updatedEntity);

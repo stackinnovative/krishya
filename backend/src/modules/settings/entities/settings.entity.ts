@@ -1,4 +1,4 @@
-import type { PolicySection, SettingsLogo, SettingsProps } from "../types/settings.type.js";
+import { MAX_SOCIAL_LINKS, type PolicySection, type SettingsLogo, type SettingsProps, type SocialLink } from "../types/settings.type.js";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -85,6 +85,7 @@ export const SETTINGS_DEFAULTS: Omit<SettingsProps, "id"> = {
             description: "If you have any questions about this Privacy Policy, please contact us through the contact details provided on our website.",
         },
     ],
+    socialLinks: [],
 };
 
 /**
@@ -106,6 +107,7 @@ export class Settings {
     public readonly maintenance: boolean;
     public readonly refundReturnSections: PolicySection[];
     public readonly privacyPolicySections: PolicySection[];
+    public readonly socialLinks: SocialLink[];
 
     constructor(props: SettingsProps) {
         const storeName = props.storeName.trim();
@@ -145,6 +147,19 @@ export class Settings {
             }
         }
 
+        if (props.socialLinks.length > MAX_SOCIAL_LINKS) {
+            throw new Error(`Cannot have more than ${MAX_SOCIAL_LINKS} social links`);
+        }
+
+        for (const link of props.socialLinks) {
+            if (!link.url.trim()) {
+                throw new Error("Every social link needs a URL");
+            }
+            if (link.label.length > 40) {
+                throw new Error("Social link label cannot exceed 40 characters");
+            }
+        }
+
         if (props.privacyPolicySections.length > 20) {
             throw new Error("Privacy policy cannot have more than 20 sections");
         }
@@ -177,6 +192,7 @@ export class Settings {
             icon: s.icon,
             description: s.description.trim(),
         }));
+        this.socialLinks = props.socialLinks.map((l) => ({ icon: l.icon, label: l.label.trim(), url: l.url.trim() }));
     }
 
     /** Delivery is waived once the subtotal clears freeAbove - freeAbove of 0 (or less)
