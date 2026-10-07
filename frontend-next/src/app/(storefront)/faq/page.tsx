@@ -2,14 +2,17 @@ import type { Metadata } from "next";
 import { Eyebrow, SectionDecor } from "@/modules/storefront-shell/components/decor";
 import WhatsAppCta from "@/modules/storefront-shell/components/WhatsAppCta";
 import FaqAccordion from "@/modules/storefront-content/components/FaqAccordion";
-import { FAQ_GROUPS } from "@/modules/storefront-content/constants/faqs";
+import { getFaqGroups } from "@/modules/storefront-content/constants/faqs";
+import { getStoreInfo } from "@/modules/settings/server";
 
-export const metadata: Metadata = {
-  title: "FAQ",
-  description: "Answers about orders, delivery, payments, products and returns at Krishay Ayurveda.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { storeName } = await getStoreInfo();
+  return { title: "FAQ", description: `Answers about orders, delivery, payments, products and returns at ${storeName}.` };
+}
 
-export default function FaqPage() {
+export default async function FaqPage() {
+  const faqGroups = getFaqGroups(await getStoreInfo());
+
   return (
     <>
       <section className="relative isolate mx-auto max-w-[900px] overflow-clip px-[clamp(20px,4vw,56px)] pt-[clamp(40px,5vw,72px)]">
@@ -20,7 +23,7 @@ export default function FaqPage() {
           <p className="m-0 text-base text-ka-body">Answers about orders, payments, products and returns.</p>
         </div>
         <div className="flex flex-col gap-[clamp(36px,4vw,56px)]">
-          {FAQ_GROUPS.map((g, gi) => (
+          {faqGroups.map((g, gi) => (
             <div key={g.group} className="flex flex-col">
               <h2 className="m-0 mb-2 font-display text-[clamp(26px,2.6vw,32px)] font-semibold text-ka-green">{g.group}</h2>
               <div className="border-t border-ka-gold/55">

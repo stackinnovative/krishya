@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getStoreInfo } from "@/modules/settings/server";
 import { SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
 import ArticleCard, { ArticleImage } from "@/modules/storefront-content/components/ArticleCard";
 import { ArticleProducts, ArticleShare } from "@/modules/storefront-content/components/ArticleExtras";
@@ -28,6 +29,7 @@ export default async function ArticlePage({ params }: Params) {
   const article = getArticleBySlug(slug);
   if (!article) notFound();
   const related = getRelatedArticles(article);
+  const { storeName } = await getStoreInfo();
 
   return (
     <>
@@ -39,7 +41,7 @@ export default async function ArticlePage({ params }: Params) {
           <span className="self-start rounded-full bg-ka-mint px-2.5 py-[5px] text-[11px] font-semibold uppercase tracking-[.14em] text-ka-green">{article.category}</span>
           <h1 className="m-0 text-balance font-display text-[clamp(38px,4.6vw,62px)] font-medium leading-[1.06] text-ka-green">{article.title}</h1>
           <span className="text-sm text-ka-muted">
-            {article.date} · {article.readTime} · By the Krishay team
+            {article.date} · {article.readTime} · By the {storeName} team
           </span>
         </header>
 

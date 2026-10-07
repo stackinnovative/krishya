@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
-import { DEFAULT_STORE_NAME } from "@/lib/contact";
 import { getProductByIdForUserApi, getRelatedProductsApi } from "@/modules/products/api/storefront-product.api";
-import { getSettings } from "@/modules/settings/server";
+import { getStoreInfo } from "@/modules/settings/server";
 import { productKeys } from "@/shared/query-keys";
 import ProductDetailContent from "./ProductDetailContent";
 
@@ -11,23 +10,23 @@ type Params = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params;
-  const [product, settings] = await Promise.all([
+  const [product, store] = await Promise.all([
     getProductByIdForUserApi(id)
       .then((r) => r.data)
       .catch(() => null),
-    getSettings(),
+    getStoreInfo(),
   ]);
 
   if (!product) return { title: "Product not found" };
 
-  const description = product.description ? product.description.slice(0, 160) : `Shop ${product.name} at ${settings?.storeName || DEFAULT_STORE_NAME}.`;
+  const description = product.description ? product.description.slice(0, 160) : `Shop ${product.name} at ${store.storeName}.`;
   const image = product.colorOptions[0]?.images[0]?.url;
 
   return {
     title: product.name,
     description,
     openGraph: {
-      title: `${product.name} | ${settings?.storeName || DEFAULT_STORE_NAME}`,
+      title: `${product.name} | ${store.storeName}`,
       description,
       images: image ? [{ url: getOptimizedImageUrl(image, 800) }] : undefined,
     },

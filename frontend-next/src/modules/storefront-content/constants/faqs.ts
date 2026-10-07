@@ -1,13 +1,17 @@
-/** Help-centre questions from the Krishay design, grouped as on the FAQ page. */
+import { describeDeliveryCharges, type StoreInfo } from "@/modules/settings/store-info";
+
+/** Help-centre questions from the Krishay design, grouped as on the FAQ page. Delivery answers are built from Business Settings. */
 export type Faq = { q: string; a: string };
 export type FaqGroup = { group: string; items: Faq[] };
 
-export const FAQ_GROUPS: FaqGroup[] = [
+type DeliveryRules = Pick<StoreInfo, "deliveryCharge" | "freeAbove">;
+
+export const getFaqGroups = (store: DeliveryRules): FaqGroup[] => [
   {
     group: "Orders & Delivery",
     items: [
       { q: "How long does delivery take?", a: "Orders are dispatched within 1–2 working days. Delivery usually takes 2–4 days within Kerala and 4–7 days to the rest of India." },
-      { q: "Is delivery free?", a: "Delivery is free on orders above the free-delivery amount shown in your cart. A small flat delivery charge applies to smaller orders." },
+      { q: "Is delivery free?", a: describeDeliveryCharges(store) },
       { q: "Do I need an account to order?", a: "No. You can check out as a guest with just your name, phone number and delivery address." },
       { q: "How can I track my order?", a: "We send order and shipping updates on WhatsApp and email, including a tracking link once your parcel is dispatched." },
       { q: "Do you deliver outside India?", a: "At the moment we deliver only within India." },
@@ -52,7 +56,9 @@ export const FAQ_GROUPS: FaqGroup[] = [
   },
 ];
 
-const pick = (group: number, item: number): Faq => FAQ_GROUPS[group]!.items[item]!;
-
 /** The five questions previewed on the home page. */
-export const HOME_FAQS: Faq[] = [pick(0, 0), pick(0, 2), pick(1, 0), pick(2, 0), pick(3, 0)];
+export const getHomeFaqs = (store: DeliveryRules): Faq[] => {
+  const groups = getFaqGroups(store);
+  const pick = (group: number, item: number): Faq => groups[group]!.items[item]!;
+  return [pick(0, 0), pick(0, 2), pick(1, 0), pick(2, 0), pick(3, 0)];
+};

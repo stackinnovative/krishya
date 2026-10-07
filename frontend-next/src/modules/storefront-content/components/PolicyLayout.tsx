@@ -1,19 +1,19 @@
 import Link from "next/link";
-import { CONTACT_EMAIL } from "@/lib/contact";
+import type { StoreInfo } from "@/modules/settings/store-info";
 import PolicyBody from "@/modules/settings/components/PolicyBody";
 import { POLICY_LINKS } from "@/modules/storefront-shell/navigation";
 import { SectionDecor } from "@/modules/storefront-shell/components/decor";
-import { POLICY_COPY, POLICY_TITLES, POLICY_UPDATED_ON, type PolicyKey } from "../constants/policies";
+import { getPolicyCopy, POLICY_TITLES, POLICY_UPDATED_ON, type PolicyKey } from "../constants/policies";
 
 type Section = { heading: string; body: string };
 
 /**
  * Shared policy page: sidebar of all four policies (a scrolling pill row on
  * phones) + title + sections. `sections` comes from Business Settings when
- * the admin has written them; otherwise the design's default copy is used.
+ * the admin has written them; delivery charges and the contact email always follow Business Settings; otherwise the design's default copy is used.
  */
-export default function PolicyLayout({ policy, sections, email }: { policy: PolicyKey; sections?: Section[]; email?: string }) {
-  const content = sections && sections.length > 0 ? sections : POLICY_COPY[policy].map((s) => ({ heading: s.heading, body: s.body }));
+export default function PolicyLayout({ policy, sections, store }: { policy: PolicyKey; sections?: Section[]; store: StoreInfo }) {
+  const content = sections && sections.length > 0 ? sections : getPolicyCopy(store)[policy].map((s) => ({ heading: s.heading, body: s.body }));
   const activeHref = `/policies/${policy}`;
 
   return (
@@ -53,8 +53,8 @@ export default function PolicyLayout({ policy, sections, email }: { policy: Poli
         ))}
         <p className="mb-0 mt-6 rounded-[10px] bg-ka-mint p-[18px] text-[14.5px] leading-[1.6] text-ka-green">
           Questions about this policy? Write to{" "}
-          <a href={`mailto:${email || CONTACT_EMAIL}`} className="font-semibold underline">
-            {email || CONTACT_EMAIL}
+          <a href={`mailto:${store.email}`} className="font-semibold underline">
+            {store.email}
           </a>{" "}
           or{" "}
           <Link href="/contact" className="font-semibold underline">

@@ -17,6 +17,8 @@ import {
   TestimonialsSection,
 } from "@/modules/storefront-content/components/home/HomeSections";
 import WhatsAppCta from "@/modules/storefront-shell/components/WhatsAppCta";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
+import { getHomeFaqs } from "@/modules/storefront-content/constants/faqs";
 import { categoryKeys, homeContentKeys } from "@/shared/query-keys";
 
 const NEWEST_FILTERS = { search: "", sort: "newest" };
@@ -33,6 +35,7 @@ export default function HomeContent() {
   const { data: activeCategories } = useActiveCategories();
   const { data: signature } = useQuery({ queryKey: categoryKeys.signature, queryFn: getSignatureCategoriesApi });
   const { data: testimonials } = useQuery({ queryKey: homeContentKeys.testimonialsUser, queryFn: getTestimonialUserApi });
+  const store = useStoreContact();
 
   // Health needs = the active categories, using a signature category's image where one exists.
   const imageById = new Map((signature?.data ?? []).map((c) => [c.id, c.image]));
@@ -54,7 +57,7 @@ export default function HomeContent() {
 
   return (
     <div>
-      <HomeHero heroImage={heroes?.data?.[0]?.image?.url} needs={needs} spotlight={bestsellers[0] ?? newestItems[0]} />
+      <HomeHero storeName={store.storeName} heroImage={heroes?.data?.[0]?.image?.url} needs={needs} spotlight={bestsellers[0] ?? newestItems[0]} />
       <HealthNeedsSection needs={needs} />
       <ProductShelf eyebrow="Most loved" title="Bestsellers" linkLabel="View all products" products={bestsellers.length ? bestsellers : newestItems.slice(0, 4)} decor="c" />
       <ProductShelf
@@ -65,11 +68,11 @@ export default function HomeContent() {
         decor="b"
         topPadding={false}
       />
-      <HeritageSection />
+      <HeritageSection storeName={store.storeName} />
       <ProcessSection />
       <TestimonialsSection testimonials={testimonials?.data ?? []} />
       <JournalPreview />
-      <FaqPreview />
+      <FaqPreview faqs={getHomeFaqs(store)} />
       <WhatsAppCta />
     </div>
   );

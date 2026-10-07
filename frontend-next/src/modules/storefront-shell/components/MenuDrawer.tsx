@@ -15,7 +15,7 @@ export default function MenuDrawer() {
   const { overlay, close } = useStorefrontUI();
   const { data: cartCount } = useCartCount();
   const { data: wishIds } = useWishlistIds();
-  const { whatsapp } = useStoreContact();
+  const { whatsapp, logoUrl } = useStoreContact();
 
   if (overlay !== "menu") return null;
 
@@ -24,7 +24,7 @@ export default function MenuDrawer() {
       <div onClick={close} className="animate-ka-fade absolute inset-0 bg-[rgba(20,35,27,.45)]" />
       <div className="animate-ka-drawer relative flex h-full w-[min(330px,88%)] flex-col overflow-auto bg-ka-cream px-6 pb-7 pt-5">
         <div className="mb-6 flex items-center justify-between">
-          <BrandMark size={52} />
+          <BrandMark logoUrl={logoUrl} size={52} />
           <button type="button" onClick={close} aria-label="Close menu" className="grid h-11 w-11 place-items-center rounded-full bg-ka-mint text-ka-green">
             <CloseIcon size={20} />
           </button>

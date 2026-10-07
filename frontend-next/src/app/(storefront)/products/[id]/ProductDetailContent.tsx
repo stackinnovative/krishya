@@ -43,7 +43,7 @@ export default function ProductDetailContent({ id }: { id: string }) {
   const { data: wishIds } = useWishlistIds();
   const { mutate: toggleWish, isPending: toggling } = useToggleWishlist();
   const { data: categoryData } = useActiveCategories();
-  const { freeAbove, whatsapp } = useStoreContact();
+  const { freeAbove, deliveryCharge, whatsapp } = useStoreContact();
   const product = data?.data;
 
   const [colorId, setColorId] = useState<string | undefined>(undefined);
@@ -280,7 +280,7 @@ export default function ProductDetailContent({ id }: { id: string }) {
             <div className="flex flex-col gap-2.5 rounded-[10px] bg-ka-mint px-[18px] py-4 text-sm text-ka-ink">
               <span className="flex items-center gap-2.5">
                 <TruckIcon size={18} strokeWidth={1.5} className="flex-none text-ka-green" />
-                {freeAbove > 0 ? `Free delivery above ${formatCurrency(freeAbove)} · ` : ""}Delivered in 2–7 days across India
+                {deliveryCharge <= 0 ? "Free delivery · " : freeAbove > 0 ? `Free delivery above ${formatCurrency(freeAbove)} · ` : ""}Delivered in 2–7 days across India
               </span>
               <a href={whatsapp(waText)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 font-semibold text-ka-wa">
                 <WhatsAppIcon size={18} className="flex-none" />

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSettings } from "@/modules/settings/server";
+import { getSettings, getStoreInfo } from "@/modules/settings/server";
 import PolicyLayout from "@/modules/storefront-content/components/PolicyLayout";
 
 export const metadata: Metadata = {
@@ -11,5 +11,5 @@ export const metadata: Metadata = {
 export default async function PrivacyPolicyPage() {
   const settings = await getSettings();
   const sections = (settings?.privacyPolicySections ?? []).map((s) => ({ heading: s.heading, body: s.description }));
-  return <PolicyLayout policy="privacy" sections={sections} email={settings?.email} />;
+  return <PolicyLayout policy="privacy" sections={sections} store={await getStoreInfo()} />;
 }
