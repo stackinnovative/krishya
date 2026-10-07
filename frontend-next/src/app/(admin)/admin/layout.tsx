@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import OfflineBanner from "@/modules/admin-shell/components/OfflineBanner";
 import { getSettings } from "@/modules/settings/server";
+import { DEFAULT_STORE_NAME } from "@/lib/contact";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -9,7 +10,6 @@ const manrope = Manrope({
   variable: "--font-manrope",
 });
 
-const DEFAULT_STORE_NAME = "Artspace";
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSettings();

@@ -9,8 +9,8 @@ import { useAdminLogin } from "@/modules/auth/hooks/useAdminLogin";
 import { useSettings } from "@/modules/settings/hooks/useSettings";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { getApiErrorMessage } from "@/lib/errors";
+import { DEFAULT_STORE_NAME } from "@/lib/contact";
 
-const DEFAULT_STORE_NAME = "Artspace";
 
 export default function AdminLoginPage() {
   return (
