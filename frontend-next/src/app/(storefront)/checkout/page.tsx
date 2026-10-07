@@ -15,6 +15,7 @@ import { openRazorpayCheckoutFunction, openRazorpayCheckoutTestFunction } from "
 import { useCart } from "@/modules/cart/hooks/useCart";
 import { createOrderApi, verifyPaymentApi } from "@/modules/orders/api/order.api";
 import Button from "@/modules/storefront-shell/components/Button";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { SectionDecor } from "@/modules/storefront-shell/components/decor";
 import { CheckIcon, LeafIcon, LockIcon } from "@/modules/storefront-shell/components/icons";
 
@@ -51,6 +52,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const { data: cartRes, isLoading } = useCart();
   const cart = cartRes?.data;
+  const { storeName } = useStoreContact();
 
   const [form, setForm] = useState({
     name: "", email: "", phone: "", addressLine1: "", addressLine2: "", city: "", state: STATE_OPTIONS[0]!, pincode: "", acceptedTerms: false,
@@ -69,12 +71,13 @@ export default function CheckoutPage() {
       const order = res.data;
       if (!order) throw new Error("no order");
 
+      const details = { storeName, prefill: { name: form.name, email: form.email, contact: form.phone } };
       const goToSuccess = (orderId: string) => router.push(`/checkout/success/${orderId}?guestId=${getGuestId()}`);
 
       if (env.paymentMode === "test") {
-        openRazorpayCheckoutTestFunction(order, goToSuccess, (paymentResponse) => verifyPaymentApi(paymentResponse));
+        openRazorpayCheckoutTestFunction(order, details, goToSuccess, (paymentResponse) => verifyPaymentApi(paymentResponse));
       } else {
-        openRazorpayCheckoutFunction(order, goToSuccess);
+        openRazorpayCheckoutFunction(order, details, goToSuccess);
       }
     } catch {
       toast.error("Could not start checkout. Try again.");
