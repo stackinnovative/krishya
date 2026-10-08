@@ -12,6 +12,11 @@ export type HeroView = {
   priority?: number;
   buttonLabel?: string;
   buttonUrl?: string;
+  secondaryLabel?: string;
+  secondaryUrl?: string;
+  badgeText?: string;
+  spotlightProductId?: string;
+  spotlightLabel?: string;
 };
 
 export type CreateHeroPayload = {
@@ -21,6 +26,11 @@ export type CreateHeroPayload = {
   image: IImage;
   buttonLabel?: string;
   buttonUrl?: string;
+  secondaryLabel?: string;
+  secondaryUrl?: string;
+  badgeText?: string;
+  spotlightProductId?: string;
+  spotlightLabel?: string;
   priority?: number;
 };
 

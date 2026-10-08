@@ -26,7 +26,7 @@ export const useSaveHero = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string | null; data: CreateHeroPayload }) => (id ? api.editHeroApi(id, data) : api.createHeroApi(data)),
-    onSuccess: (_r, v) => { toast.success(v.id ? "Hero updated" : "Hero added"); invalidateHeroViews(qc); },
+    onSuccess: (_r, v) => { toast.success(v.id ? "Slide updated" : "Slide added"); invalidateHeroViews(qc); },
     onError: (err) => toast.error(getApiErrorMessage(err, "Could not save the hero slide.")),
   });
 };
@@ -34,7 +34,8 @@ export const useToggleHero = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => (isActive ? api.blockHeroApi(id) : api.unblockHeroApi(id)),
-    onSuccess: () => invalidateHeroViews(qc),
+    onSuccess: (_r, v) => { toast.success(v.isActive ? "Slide moved to drafts" : "Slide is live"); invalidateHeroViews(qc); },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Could not update the slide.")),
   });
 };
 

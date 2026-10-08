@@ -7,6 +7,7 @@ import {
   getToteBagCollectionApi,
 } from "../api/storefront-product.api";
 import { productKeys } from "@/shared/query-keys";
+import { formatCurrency } from "@/lib/format";
 
 export const useFeaturedProducts = () => useQuery({ queryKey: productKeys.featured, queryFn: getFeaturedProductsApi });
 
@@ -27,6 +28,17 @@ export const useProductSearch = (search: string, limit = 6) =>
     queryFn: () => getAllProductsForUserApi({ search, limit, page: 1 }),
     enabled: search.length > 0,
     placeholderData: (prev) => prev,
+  });
+
+/** Live (active) products as dropdown options - e.g. the hero "spotlight product" picker.
+ * Only active products are listed, so admin can't spotlight something customers can't buy.
+ * 100 is the backend's per-request cap. */
+export const useActiveProductOptions = () =>
+  useQuery({
+    queryKey: [...productKeys.userList, "options"],
+    queryFn: () => getAllProductsForUserApi({ search: "", sort: "newest", limit: 100, page: 1 }),
+    select: (res) => res.data.map((p) => ({ label: `${p.name} - ${formatCurrency(p.price)}`, value: p.id })),
+    staleTime: 60_000,
   });
 
 export const useProductDetails = (id: string) =>

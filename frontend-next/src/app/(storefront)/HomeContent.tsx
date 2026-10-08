@@ -29,7 +29,7 @@ const NEWEST_FILTERS = { search: "", sort: "newest" };
  * of firing a second client-side fetch (and, critically, so the homepage's
  * real content is present in the server-rendered HTML for SEO/crawlers). */
 export default function HomeContent() {
-  const { data: heroes } = useQuery({ queryKey: homeContentKeys.heroUser, queryFn: getHeroUserApi });
+  const { data: heroes, isPending: heroesPending } = useQuery({ queryKey: homeContentKeys.heroUser, queryFn: getHeroUserApi });
   const { data: featured } = useFeaturedProducts();
   const { data: newest } = useProductList(NEWEST_FILTERS);
   const { data: activeCategories } = useActiveCategories();
@@ -57,7 +57,7 @@ export default function HomeContent() {
 
   return (
     <div>
-      <HomeHero storeName={store.storeName} heroImage={heroes?.data?.[0]?.image?.url} needs={needs} spotlight={bestsellers[0] ?? newestItems[0]} />
+      <HomeHero storeName={store.storeName} heroes={heroes?.data ?? []} loading={heroesPending} needs={needs} defaultSpotlight={bestsellers[0] ?? newestItems[0]} />
       <HealthNeedsSection needs={needs} />
       <ProductShelf eyebrow="Most loved" title="Bestsellers" linkLabel="View all products" products={bestsellers.length ? bestsellers : newestItems.slice(0, 4)} decor="c" />
       <ProductShelf
