@@ -193,14 +193,6 @@ export const MapPinIcon = (p: IconProps) => (
   </Svg>
 );
 
-export const InstagramIcon = (p: IconProps) => (
-  <Svg {...p}>
-    <rect x="3" y="3" width="18" height="18" rx="5" />
-    <circle cx="12" cy="12" r="4" />
-    <circle cx="17.5" cy="6.5" r=".8" />
-  </Svg>
-);
-
 export const DeviceIcon = (p: IconProps) => (
   <Svg {...p}>
     <rect x="4" y="5" width="16" height="11" rx="1.5" />

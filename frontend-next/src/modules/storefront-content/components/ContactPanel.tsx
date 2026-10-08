@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { STORE_ADDRESS } from "@/lib/contact";
 import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
+import SocialLinks from "@/modules/storefront-shell/components/SocialLinks";
 import { CheckIcon, MapPinIcon, WhatsAppIcon } from "@/modules/storefront-shell/components/icons";
 
 const inputClass = "h-12 w-full rounded-lg border border-ka-line bg-ka-cream px-3.5 text-[15px] font-normal text-ka-ink outline-none focus:border-ka-sage focus:ring-2 focus:ring-ka-sage/40";
@@ -15,7 +16,7 @@ const EMPTY = { name: "", phone: "", email: "", message: "" };
  * pushes everywhere) instead of pretending to submit it somewhere.
  */
 export default function ContactPanel() {
-  const { email, phone, whatsapp } = useStoreContact();
+  const { email, phone, whatsapp, socialLinks } = useStoreContact();
   const [form, setForm] = useState(EMPTY);
   const [sent, setSent] = useState(false);
   const set = (key: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -117,6 +118,12 @@ export default function ContactPanel() {
               Sunday closed
             </span>
           </div>
+          {socialLinks.length > 0 && (
+            <div className={`${card} col-span-full gap-3`}>
+              <span className={cardLabel}>FOLLOW US</span>
+              <SocialLinks links={socialLinks} variant="light" className="[&_a]:bg-ka-cream [&_a:hover]:bg-ka-green" />
+            </div>
+          )}
         </div>
         <a
           href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(STORE_ADDRESS)}`}

@@ -1,23 +1,21 @@
 import Link from "next/link";
-import { AYUSH_DISCLAIMER, AYUSH_LICENSE_NO, CONTACT_EMAIL, CONTACT_PHONE, DEFAULT_STORE_NAME, INSTAGRAM_HANDLE, INSTAGRAM_URL, STORE_ADDRESS } from "@/lib/contact";
-import { getSettings } from "@/modules/settings/server";
+import { AYUSH_DISCLAIMER, AYUSH_LICENSE_NO, STORE_ADDRESS } from "@/lib/contact";
+import { getStoreInfo } from "@/modules/settings/server";
 import { getActiveCategories } from "@/modules/categories/server";
 import { NAV_LINKS, POLICY_LINKS } from "../navigation";
 import BrandLogo from "./BrandLogo";
 import FooterWave from "./FooterWave";
 import { SectionDecor } from "./decor";
-import { InstagramIcon, LockIcon } from "./icons";
+import { LockIcon } from "./icons";
+import SocialLinks from "./SocialLinks";
 
 const LINK_CLASS = "self-start text-left text-sm text-ka-cream/80 transition-colors hover:text-ka-gold";
 const HEADING_CLASS = "mb-1 text-xs font-bold tracking-[.2em] text-ka-gold";
 
 export default async function Footer() {
-  const [settings, categories] = await Promise.all([getSettings(), getActiveCategories()]);
-  const storeName = settings?.storeName || DEFAULT_STORE_NAME;
-  // Business Settings' contact fields are the source of truth once set - the
-  // env vars remain a fallback for stores that haven't filled them in yet.
-  const contactEmail = settings?.email || CONTACT_EMAIL;
-  const contactPhone = settings?.phone || CONTACT_PHONE;
+  // Name, logo and contact details all come from Business Settings.
+  const [store, categories] = await Promise.all([getStoreInfo(), getActiveCategories()]);
+  const { storeName, logoUrl, email: contactEmail, phone: contactPhone } = store;
 
   return (
     <>
@@ -27,11 +25,9 @@ export default async function Footer() {
         <div className="mx-auto max-w-[1280px] px-[clamp(20px,4vw,56px)] pb-7 pt-[clamp(48px,6vw,88px)]">
           <div className="flex flex-wrap gap-x-[clamp(28px,3vw,44px)] gap-y-10">
             <div className="flex max-w-[340px] flex-[1_1_280px] flex-col gap-[18px]">
-              <BrandLogo tone="dark" />
+              <BrandLogo storeName={storeName} logoUrl={logoUrl} tone="dark" />
               <p className="m-0 leading-[1.7]">Rooted in Ayurveda, crafted for today. Classical Kerala preparations from the House of Cochin Arya Vaidyasala.</p>
-              <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2.5 self-start font-medium text-ka-cream hover:text-ka-gold">
-                <InstagramIcon size={20} strokeWidth={1.5} />@{INSTAGRAM_HANDLE}
-              </a>
+              <SocialLinks links={store.socialLinks} />
             </div>
 
             <nav aria-label="Quick links" className="flex flex-[1_1_140px] flex-col gap-3">

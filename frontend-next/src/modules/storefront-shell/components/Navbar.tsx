@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useCartCount } from "@/modules/cart/hooks/useCart";
 import { useWishlistIds } from "@/modules/wishlist/hooks/useWishlist";
 import { NAV_LINKS, MOBILE_ROOT_PATHS, getBackHref, isNavActive } from "../navigation";
+import { useStoreContact } from "../hooks/useStoreContact";
 import { useStorefrontUI } from "./StorefrontUIProvider";
 import BrandLogo from "./BrandLogo";
 import { BagIcon, ChevronLeftIcon, HeartIcon, SearchIcon } from "./icons";
@@ -28,6 +29,7 @@ function CountBadge({ count, className = "" }: { count: number; className?: stri
 export default function Navbar() {
   const pathname = usePathname();
   const { openSearch } = useStorefrontUI();
+  const { storeName, logoUrl } = useStoreContact();
   const { data: cartCount } = useCartCount();
   const { data: wishIds } = useWishlistIds();
   const [scrolled, setScrolled] = useState(false);
@@ -65,8 +67,8 @@ export default function Navbar() {
           </Link>
         )}
 
-        <Link href="/" aria-label="Krishay Ayurveda home" className="flex-none">
-          <BrandLogo />
+        <Link href="/" aria-label={`${storeName} home`} className="flex-none">
+          <BrandLogo storeName={storeName} logoUrl={logoUrl} />
         </Link>
 
         <nav aria-label="Main" className="hidden flex-1 justify-center gap-[clamp(18px,2.6vw,40px)] ka:flex">

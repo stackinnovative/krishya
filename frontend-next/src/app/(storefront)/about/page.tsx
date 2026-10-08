@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
+import { getStoreInfo } from "@/modules/settings/server";
 import Link from "next/link";
 import Image from "next/image";
 import { CONTAINER, Eyebrow, SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
 import { HeartIcon, MortarIcon, SproutIcon } from "@/modules/storefront-shell/components/icons";
 import { ArticleImage } from "@/modules/storefront-content/components/ArticleCard";
 
-export const metadata: Metadata = {
-  title: "Our Story",
-  description: "Rooted in Ayurveda, crafted for today - the story of Krishay Ayurveda and the House of Cochin Arya Vaidyasala.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { storeName } = await getStoreInfo();
+  return {
+    title: "Our Story",
+    description: `Rooted in Ayurveda, crafted for today - the story of ${storeName} and the House of Cochin Arya Vaidyasala.`,
+  };
+}
 
 const VALUES = [
   { icon: <MortarIcon size={24} strokeWidth={1.4} />, title: "Authenticity", body: "Every formulation follows classical Ayurvedic texts, prepared the traditional Kerala way." },
@@ -32,7 +36,8 @@ const CRAFT = [
 
 const H2 = "m-0 font-display text-[clamp(32px,3.4vw,48px)] font-medium leading-[1.1] text-ka-green";
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { storeName } = await getStoreInfo();
   return (
     <>
       <section className="relative isolate overflow-clip pb-[clamp(40px,5vw,72px)] pt-[clamp(48px,6vw,96px)]">
@@ -73,7 +78,7 @@ export default function AboutPage() {
               batch checked by experienced hands before it leaves the kitchen.
             </p>
             <p className="m-0 text-pretty">
-              Krishay is our way of sharing these preparations with families across India, with clear information, honest descriptions and the same care our elders put
+              {storeName} is our way of sharing these preparations with families across India, with clear information, honest descriptions and the same care our elders put
               into every bottle.
             </p>
           </div>

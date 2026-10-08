@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { formatCurrency } from "@/lib/format";
+import { splitStoreName } from "@/modules/settings/store-info";
 import { useStorefrontUI } from "@/modules/storefront-shell/components/StorefrontUIProvider";
 import { ArrowDownIcon, ArrowRightIcon, LeafIcon, LockIcon, MortarIcon, SearchIcon, ShieldCheckIcon, ShieldIcon, SproutIcon } from "@/modules/storefront-shell/components/icons";
 import type { UserProductListItem } from "@/modules/products/types/storefront-product.type";
@@ -13,6 +14,8 @@ const DEFAULT_HERO_IMAGE = "/images/hero-oil-herbs.jpg";
 export type HealthNeed = { id: string; name: string; image?: string };
 
 type Props = {
+  /** Business Settings store name - the hero headline, first word in gold. */
+  storeName: string;
   /** Admin's first active hero slide image, when one is set; the brand photo otherwise. */
   heroImage?: string;
   needs: HealthNeed[];
@@ -33,8 +36,9 @@ function AyushPill({ className = "" }: { className?: string }) {
 }
 
 /** Phone hero: search pill, rounded mint card with the arched photo, then the "Shop by need" scroller and the 2x2 trust grid. */
-function MobileHero({ heroImage, needs }: Props) {
+function MobileHero({ storeName, heroImage, needs }: Props) {
   const { openSearch } = useStorefrontUI();
+  const { lead, rest } = splitStoreName(storeName);
 
   return (
     <section className="relative isolate flex flex-col gap-[18px] overflow-clip px-4 pb-7 pt-[76px] ka:hidden">
@@ -58,9 +62,13 @@ function MobileHero({ heroImage, needs }: Props) {
           Authentic Kerala Ayurveda
         </span>
         <h1 className="relative m-0 font-display text-[46px] font-semibold leading-[.98] tracking-[-.01em] text-ka-green">
-          <span className="text-ka-gold-deep">Krishay</span>
-          <br />
-          Ayurveda
+          <span className="text-ka-gold-deep">{lead}</span>
+          {rest && (
+            <>
+              <br />
+              {rest}
+            </>
+          )}
         </h1>
         <p className="relative m-0 max-w-[280px] text-[15px] leading-[1.55] text-ka-body-deep">Pure Kerala remedies, made by hand in small batches.</p>
         <Link
@@ -141,7 +149,8 @@ const TRUST_ITEMS = [
 ];
 
 /** Desktop hero: split layout with the arched photo, floating spotlight product and AYUSH pill, followed by the trust strip. */
-function DesktopHero({ heroImage, spotlight }: Props) {
+function DesktopHero({ storeName, heroImage, spotlight }: Props) {
+  const { lead, rest } = splitStoreName(storeName);
   return (
     <div className="hidden ka:block">
       <section className="relative overflow-hidden bg-ka-cream">
@@ -155,7 +164,8 @@ function DesktopHero({ heroImage, spotlight }: Props) {
               Authentic Kerala Ayurveda
             </span>
             <h1 className="m-0 font-display text-[clamp(56px,6.8vw,104px)] font-semibold leading-[.95] tracking-[-.015em] text-ka-green">
-              <span className="text-ka-gold-deep">Krishay</span> Ayurveda
+              <span className="text-ka-gold-deep">{lead}</span>
+              {rest && ` ${rest}`}
             </h1>
             <p className="m-0 max-w-[420px] text-[clamp(16px,1.3vw,18px)] leading-[1.6] text-ka-body-deep">
               Pure Kerala remedies, made by hand in small batches. From the House of Cochin Arya Vaidyasala.

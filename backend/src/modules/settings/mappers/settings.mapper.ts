@@ -1,5 +1,5 @@
 import { Settings, SETTINGS_DEFAULTS } from "../entities/settings.entity.js";
-import type { SettingsView } from "../types/settings.type.js";
+import type { SettingsView, SocialIconName } from "../types/settings.type.js";
 
 export class SettingsMapper {
     static toDomain(settingsModelData: any): Settings | null {
@@ -30,6 +30,11 @@ export class SettingsMapper {
             // the same seeded defaults here instead of an empty list.
             refundReturnSections: settingsModelData.refundReturnSections ?? SETTINGS_DEFAULTS.refundReturnSections,
             privacyPolicySections: settingsModelData.privacyPolicySections ?? SETTINGS_DEFAULTS.privacyPolicySections,
+            socialLinks: (settingsModelData.socialLinks ?? SETTINGS_DEFAULTS.socialLinks).map((l: { icon: SocialIconName; label?: string; url: string }) => ({
+                icon: l.icon,
+                label: l.label ?? "",
+                url: l.url,
+            })),
         });
     }
 
@@ -45,6 +50,7 @@ export class SettingsMapper {
             maintenance: settingsEntity.maintenance,
             refundReturnSections: settingsEntity.refundReturnSections,
             privacyPolicySections: settingsEntity.privacyPolicySections,
+            socialLinks: settingsEntity.socialLinks,
         };
     }
 
@@ -61,6 +67,7 @@ export class SettingsMapper {
             maintenance: settingsEntity.maintenance,
             refundReturnSections: settingsEntity.refundReturnSections,
             privacyPolicySections: settingsEntity.privacyPolicySections,
+            socialLinks: settingsEntity.socialLinks,
         };
     }
 }

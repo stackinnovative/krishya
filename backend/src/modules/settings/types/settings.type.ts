@@ -29,6 +29,36 @@ export const POLICY_ICON_NAMES = [
 
 export type PolicyIconName = (typeof POLICY_ICON_NAMES)[number];
 
+/**
+ * Platforms an admin can pick for a social media link. A fixed allow-list
+ * (like POLICY_ICON_NAMES) so the storefront can always map a link to a
+ * real icon instead of trusting an arbitrary string.
+ */
+export const SOCIAL_ICON_NAMES = [
+    "instagram",
+    "facebook",
+    "youtube",
+    "x",
+    "linkedin",
+    "whatsapp",
+    "telegram",
+    "pinterest",
+    "threads",
+    "tiktok",
+    "website",
+    "email",
+] as const;
+
+export type SocialIconName = (typeof SOCIAL_ICON_NAMES)[number];
+
+export const MAX_SOCIAL_LINKS = 12;
+
+export type SocialLink = {
+    icon: SocialIconName;
+    label: string;
+    url: string;
+};
+
 export type PolicySection = {
     heading: string;
     icon: PolicyIconName;
@@ -47,6 +77,7 @@ export type SettingsProps = {
     maintenance: boolean;
     refundReturnSections: PolicySection[];
     privacyPolicySections: PolicySection[];
+    socialLinks: SocialLink[];
 };
 
 export type SettingsView = {
@@ -61,4 +92,5 @@ export type SettingsView = {
     maintenance: boolean;
     refundReturnSections: PolicySection[];
     privacyPolicySections: PolicySection[];
+    socialLinks: SocialLink[];
 };

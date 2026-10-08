@@ -1,6 +1,5 @@
 import toast from "react-hot-toast";
 import { env } from "./env";
-import { DEFAULT_STORE_NAME } from "./contact";
 import type { IRazorpayOptions, IRazorpayOrder } from "@/modules/orders/types/order.type";
 
 declare global {
@@ -17,19 +16,22 @@ const openRazorpayCheckout = (options: IRazorpayOptions) => {
 
 type RazorpayPaymentResponse = { razorpay_payment_id: string; razorpay_order_id: string; razorpay_signature: string };
 
+/** Shown in the Razorpay window: the store name from Business Settings and the shopper's own checkout details. */
+export type RazorpayCheckoutDetails = { storeName: string; prefill: { name: string; email: string; contact: string } };
+
 /** Live mode: relies on the backend's payment webhook to confirm the order. */
-export const openRazorpayCheckoutFunction = (order: IRazorpayOrder, onHandle: (orderId: string) => void) => {
+export const openRazorpayCheckoutFunction = (order: IRazorpayOrder, details: RazorpayCheckoutDetails, onHandle: (orderId: string) => void) => {
   if (!env.razorpayKeyId) return toast.error("Payment configuration error");
   openRazorpayCheckout({
     key: env.razorpayKeyId,
     amount: order.amount,
     currency: order.currency,
-    name: DEFAULT_STORE_NAME,
+    name: details.storeName,
     description: "Payment for order",
     order_id: order.id,
     notes: order.notes as Record<string, string>,
     handler: () => onHandle(String((order.notes as Record<string, string>).appOrderId)),
-    prefill: { email: "user@example.com", contact: "9999999999" },
+    prefill: details.prefill,
     onPaymentFailed: () => toast.error("Payment failed"),
   });
 };
@@ -37,6 +39,7 @@ export const openRazorpayCheckoutFunction = (order: IRazorpayOrder, onHandle: (o
 /** Test mode (NEXT_PUBLIC_PAYMENT_MODE=test): confirms via verify-payment right after the popup succeeds, bypassing the webhook - safe for local/staging. */
 export const openRazorpayCheckoutTestFunction = (
   order: IRazorpayOrder,
+  details: RazorpayCheckoutDetails,
   onHandle: (orderId: string) => void,
   onVerify: (paymentResponse: RazorpayPaymentResponse) => Promise<void>
 ) => {
@@ -45,7 +48,7 @@ export const openRazorpayCheckoutTestFunction = (
     key: env.razorpayTestKeyId,
     amount: order.amount,
     currency: order.currency,
-    name: `${DEFAULT_STORE_NAME} [TEST]`,
+    name: `${details.storeName} [TEST]`,
     description: "Payment for order",
     order_id: order.id,
     notes: order.notes as Record<string, string>,
@@ -57,7 +60,7 @@ export const openRazorpayCheckoutTestFunction = (
         toast.error("Payment verification failed");
       }
     },
-    prefill: { email: "test@example.com", contact: "9999999999" },
+    prefill: details.prefill,
     onPaymentFailed: () => toast.error("[TEST] Payment failed"),
   });
 };

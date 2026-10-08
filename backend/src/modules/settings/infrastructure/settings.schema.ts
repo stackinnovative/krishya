@@ -1,11 +1,17 @@
 import { Schema, model, Document } from "mongoose";
 import { SETTINGS_DEFAULTS } from "../entities/settings.entity.js";
-import type { PolicyIconName } from "../types/settings.type.js";
+import type { PolicyIconName, SocialIconName } from "../types/settings.type.js";
 
 export interface IPolicySection {
     heading: string;
     icon: PolicyIconName;
     description: string;
+}
+
+export interface ISocialLink {
+    icon: SocialIconName;
+    label: string;
+    url: string;
 }
 
 export interface ISettings extends Document {
@@ -19,6 +25,7 @@ export interface ISettings extends Document {
     maintenance: boolean;
     refundReturnSections: IPolicySection[];
     privacyPolicySections: IPolicySection[];
+    socialLinks: ISocialLink[];
 }
 
 const settingsSchema = new Schema<ISettings>(
@@ -62,6 +69,19 @@ const settingsSchema = new Schema<ISettings>(
                 ),
             ],
             default: SETTINGS_DEFAULTS.privacyPolicySections,
+        },
+        socialLinks: {
+            type: [
+                new Schema(
+                    {
+                        icon: { type: String, required: true },
+                        label: { type: String, trim: true, default: "" },
+                        url: { type: String, required: true, trim: true },
+                    },
+                    { _id: false }
+                ),
+            ],
+            default: SETTINGS_DEFAULTS.socialLinks,
         },
     },
     {

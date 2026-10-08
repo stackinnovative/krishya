@@ -8,6 +8,7 @@ import { NAV_LINKS } from "../navigation";
 import { useStoreContact } from "../hooks/useStoreContact";
 import { useStorefrontUI } from "./StorefrontUIProvider";
 import { BrandMark } from "./BrandLogo";
+import SocialLinks from "./SocialLinks";
 import { ChevronRightIcon, CloseIcon } from "./icons";
 
 /** Left slide-in menu opened from the mobile tab bar's "More". */
@@ -15,7 +16,7 @@ export default function MenuDrawer() {
   const { overlay, close } = useStorefrontUI();
   const { data: cartCount } = useCartCount();
   const { data: wishIds } = useWishlistIds();
-  const { whatsapp } = useStoreContact();
+  const { whatsapp, logoUrl, socialLinks } = useStoreContact();
 
   if (overlay !== "menu") return null;
 
@@ -24,7 +25,7 @@ export default function MenuDrawer() {
       <div onClick={close} className="animate-ka-fade absolute inset-0 bg-[rgba(20,35,27,.45)]" />
       <div className="animate-ka-drawer relative flex h-full w-[min(330px,88%)] flex-col overflow-auto bg-ka-cream px-6 pb-7 pt-5">
         <div className="mb-6 flex items-center justify-between">
-          <BrandMark size={52} />
+          <BrandMark logoUrl={logoUrl} size={52} />
           <button type="button" onClick={close} aria-label="Close menu" className="grid h-11 w-11 place-items-center rounded-full bg-ka-mint text-ka-green">
             <CloseIcon size={20} />
           </button>
@@ -60,6 +61,7 @@ export default function MenuDrawer() {
         >
           Chat on WhatsApp
         </a>
+        <SocialLinks links={socialLinks} variant="light" className="mt-5 justify-center" />
 
         <span className="mt-auto pt-7 font-display text-lg italic text-ka-green">{STORE_TAGLINE}</span>
       </div>

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSettings } from "@/modules/settings/server";
+import { getStoreInfo } from "@/modules/settings/server";
 import PolicyLayout from "@/modules/storefront-content/components/PolicyLayout";
 
 export const metadata: Metadata = {
@@ -8,6 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default async function ShippingPolicyPage() {
-  const settings = await getSettings();
-  return <PolicyLayout policy="shipping" email={settings?.email} />;
+  return <PolicyLayout policy="shipping" store={await getStoreInfo()} />;
 }

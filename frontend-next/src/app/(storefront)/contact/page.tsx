@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
+import { getStoreInfo } from "@/modules/settings/server";
 import { Eyebrow, SectionDecor } from "@/modules/storefront-shell/components/decor";
 import ContactPanel from "@/modules/storefront-content/components/ContactPanel";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: "Questions about a product or an order? Write to Krishay Ayurveda or chat with us on WhatsApp.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { storeName } = await getStoreInfo();
+  return {
+    title: "Contact",
+    description: `Questions about a product or an order? Write to ${storeName} or chat with us on WhatsApp.`,
+  };
+}
 
 export default function ContactPage() {
   return (

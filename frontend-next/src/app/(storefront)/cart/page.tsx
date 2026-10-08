@@ -12,7 +12,7 @@ export default function CartPage() {
   const { data, isLoading } = useCart();
   const { mutate: updateCount, isPending: updatingCount, variables: updateVars } = useUpdateCartCount();
   const { mutate: removeItem, isPending: removing, variables: removeVars } = useRemoveCartItem();
-  const { freeAbove } = useStoreContact();
+  const { freeAbove, deliveryCharge } = useStoreContact();
 
   const cart = data?.data;
   const items = cart?.items ?? [];
@@ -46,7 +46,7 @@ export default function CartPage() {
       ) : (
         <div className="flex flex-wrap items-start gap-5 ka:gap-[clamp(24px,4vw,56px)]">
           <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-[clamp(12px,2vw,20px)]">
-            {freeAbove > 0 && (
+            {freeAbove > 0 && deliveryCharge > 0 && (
               <div className="flex items-center gap-3 rounded-[14px] bg-ka-mint px-3.5 py-3">
                 <span className="grid h-[38px] w-[38px] flex-none place-items-center rounded-full bg-ka-cream text-ka-green">
                   <TruckIcon size={20} />

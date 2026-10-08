@@ -1,9 +1,16 @@
 import type { ApiResponse } from "@/shared/types/api.types";
 import type { PolicyIconName } from "../constants/policy-icons";
+import type { SocialIconName } from "../constants/social-icons";
 
 export type SettingsLogo = {
   url: string;
   publicId: string;
+};
+
+export type SocialLink = {
+  icon: SocialIconName;
+  label: string;
+  url: string;
 };
 
 export type PolicySection = {
@@ -24,6 +31,7 @@ export type SettingsView = {
   maintenance: boolean;
   refundReturnSections: PolicySection[];
   privacyPolicySections: PolicySection[];
+  socialLinks: SocialLink[];
 };
 
 export type UpdateSettingsPayload = Omit<SettingsView, "id">;

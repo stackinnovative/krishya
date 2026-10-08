@@ -8,7 +8,7 @@ import { ArrowRightIcon, FlaskIcon, SproutIcon, TruckIcon, UruliIcon } from "@/m
 import ArticleCard from "../ArticleCard";
 import FaqAccordion from "../FaqAccordion";
 import { ARTICLES } from "../../constants/articles";
-import { HOME_FAQS } from "../../constants/faqs";
+import type { Faq } from "../../constants/faqs";
 import { NeedCircle, type HealthNeed } from "./HomeHero";
 
 const MINT = "#E8F0E4";
@@ -92,7 +92,7 @@ export function ProductShelf({
   );
 }
 
-export function HeritageSection() {
+export function HeritageSection({ storeName }: { storeName: string }) {
   return (
     <>
       <Wave from={CREAM} to={SAND} />
@@ -110,7 +110,7 @@ export function HeritageSection() {
               slowly over a gentle fire, and every batch watched over by experienced hands.
             </p>
             <p className="m-0 text-pretty text-base leading-[1.75] text-ka-body">
-              Krishay brings that same care to homes across India, with honest formulations and clear guidance on how to use them.
+              {storeName} brings that same care to homes across India, with honest formulations and clear guidance on how to use them.
             </p>
             <div className="flex items-center gap-5 border-y border-ka-gold/55 py-5">
               <span className="font-display text-[clamp(56px,6vw,84px)] font-medium leading-[.9] text-ka-gold">75+</span>
@@ -211,7 +211,7 @@ export function JournalPreview() {
   );
 }
 
-export function FaqPreview() {
+export function FaqPreview({ faqs }: { faqs: Faq[] }) {
   return (
     <>
       <Wave from={CREAM} to={MINT} shape="b" />
@@ -223,7 +223,7 @@ export function FaqPreview() {
             <h2 className={SECTION_TITLE}>Frequently asked questions</h2>
           </div>
           <div className="border-t border-ka-green/[.18]">
-            <FaqAccordion items={HOME_FAQS} defaultOpen={0} />
+            <FaqAccordion items={faqs} defaultOpen={0} />
           </div>
           <div className="mt-9 flex justify-center">
             <Link
