@@ -4,7 +4,12 @@ import { raw } from "./raw-client";
 import { logout } from "./logout";
 
 const api = axios.create({
-  baseURL: env.apiBaseUrl,
+  // In the browser this is the same-origin /api/proxy rewrite (see
+  // next.config.ts). A relative URL can't be resolved during a server render,
+  // so server-side prefetches (home page, product pages) call the backend
+  // directly instead - otherwise they silently fail and the page renders its
+  // loading state until the client refetches.
+  baseURL: typeof window === "undefined" ? env.backendApiUrl : env.apiBaseUrl,
   withCredentials: true,
 });
 
