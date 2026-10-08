@@ -15,9 +15,18 @@ import { scrollToFirstError } from "@/shared/scrollToFirstError";
 export type FormFieldDef = (
   | { type: "text" | "number" | "email" | "tel" | "url" | "password"; placeholder?: string; minLength?: number; maxLength?: number }
   | { type: "area"; placeholder?: string; rows?: number; minLength?: number; maxLength?: number }
-  | { type: "select" | "searchable-select"; options: string[] | { label: string; value: string }[] }
+  | { type: "select" | "searchable-select"; options: string[] | { label: string; value: string }[]; placeholder?: string }
   | { type: "image"; imageMaxHeight?: number; imageAspectRatio?: number }
-) & { key: string; label: string; required?: boolean; allowSpecialChars?: boolean };
+) & {
+  key: string;
+  label: string;
+  required?: boolean;
+  allowSpecialChars?: boolean;
+  /** Helper text under the field - what it does / where it shows. */
+  hint?: string;
+  /** Extra rule run after the built-in checks; return an error message or null. Gets every value, for rules that depend on another field. */
+  validate?: (value: unknown, values: Record<string, unknown>) => string | null;
+};
 
 const isEmpty = (type: FormFieldType, value: unknown) => {
   if (type === "image") return !value;
@@ -90,7 +99,10 @@ export default function FormModal({
       // words; url/email/tel/number keep their own format rules instead.
       if ((f.type === "text" || f.type === "area") && !f.allowSpecialChars && containsSpecialChars(value)) {
         next[f.key] = `${f.label} can only contain letters, numbers, and basic punctuation (' - & , . ! ?).`;
+        continue;
       }
+      const customError = f.validate?.(value, values);
+      if (customError) next[f.key] = customError;
     }
     return next;
   };
@@ -184,6 +196,7 @@ export default function FormModal({
                   maxLength={"maxLength" in f ? f.maxLength : undefined}
                   imageMaxHeight={"imageMaxHeight" in f ? f.imageMaxHeight : undefined}
                   imageAspectRatio={"imageAspectRatio" in f ? f.imageAspectRatio : undefined}
+                  hint={f.hint}
                 />
               ))}
             </div>

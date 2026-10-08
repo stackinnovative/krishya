@@ -56,7 +56,7 @@ export default function ImageDropzone({
 }: {
   value: ImageFieldValue | null;
   onChange: (v: ImageFieldValue | null) => void;
-  /** Caps how tall the field can render; width always spans the container and height follows aspectRatio. */
+  /** Caps how tall the field can render; the width shrinks with it so the box keeps aspectRatio (and the preview matches the crop). */
   maxHeight?: number;
   error?: boolean;
   /** width / height of the crop frame, e.g. 16/9 for a hero banner, 21/6 for a promo strip. */
@@ -161,7 +161,7 @@ export default function ImageDropzone({
     return (
       <div
         className="relative w-full overflow-hidden rounded-[14px]"
-        style={{ aspectRatio, maxHeight }}
+        style={{ aspectRatio, maxHeight, maxWidth: maxHeight ? maxHeight * aspectRatio : undefined }}
         // A plain <img> and this <div> aren't form controls, so a click that
         // lands on them (not on one of the buttons below) is "dead space" to
         // the browser - left alone, the surrounding <label> would silently
@@ -220,7 +220,7 @@ export default function ImageDropzone({
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        style={{ aspectRatio, maxHeight }}
+        style={{ aspectRatio, maxHeight, maxWidth: maxHeight ? maxHeight * aspectRatio : undefined }}
         className={
           error
             ? "flex w-full flex-col items-center justify-center gap-1.5 rounded-[14px] border-[1.5px] border-dashed border-[#f0a99b] bg-[#fdf2f0] text-[#d6432f] hover:border-[#d6432f]"
