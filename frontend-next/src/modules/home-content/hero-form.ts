@@ -26,6 +26,8 @@ export const buildHeroFields = (productOptions: ProductOption[], otherPositions:
     type: "image",
     required: true,
     imageAspectRatio: HERO_ASPECT_RATIO,
+    // ~180x225 preview: the same 4:5 crop, small enough that the text fields stay in view.
+    imageMaxHeight: 225,
     hint: "Portrait (4:5) - the preview shows exactly what customers see inside the arch. Use the pencil to adjust the crop.",
   },
   {
