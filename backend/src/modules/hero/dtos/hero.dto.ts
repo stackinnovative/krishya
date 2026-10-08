@@ -54,6 +54,10 @@ export const CreateHeroSchema = z
             .optional(),
     })
     .superRefine((dto, ctx) => {
+        // Button text without a link would render a button that goes nowhere.
+        if (dto.buttonLabel && !dto.buttonUrl) {
+            ctx.addIssue({ code: "custom", path: ["buttonUrl"], message: "Add a link for the main button, or clear its text" });
+        }
         // The second link is a pair: text without a link (or a link without text) renders nothing useful.
         if (dto.secondaryLabel && !dto.secondaryUrl) {
             ctx.addIssue({ code: "custom", path: ["secondaryUrl"], message: "Add a link for the second link, or clear its text" });
