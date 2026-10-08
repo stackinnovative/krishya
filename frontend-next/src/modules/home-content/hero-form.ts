@@ -26,8 +26,7 @@ export const buildHeroFields = (productOptions: ProductOption[], otherPositions:
     type: "image",
     required: true,
     imageAspectRatio: HERO_ASPECT_RATIO,
-    imageMaxHeight: 280,
-    hint: "Portrait (4:5), shown inside the arch. A clear, well-lit product or herbs photo works best.",
+    hint: "Portrait (4:5) - the preview shows exactly what customers see inside the arch. Use the pencil to adjust the crop.",
   },
   {
     key: "label",
@@ -66,7 +65,7 @@ export const buildHeroFields = (productOptions: ProductOption[], otherPositions:
     placeholder: "Shop Now",
     maxLength: HERO_LIMITS.buttonLabel,
     allowSpecialChars: true,
-    hint: "Leave empty to show “Shop Now”.",
+    hint: "Leave the text and link empty to show “Shop Now” linking to the shop.",
   },
   {
     key: "buttonUrl",
@@ -74,8 +73,8 @@ export const buildHeroFields = (productOptions: ProductOption[], otherPositions:
     type: "url",
     placeholder: "/products",
     maxLength: HERO_LIMITS.url,
-    hint: "A page on this site (/products, /about) or a full address (https://…). Leave empty to open the shop.",
-    validate: validateHeroLink,
+    hint: "A page on this site (/products, /about) or a full address (https://…). Required when the button has text.",
+    validate: (v, all) => validateHeroLink(v) ?? (str(v) || !str(all.buttonLabel) ? null : "Add a link for the button, or clear its text."),
   },
   {
     key: "secondaryLabel",
