@@ -1,4 +1,9 @@
-import type { IImage, HeroProps } from "../types/hero.type.js";
+import { HERO_LIMITS, type IImage, type HeroProps } from "../types/hero.type.js";
+
+const OBJECT_ID_RE = /^[a-f\d]{24}$/i;
+
+/** Optional text: trimmed, and an empty string stored as "not set". */
+const optional = (value: string | undefined) => value?.trim() || undefined;
 
 export class Hero {
     public readonly id: string | null;
@@ -8,6 +13,11 @@ export class Hero {
     public readonly image: IImage;
     public readonly buttonLabel?: string | undefined;
     public readonly buttonUrl?: string | undefined;
+    public readonly secondaryLabel?: string | undefined;
+    public readonly secondaryUrl?: string | undefined;
+    public readonly badgeText?: string | undefined;
+    public readonly spotlightProductId?: string | undefined;
+    public readonly spotlightLabel?: string | undefined;
     public readonly priority?: number | undefined;
     public readonly isActive: boolean;
 
@@ -19,20 +29,39 @@ export class Hero {
             throw new Error("Hero title cannot be empty");
         }
 
-        if (title.length < 2 || title.length > 100) {
-            throw new Error("Hero title must be between 2 and 100 characters");
+        if (title.length < HERO_LIMITS.titleMin || title.length > HERO_LIMITS.title) {
+            throw new Error(`Hero title must be between ${HERO_LIMITS.titleMin} and ${HERO_LIMITS.title} characters`);
         }
 
         if (!subtitle) {
             throw new Error("Hero subtitle cannot be empty");
         }
 
-        if (subtitle.length < 5 || subtitle.length > 200) {
-            throw new Error("Hero subtitle must be between 5 and 200 characters");
+        if (subtitle.length < HERO_LIMITS.subtitleMin || subtitle.length > HERO_LIMITS.subtitle) {
+            throw new Error(`Hero subtitle must be between ${HERO_LIMITS.subtitleMin} and ${HERO_LIMITS.subtitle} characters`);
         }
 
-        if (props.label && props.label.trim().length > 40) {
-            throw new Error("Hero label cannot exceed 40 characters");
+        if (props.label && props.label.trim().length > HERO_LIMITS.label) {
+            throw new Error(`Hero label cannot exceed ${HERO_LIMITS.label} characters`);
+        }
+
+        if (props.badgeText && props.badgeText.trim().length > HERO_LIMITS.badgeText) {
+            throw new Error(`Hero badge text cannot exceed ${HERO_LIMITS.badgeText} characters`);
+        }
+
+        if (props.spotlightLabel && props.spotlightLabel.trim().length > HERO_LIMITS.spotlightLabel) {
+            throw new Error(`Hero spotlight tag cannot exceed ${HERO_LIMITS.spotlightLabel} characters`);
+        }
+
+        const spotlightProductId = optional(props.spotlightProductId);
+        if (spotlightProductId && !OBJECT_ID_RE.test(spotlightProductId)) {
+            throw new Error("Hero spotlight product id is invalid");
+        }
+
+        const secondaryLabel = optional(props.secondaryLabel);
+        const secondaryUrl = optional(props.secondaryUrl);
+        if (Boolean(secondaryLabel) !== Boolean(secondaryUrl)) {
+            throw new Error("Hero second link needs both text and a link");
         }
 
         if (!props.image || !props.image.url || !props.image.publicId) {
@@ -40,12 +69,18 @@ export class Hero {
         }
 
         this.id = props.id ?? null;
-        this.label = props.label?.trim() || undefined;
+        this.label = optional(props.label);
         this.title = title;
         this.subtitle = subtitle;
         this.image = props.image;
-        this.buttonLabel = props.buttonLabel?.trim() || undefined;
-        this.buttonUrl = props.buttonUrl?.trim() || undefined;
+        this.buttonLabel = optional(props.buttonLabel);
+        this.buttonUrl = optional(props.buttonUrl);
+        this.secondaryLabel = secondaryLabel;
+        this.secondaryUrl = secondaryUrl;
+        this.badgeText = optional(props.badgeText);
+        this.spotlightProductId = spotlightProductId;
+        // The tag only labels a spotlighted product - without one it would render nowhere.
+        this.spotlightLabel = spotlightProductId ? optional(props.spotlightLabel) : undefined;
         this.priority = props.priority ?? 0;
         this.isActive = props.isActive ?? true;
     }
@@ -79,6 +114,11 @@ export class Hero {
         image: IImage;
         buttonLabel?: string | undefined;
         buttonUrl?: string | undefined;
+        secondaryLabel?: string | undefined;
+        secondaryUrl?: string | undefined;
+        badgeText?: string | undefined;
+        spotlightProductId?: string | undefined;
+        spotlightLabel?: string | undefined;
         priority?: number | undefined;
     }): Hero {
         return new Hero({
@@ -89,6 +129,11 @@ export class Hero {
             image: props.image,
             buttonLabel: props.buttonLabel,
             buttonUrl: props.buttonUrl,
+            secondaryLabel: props.secondaryLabel,
+            secondaryUrl: props.secondaryUrl,
+            badgeText: props.badgeText,
+            spotlightProductId: props.spotlightProductId,
+            spotlightLabel: props.spotlightLabel,
             priority: props.priority ?? this.priority,
         });
     }

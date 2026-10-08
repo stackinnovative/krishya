@@ -1,43 +1,67 @@
 import { z } from "zod";
+import { HERO_LIMITS } from "../types/hero.type.js";
 
 export const HeroImageSchema = z.object({
     url: z.string().url("Valid image URL is required"),
     publicId: z.string().min(1, "Image public ID is required"),
 });
 
-export const CreateHeroSchema = z.object({
-    label: z
+/** A page on this site ("/products") or a full web address ("https://..."). Empty means "not set". */
+const linkField = (name: string) =>
+    z
         .string()
-        .max(40, "Label cannot exceed 40 characters")
-        .optional(),
-    title: z
-        .string()
-        .min(2, "Title must be at least 2 characters")
-        .max(100, "Title cannot exceed 100 characters"),
-    subtitle: z
-        .string()
-        .min(5, "Subtitle must be at least 5 characters")
-        .max(200, "Subtitle cannot exceed 200 characters"),
-    image: HeroImageSchema,
-    buttonLabel: z
-        .string()
-        .max(30, "Button label cannot exceed 30 characters")
-        .optional(),
-    buttonUrl: z
-        .string()
-        .max(300, "Button link cannot exceed 300 characters")
+        .trim()
+        .max(HERO_LIMITS.url, `${name} cannot exceed ${HERO_LIMITS.url} characters`)
         .refine(
-            (v) => v === "" || v.startsWith("/") || /^https?:\/\//.test(v),
-            "Button link must be a relative path (e.g. /products) or a full URL"
+            (v) => v === "" || (v.startsWith("/") && !v.startsWith("//")) || /^https?:\/\/\S+$/.test(v),
+            `${name} must be a page on this site (e.g. /products) or a full web address starting with https://`
         )
-        .optional(),
-    priority: z
-        .number()
-        .int("Priority must be an integer")
-        .min(0, "Priority must be 0 or greater")
-        .max(1000, "Priority cannot exceed 1000")
-        .optional(),
-});
+        .optional();
+
+const optionalText = (name: string, max: number) =>
+    z.string().trim().max(max, `${name} cannot exceed ${max} characters`).optional();
+
+export const CreateHeroSchema = z
+    .object({
+        label: optionalText("Eyebrow text", HERO_LIMITS.label),
+        title: z
+            .string()
+            .trim()
+            .min(HERO_LIMITS.titleMin, `Headline must be at least ${HERO_LIMITS.titleMin} characters`)
+            .max(HERO_LIMITS.title, `Headline cannot exceed ${HERO_LIMITS.title} characters`),
+        subtitle: z
+            .string()
+            .trim()
+            .min(HERO_LIMITS.subtitleMin, `Supporting text must be at least ${HERO_LIMITS.subtitleMin} characters`)
+            .max(HERO_LIMITS.subtitle, `Supporting text cannot exceed ${HERO_LIMITS.subtitle} characters`),
+        image: HeroImageSchema,
+        buttonLabel: optionalText("Main button text", HERO_LIMITS.buttonLabel),
+        buttonUrl: linkField("Main button link"),
+        secondaryLabel: optionalText("Second link text", HERO_LIMITS.buttonLabel),
+        secondaryUrl: linkField("Second link"),
+        badgeText: optionalText("Badge text", HERO_LIMITS.badgeText),
+        spotlightProductId: z
+            .string()
+            .trim()
+            .refine((v) => v === "" || /^[a-f\d]{24}$/i.test(v), "Choose a valid product to spotlight")
+            .optional(),
+        spotlightLabel: optionalText("Spotlight tag", HERO_LIMITS.spotlightLabel),
+        priority: z
+            .number()
+            .int("Slide position must be a whole number")
+            .min(0, "Slide position must be 0 or greater")
+            .max(1000, "Slide position cannot exceed 1000")
+            .optional(),
+    })
+    .superRefine((dto, ctx) => {
+        // The second link is a pair: text without a link (or a link without text) renders nothing useful.
+        if (dto.secondaryLabel && !dto.secondaryUrl) {
+            ctx.addIssue({ code: "custom", path: ["secondaryUrl"], message: "Add a link for the second link, or clear its text" });
+        }
+        if (dto.secondaryUrl && !dto.secondaryLabel) {
+            ctx.addIssue({ code: "custom", path: ["secondaryLabel"], message: "Add text for the second link, or clear its link" });
+        }
+    });
 
 export type CreateHeroRequestDto = z.infer<typeof CreateHeroSchema>;
 
