@@ -3,6 +3,7 @@
 import AdminGate from "@/modules/auth/components/AdminGate";
 import AdminShell from "./AdminShell";
 import type { SearchableSelectOption } from "./SearchableSelect";
+import type { AdminBreadcrumb } from "./AdminBreadcrumbs";
 
 export default function AdminPageShell({
   title,
@@ -13,6 +14,7 @@ export default function AdminPageShell({
   sortOptions,
   sortValue,
   onSortChange,
+  breadcrumbs,
   children,
 }: {
   title: string;
@@ -26,6 +28,8 @@ export default function AdminPageShell({
   sortOptions?: SearchableSelectOption[];
   sortValue?: string;
   onSortChange?: (v: string) => void;
+  /** Trail above the title for pages below a module's list (e.g. Blog › Edit article) - see AdminBreadcrumbs. */
+  breadcrumbs?: AdminBreadcrumb[];
   children: React.ReactNode;
 }) {
   return (
@@ -39,6 +43,7 @@ export default function AdminPageShell({
         sortOptions={sortOptions}
         sortValue={sortValue}
         onSortChange={onSortChange}
+        breadcrumbs={breadcrumbs}
       >
         {children}
       </AdminShell>

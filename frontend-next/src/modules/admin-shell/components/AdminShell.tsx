@@ -4,6 +4,7 @@ import { useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminTopbar from "./AdminTopbar";
 import type { SearchableSelectOption } from "./SearchableSelect";
+import type { AdminBreadcrumb } from "./AdminBreadcrumbs";
 
 export default function AdminShell({
   title,
@@ -14,6 +15,7 @@ export default function AdminShell({
   sortOptions,
   sortValue,
   onSortChange,
+  breadcrumbs,
   children,
 }: {
   title: string;
@@ -24,6 +26,7 @@ export default function AdminShell({
   sortOptions?: SearchableSelectOption[];
   sortValue?: string;
   onSortChange?: (v: string) => void;
+  breadcrumbs?: AdminBreadcrumb[];
   children: React.ReactNode;
 }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -51,6 +54,7 @@ export default function AdminShell({
             sortOptions={sortOptions}
             sortValue={sortValue}
             onSortChange={onSortChange}
+            breadcrumbs={breadcrumbs}
           />
           {children}
         </div>
