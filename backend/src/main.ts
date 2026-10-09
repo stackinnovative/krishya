@@ -16,6 +16,7 @@ import registerHeroModule from "./modules/hero/hero.module.js";
 import registerBannerModule from "./modules/banner/banner.module.js";
 import registerTestimonialModule from "./modules/testimonial/testimonial.module.js";
 import registerWishlistModule from "./modules/wishlist/wishlist.module.js";
+import registerAboutModule from "./modules/about/about.module.js";
 
 const PORT = env.PORT;
 
@@ -40,6 +41,7 @@ const startServer = async () => {
     registerBannerModule(expressApp);
     registerTestimonialModule(expressApp);
     registerWishlistModule(expressApp);
+    registerAboutModule(expressApp);
 
     expressApp.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);

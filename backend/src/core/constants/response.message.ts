@@ -295,6 +295,11 @@ export const ResponseMessages = {
   TESTIMONIAL_ACTIVATED_SUCCESSFULLY: "Testimonial activated successfully",
   TESTIMONIAL_DEACTIVATED_SUCCESSFULLY: "Testimonial deactivated successfully",
 
+  /* ================= ABOUT ================= */
+  ABOUT_FETCHED_SUCCESSFULLY: "About content fetched successfully",
+  ABOUT_UPDATED: "About content updated successfully",
+  ABOUT_UPDATE_FAILED: "Failed to update about content",
+
   /* ================= SETTINGS ================= */
   SETTINGS_FETCHED_SUCCESSFULLY: "Settings fetched successfully",
   SETTINGS_UPDATED: "Settings updated successfully",

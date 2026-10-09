@@ -12,6 +12,7 @@ import { registerHeroDependencies } from "./hero.container.js";
 import { registerBannerDependencies } from "./banner.container.js";
 import { registerTestimonialDependencies } from "./testimonial.container.js";
 import { registerWishlistDependencies } from "./wishlist.container.js";
+import { registerAboutDependencies } from "./about.container.js";
 
 registerCommonDependencies()
 registerUserDependencies();
@@ -27,6 +28,7 @@ registerHeroDependencies()
 registerBannerDependencies()
 registerTestimonialDependencies()
 registerWishlistDependencies()
+registerAboutDependencies()
 
 
 export { container } from "tsyringe";
