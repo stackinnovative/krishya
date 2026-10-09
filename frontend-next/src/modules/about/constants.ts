@@ -18,12 +18,16 @@ export const ABOUT_LIMITS = {
   quote: 300,
   name: 60,
   role: 80,
+  craftHeading: 80,
+  craftCaption: 60,
+  craftItemsMax: 6,
 } as const;
 
 /** Crop ratios - each matches the box the photo fills on the storefront. */
 export const ABOUT_TEASER_RATIO = 5 / 6;
 export const ABOUT_HEADER_RATIO = 16 / 7;
 export const ABOUT_TRIBUTE_RATIO = 4 / 5;
+export const ABOUT_CRAFT_RATIO = 4 / 5;
 
 /** Bundled photos used until admin uploads their own. */
 export const ABOUT_FALLBACK_IMAGES = {
@@ -73,4 +77,5 @@ export const ABOUT_FALLBACK: AboutView = {
     name: "",
     role: "",
   },
+  craft: { heading: "The traditional way", items: [] },
 };

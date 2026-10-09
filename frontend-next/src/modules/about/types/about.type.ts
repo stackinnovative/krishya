@@ -37,6 +37,12 @@ export type AboutTribute = {
   role: string;
 };
 
+/** One step of the traditional process - a real photo with a short caption. */
+export type AboutCraftItem = { image: AboutImage; caption: string };
+
+/** "The traditional way" photo row on the About page - hidden while it has no items. */
+export type AboutCraft = { heading: string; items: AboutCraftItem[] };
+
 export type AboutView = {
   id: string;
   teaser: AboutTeaser;
@@ -44,6 +50,7 @@ export type AboutView = {
   story: AboutStory;
   stat: AboutStat;
   tribute: AboutTribute;
+  craft: AboutCraft;
 };
 
 export type UpdateAboutPayload = Omit<AboutView, "id">;

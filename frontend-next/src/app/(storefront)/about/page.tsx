@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { CONTAINER, Eyebrow, SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
 import { HeartIcon, MortarIcon, SproutIcon } from "@/modules/storefront-shell/components/icons";
-import { ArticleImage } from "@/modules/storefront-content/components/ArticleCard";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { getAbout } from "@/modules/about/server";
 import { ABOUT_FALLBACK_IMAGES } from "@/modules/about/constants";
@@ -27,16 +26,10 @@ const VALUES = [
   },
 ];
 
-const CRAFT = [
-  { label: "Sorting herbs by hand", tone: "#FAF6EE" },
-  { label: "Slow-cooking in bronze urulis", tone: "#EFE6D8" },
-  { label: "Grinding churnams on stone", tone: "#FAF6EE" },
-];
-
 const H2 = "m-0 font-display text-[clamp(32px,3.4vw,48px)] font-medium leading-[1.1] text-ka-green";
 
 export default async function AboutPage() {
-  const { header, story, stat, tribute } = await getAbout();
+  const { header, story, stat, tribute, craft } = await getAbout();
   const headerPhoto = header.image ? getOptimizedImageUrl(header.image.url, 1600, 700) : ABOUT_FALLBACK_IMAGES.header;
   const hasStat = Boolean(stat.value && stat.label);
 
@@ -140,22 +133,36 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Wave from="#FAF6EE" to="#E8F0E4" shape="b" />
-      <section className="relative isolate overflow-clip bg-ka-mint py-[clamp(56px,7vw,112px)]">
-        <SectionDecor variant="a" />
-        <div className={CONTAINER}>
-          <h2 className={`${H2} mb-[clamp(28px,3.6vw,48px)]`}>The traditional way</h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-[clamp(12px,1.8vw,20px)]">
-            {CRAFT.map((c) => (
-              <div key={c.label} className="flex flex-col gap-2.5">
-                <ArticleImage tone={c.tone} className="aspect-[4/5]" />
-                <span className="text-[14.5px] font-semibold text-ka-green">{c.label}</span>
+      {/* Real photos only - the row stays hidden until the store uploads its own. */}
+      {craft.items.length > 0 && (
+        <>
+          <Wave from="#FAF6EE" to="#E8F0E4" shape="b" />
+          <section className="relative isolate overflow-clip bg-ka-mint py-[clamp(56px,7vw,112px)]">
+            <SectionDecor variant="a" />
+            <div className={CONTAINER}>
+              <h2 className={`${H2} mb-[clamp(28px,3.6vw,48px)] text-balance break-words`}>{craft.heading}</h2>
+              {/* Fixed columns, so one or two photos keep the same size instead of stretching across the row. */}
+              <div className="grid grid-cols-1 gap-[clamp(12px,1.8vw,20px)] xs:grid-cols-2 ka:grid-cols-3">
+                {craft.items.map((item) => (
+                  <figure key={item.image.publicId} className="m-0 flex flex-col gap-2.5">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-ka-sand">
+                      <Image
+                        src={getOptimizedImageUrl(item.image.url, 680, 850)}
+                        alt={item.caption}
+                        fill
+                        sizes="(max-width: 560px) 100vw, (max-width: 820px) 50vw, 420px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <figcaption className="break-words text-[14.5px] font-semibold text-ka-green">{item.caption}</figcaption>
+                  </figure>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <Wave from="#E8F0E4" to="#FAF6EE" />
+            </div>
+          </section>
+          <Wave from="#E8F0E4" to="#FAF6EE" />
+        </>
+      )}
 
       <section className="relative isolate overflow-clip pt-[clamp(40px,5vw,72px)]">
         <SectionDecor variant="b" />

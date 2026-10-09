@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import toast from "react-hot-toast";
-import { ArrowDown, ArrowUp, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowLeft, ArrowRight, ArrowUp, ExternalLink, Trash2 } from "lucide-react";
 import AdminCard from "@/modules/admin-shell/components/AdminCard";
 import AdminAsyncState from "@/modules/admin-shell/components/AdminAsyncState";
 import AdminButton from "@/modules/admin-shell/components/AdminButton";
@@ -16,8 +16,18 @@ import { uploadToCloudinary } from "@/lib/cloudinary";
 import { getApiFieldErrors } from "@/lib/errors";
 import { scrollToFirstError } from "@/shared/scrollToFirstError";
 import { useAbout, useUpdateAbout } from "../hooks/useAbout";
-import { ABOUT_HEADER_RATIO, ABOUT_LIMITS as L, ABOUT_TEASER_RATIO, ABOUT_TRIBUTE_RATIO } from "../constants";
-import { toDraft, toFieldErrors, toPayload, validateAbout, type AboutDraft, type AboutErrors, type ImageSlot } from "../about-form";
+import { ABOUT_CRAFT_RATIO, ABOUT_HEADER_RATIO, ABOUT_LIMITS as L, ABOUT_TEASER_RATIO, ABOUT_TRIBUTE_RATIO } from "../constants";
+import {
+  newCraftItem,
+  toDraft,
+  toFieldErrors,
+  toPayload,
+  validateAbout,
+  type AboutDraft,
+  type AboutErrors,
+  type CraftDraftItem,
+  type ImageSlot,
+} from "../about-form";
 import type { AboutImage } from "../types/about.type";
 
 function Section({ title, description, children }: { title: string; description: string; children: React.ReactNode }) {
@@ -80,6 +90,18 @@ export default function AboutEditor() {
     patch("story", { paragraphs });
   };
 
+  const setCraftItems = (items: CraftDraftItem[]) => {
+    patch("craft", { items });
+  };
+
+  /** Swaps craft photo `i` with its neighbour `i + step`. */
+  const moveCraftItem = (i: number, step: -1 | 1) => {
+    if (!draft) return;
+    const next = [...draft.craft.items];
+    [next[i + step], next[i]] = [next[i]!, next[i + step]!];
+    setCraftItems(next);
+  };
+
   const handleSave = async () => {
     if (!draft) return;
     const found = validateAbout(draft);
@@ -91,18 +113,20 @@ export default function AboutEditor() {
     }
 
     // Upload only the photos that were newly cropped in this session.
+    const upload = async (value: ImageFieldValue | null, name: string): Promise<AboutImage | null> => {
+      if (!isPendingImage(value)) return value;
+      return uploadToCloudinary(new File([value.blob], `about-${name}.jpg`, { type: value.blob.type || "image/jpeg" }));
+    };
     const images: Record<ImageSlot, AboutImage | null> = { teaser: null, header: null, tribute: null };
+    let craftImages: AboutImage[] = [];
     setUploading(true);
     try {
       for (const slot of ["teaser", "header", "tribute"] as const) {
-        const value: ImageFieldValue | null = draft[slot].image;
-        if (isPendingImage(value)) {
-          const file = new File([value.blob], `about-${slot}.jpg`, { type: value.blob.type || "image/jpeg" });
-          images[slot] = await uploadToCloudinary(file);
-        } else {
-          images[slot] = value;
-        }
+        images[slot] = await upload(draft[slot].image, slot);
       }
+      // Validation already made sure every craft item has a photo.
+      const uploaded = await Promise.all(draft.craft.items.map((item, i) => upload(item.image, `craft-${i + 1}`)));
+      craftImages = uploaded.filter((img): img is AboutImage => img !== null);
     } catch {
       toast.error("A photo could not be uploaded. Check your connection and try again.");
       return;
@@ -111,7 +135,7 @@ export default function AboutEditor() {
     }
 
     try {
-      const res = await updateAbout.mutateAsync(toPayload(draft, images));
+      const res = await updateAbout.mutateAsync(toPayload(draft, images, craftImages));
       if (res.data) setDraft(toDraft(res.data));
       setErrors({});
     } catch (err) {
@@ -397,6 +421,109 @@ export default function AboutEditor() {
                 />
               </Section>
             </div>
+          </div>
+
+          <div className="mt-4">
+            <Section
+              title="Craft photos"
+              description={`"The traditional way" row on the About page - real photos of how the products are made, each with a short caption. Hidden until at least one photo is added.`}
+            >
+              <FormField
+                label="Section heading"
+                value={draft.craft.heading}
+                onChange={(v) => patch("craft", { heading: v as string })}
+                placeholder="e.g. The traditional way"
+                maxLength={L.craftHeading}
+                required
+                error={errors["craft.heading"]}
+              />
+              <div className="flex flex-col gap-3" data-invalid={errors["craft.items"] ? "true" : undefined}>
+                {draft.craft.items.length === 0 ? (
+                  <div className="rounded-2xl border border-dashed border-[#dcdcd8] px-4 py-6 text-center text-[12px] text-[#8a8a8e]">
+                    No photos yet - the section stays hidden on the About page. Add 3 for a full row.
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3 xs:grid-cols-2 lg:grid-cols-3">
+                    {draft.craft.items.map((item, i) => (
+                      <div key={item.key} className="rounded-2xl border border-[#ececea] p-3">
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span className="text-[11.5px] font-semibold text-[#8a8a8e]">Photo {i + 1}</span>
+                          <div className="flex gap-1.5">
+                            <button
+                              type="button"
+                              aria-label={`Move photo ${i + 1} earlier`}
+                              title="Move earlier"
+                              style={iconButtonStyle}
+                              disabled={i === 0}
+                              className="disabled:opacity-40"
+                              onClick={() => moveCraftItem(i, -1)}
+                            >
+                              <ArrowLeft size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Move photo ${i + 1} later`}
+                              title="Move later"
+                              style={iconButtonStyle}
+                              disabled={i === draft.craft.items.length - 1}
+                              className="disabled:opacity-40"
+                              onClick={() => moveCraftItem(i, 1)}
+                            >
+                              <ArrowRight size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Remove photo ${i + 1}`}
+                              title="Remove"
+                              style={dangerIconButtonStyle}
+                              onClick={() => setCraftItems(draft.craft.items.filter((x) => x.key !== item.key))}
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-3">
+                          <FormField
+                            label="Photo"
+                            type="image"
+                            value={item.image}
+                            onChange={(v) => setCraftItems(draft.craft.items.map((x) => (x.key === item.key ? { ...x, image: v as ImageFieldValue | null } : x)))}
+                            imageAspectRatio={ABOUT_CRAFT_RATIO}
+                            imageMaxHeight={210}
+                            required
+                            error={errors[`craft.items.${i}.image`]}
+                            hint="Portrait (4:5)."
+                          />
+                          <FormField
+                            label="Caption"
+                            value={item.caption}
+                            onChange={(v) => setCraftItems(draft.craft.items.map((x) => (x.key === item.key ? { ...x, caption: v as string } : x)))}
+                            placeholder="e.g. Slow-cooking in bronze urulis"
+                            maxLength={L.craftCaption}
+                            required
+                            error={errors[`craft.items.${i}.caption`]}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {errors["craft.items"] && <span className="text-[11px] font-medium text-[#d6432f]">{errors["craft.items"]}</span>}
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    style={{ ...blackPillButton, opacity: draft.craft.items.length >= L.craftItemsMax ? 0.5 : 1 }}
+                    disabled={draft.craft.items.length >= L.craftItemsMax}
+                    onClick={() => setCraftItems([...draft.craft.items, newCraftItem()])}
+                  >
+                    + Add photo
+                  </button>
+                  <span className="text-[11.5px] text-[#8a8a8e]">
+                    {draft.craft.items.length}/{L.craftItemsMax} photos
+                  </span>
+                </div>
+              </div>
+            </Section>
           </div>
 
           {/* Sticky so Save is always reachable on a long form, as on Business Settings. */}
