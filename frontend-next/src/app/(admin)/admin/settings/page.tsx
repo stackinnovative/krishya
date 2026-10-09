@@ -7,6 +7,7 @@ import AdminCard from "@/modules/admin-shell/components/AdminCard";
 import AdminAsyncState from "@/modules/admin-shell/components/AdminAsyncState";
 import Skeleton from "@/modules/admin-shell/components/Skeleton";
 import AdminButton from "@/modules/admin-shell/components/AdminButton";
+import Toggle from "@/modules/admin-shell/components/Toggle";
 import FormField, { containsSpecialChars } from "@/modules/admin-shell/components/FormField";
 import { isPendingImage, type ImageFieldValue } from "@/modules/admin-shell/components/ImageDropzone";
 import { tab, whitePillButton } from "@/modules/admin-shell/style-helpers";
@@ -16,14 +17,6 @@ import SocialLinksEditor from "@/modules/settings/components/SocialLinksEditor";
 import { validateSocialUrl } from "@/modules/settings/constants/social-icons";
 import type { SettingsView } from "@/modules/settings/types/settings.type";
 import { uploadToCloudinary } from "@/lib/cloudinary";
-
-function Toggle({ on, onClick }: { on: boolean; onClick: () => void }) {
-  return (
-    <div onClick={onClick} className="relative h-[22px] w-10 flex-none cursor-pointer rounded-full" style={{ background: on ? "#3fbf5f" : "#d9d9d5", transition: "background .2s" }}>
-      <div className="absolute top-0.5 h-[18px] w-[18px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,.2)]" style={{ left: on ? 20 : 2, transition: "left .2s" }} />
-    </div>
-  );
-}
 
 /** A backend that predates a field (e.g. socialLinks) omits it - fill it so the form never reads undefined. */
 const withDefaults = (s: SettingsView): SettingsView => ({ ...s, socialLinks: s.socialLinks ?? [] });
