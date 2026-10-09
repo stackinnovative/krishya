@@ -1,17 +1,15 @@
 import type { Metadata } from "next";
-import { getStoreInfo } from "@/modules/settings/server";
 import Link from "next/link";
 import Image from "next/image";
 import { CONTAINER, Eyebrow, SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
 import { HeartIcon, MortarIcon, SproutIcon } from "@/modules/storefront-shell/components/icons";
-import { ArticleImage } from "@/modules/storefront-content/components/ArticleCard";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { getAbout } from "@/modules/about/server";
+import { ABOUT_FALLBACK_IMAGES } from "@/modules/about/constants";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const { storeName } = await getStoreInfo();
-  return {
-    title: "Our Story",
-    description: `Rooted in Ayurveda, crafted for today - the story of ${storeName} and the House of Cochin Arya Vaidyasala.`,
-  };
+  const about = await getAbout();
+  return { title: about.header.title, description: about.teaser.summary };
 }
 
 const VALUES = [
@@ -28,62 +26,84 @@ const VALUES = [
   },
 ];
 
-const CRAFT = [
-  { label: "Sorting herbs by hand", tone: "#FAF6EE" },
-  { label: "Slow-cooking in bronze urulis", tone: "#EFE6D8" },
-  { label: "Grinding churnams on stone", tone: "#FAF6EE" },
-];
-
 const H2 = "m-0 font-display text-[clamp(32px,3.4vw,48px)] font-medium leading-[1.1] text-ka-green";
 
 export default async function AboutPage() {
-  const { storeName } = await getStoreInfo();
+  const { header, story, stat, tribute, craft } = await getAbout();
+  const headerPhoto = header.image ? getOptimizedImageUrl(header.image.url, 1600, 700) : ABOUT_FALLBACK_IMAGES.header;
+  const hasStat = Boolean(stat.value && stat.label);
+
   return (
     <>
       <section className="relative isolate overflow-clip pb-[clamp(40px,5vw,72px)] pt-[clamp(48px,6vw,96px)]">
         <SectionDecor variant="a" />
         <div className="mx-auto flex max-w-[880px] flex-col items-center gap-[18px] px-[clamp(20px,4vw,56px)] text-center">
-          <Eyebrow centered>Our Story</Eyebrow>
-          <h1 className="m-0 text-balance font-display text-[clamp(42px,5vw,72px)] font-medium leading-[1.04] text-ka-green">Rooted in Ayurveda, crafted for today</h1>
-          <p className="m-0 font-display text-[clamp(20px,1.7vw,24px)] italic text-ka-green">From the House of Cochin Arya Vaidyasala</p>
+          {header.eyebrow && <Eyebrow centered>{header.eyebrow}</Eyebrow>}
+          <h1 className="m-0 text-balance break-words font-display text-[clamp(42px,5vw,72px)] font-medium leading-[1.04] text-ka-green">{header.title}</h1>
+          {header.subtitle && <p className="m-0 text-balance font-display text-[clamp(20px,1.7vw,24px)] italic text-ka-green">{header.subtitle}</p>}
         </div>
         <div className={`${CONTAINER} mt-[clamp(36px,4.4vw,64px)]`}>
           <div className="relative h-[clamp(260px,36vw,520px)] overflow-hidden rounded-xl bg-ka-mint">
-            <Image src="/images/hero-oil-herbs.jpg" alt="Herbal oil, turmeric and sesame prepared for a classical formulation" fill priority sizes="100vw" className="object-cover object-[50%_60%]" />
+            <Image src={headerPhoto} alt={header.title} fill priority sizes="100vw" className={`object-cover ${header.image ? "" : "object-[50%_60%]"}`} />
           </div>
         </div>
       </section>
 
       <section className="relative isolate overflow-clip pb-[clamp(56px,7vw,112px)]">
         <SectionDecor variant="b" />
-        <div className={`${CONTAINER} grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] gap-[clamp(28px,6vw,96px)]`}>
-          <div className="flex flex-col gap-[18px]">
-            <h2 className={H2}>A house of healers</h2>
-            <div className="flex max-w-[360px] items-center gap-5 border-y border-ka-gold/55 py-[18px]">
-              <span className="font-display text-[72px] font-medium leading-[.9] text-ka-gold">75+</span>
-              <span className="text-[15px] font-medium leading-normal text-ka-green">
-                years of Ayurvedic
-                <br />
-                tradition in Kerala
-              </span>
-            </div>
+        <div className={`${CONTAINER} grid grid-cols-[repeat(auto-fit,minmax(min(100%,420px),1fr))] items-start gap-[clamp(28px,6vw,96px)]`}>
+          <div className="flex flex-col gap-[18px] ka:sticky ka:top-[120px]">
+            <h2 className={`${H2} text-balance break-words`}>{story.heading}</h2>
+            {hasStat && (
+              <div className="flex max-w-[360px] items-center gap-5 border-y border-ka-gold/55 py-[18px]">
+                <span className="flex-none font-display text-[72px] font-medium leading-[.9] text-ka-gold">{stat.value}</span>
+                <span className="text-[15px] font-medium leading-normal text-ka-green">{stat.label}</span>
+              </div>
+            )}
           </div>
-          <div className="flex flex-col gap-[18px] text-[16.5px] leading-[1.8] text-[#3F423B]">
-            <p className="m-0 text-pretty">
-              Cochin Arya Vaidyasala began as a small family dispensary in Kochi, where Vaidyas prepared medicines by hand for the people of the neighbourhood. Recipes were
-              learned from the classical texts and passed from teacher to student, together with the patience each preparation needs.
-            </p>
-            <p className="m-0 text-pretty">
-              Over the decades the Vaidyasala grew, but its way of working stayed the same: herbs gathered in their season, oils cooked slowly over a low fire, and every
-              batch checked by experienced hands before it leaves the kitchen.
-            </p>
-            <p className="m-0 text-pretty">
-              {storeName} is our way of sharing these preparations with families across India, with clear information, honest descriptions and the same care our elders put
-              into every bottle.
-            </p>
+          <div className="flex min-w-0 flex-col gap-[18px] text-[16.5px] leading-[1.8] text-[#3F423B]">
+            {story.paragraphs.map((p, i) => (
+              <p key={i} className="m-0 whitespace-pre-line text-pretty break-words">
+                {p}
+              </p>
+            ))}
+            {story.closing && (
+              <p className="m-0 mt-2 whitespace-pre-line border-l-2 border-ka-gold pl-5 font-display text-[clamp(22px,2vw,26px)] italic leading-[1.35] text-ka-gold-deep">
+                {story.closing}
+              </p>
+            )}
           </div>
         </div>
       </section>
+
+      {tribute.image && (
+        <section className="relative isolate overflow-clip pb-[clamp(56px,7vw,112px)]">
+          <SectionDecor variant="c" />
+          <div className={`${CONTAINER} grid grid-cols-[repeat(auto-fit,minmax(min(100%,340px),1fr))] items-center gap-[clamp(32px,6vw,96px)]`}>
+            <div className="relative mx-auto aspect-square w-[min(100%,420px)]">
+              <span aria-hidden="true" className="absolute inset-0 rounded-full border-[1.5px] border-ka-gold/70" />
+              <span aria-hidden="true" className="absolute inset-[3%] rotate-6 rounded-full border border-ka-gold/45" />
+              <div className="absolute inset-[7%] overflow-hidden rounded-full bg-ka-sand">
+                <Image src={getOptimizedImageUrl(tribute.image.url, 800, 1000)} alt={tribute.name || "In loving memory"} fill sizes="(max-width: 820px) 80vw, 400px" className="object-cover object-top" />
+              </div>
+            </div>
+            <figure className="m-0 flex flex-col gap-5">
+              <span aria-hidden="true" className="h-[30px] font-display text-[72px] leading-[.6] text-ka-gold">
+                &ldquo;
+              </span>
+              {tribute.quote && (
+                <blockquote className="m-0 text-balance break-words font-display text-[clamp(28px,3vw,40px)] italic leading-[1.3] text-ka-green">{tribute.quote}</blockquote>
+              )}
+              {(tribute.name || tribute.role) && (
+                <figcaption className="flex flex-col gap-1 border-t border-ka-gold/50 pt-4">
+                  {tribute.name && <span className="text-[16px] font-semibold text-ka-ink">{tribute.name}</span>}
+                  {tribute.role && <span className="text-[14px] text-ka-muted">{tribute.role}</span>}
+                </figcaption>
+              )}
+            </figure>
+          </div>
+        </section>
+      )}
 
       <Wave from="#FAF6EE" to="#1F4D3A" shape="b" />
       <section className="relative isolate overflow-clip bg-ka-green py-[clamp(56px,7vw,104px)]">
@@ -113,22 +133,36 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <Wave from="#FAF6EE" to="#E8F0E4" shape="b" />
-      <section className="relative isolate overflow-clip bg-ka-mint py-[clamp(56px,7vw,112px)]">
-        <SectionDecor variant="a" />
-        <div className={CONTAINER}>
-          <h2 className={`${H2} mb-[clamp(28px,3.6vw,48px)]`}>The traditional way</h2>
-          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-[clamp(12px,1.8vw,20px)]">
-            {CRAFT.map((c) => (
-              <div key={c.label} className="flex flex-col gap-2.5">
-                <ArticleImage tone={c.tone} className="aspect-[4/5]" />
-                <span className="text-[14.5px] font-semibold text-ka-green">{c.label}</span>
+      {/* Real photos only - the row stays hidden until the store uploads its own. */}
+      {craft.items.length > 0 && (
+        <>
+          <Wave from="#FAF6EE" to="#E8F0E4" shape="b" />
+          <section className="relative isolate overflow-clip bg-ka-mint py-[clamp(56px,7vw,112px)]">
+            <SectionDecor variant="a" />
+            <div className={CONTAINER}>
+              <h2 className={`${H2} mb-[clamp(28px,3.6vw,48px)] text-balance break-words`}>{craft.heading}</h2>
+              {/* Fixed columns, so one or two photos keep the same size instead of stretching across the row. */}
+              <div className="grid grid-cols-1 gap-[clamp(12px,1.8vw,20px)] xs:grid-cols-2 ka:grid-cols-3">
+                {craft.items.map((item) => (
+                  <figure key={item.image.publicId} className="m-0 flex flex-col gap-2.5">
+                    <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-ka-sand">
+                      <Image
+                        src={getOptimizedImageUrl(item.image.url, 680, 850)}
+                        alt={item.caption}
+                        fill
+                        sizes="(max-width: 560px) 100vw, (max-width: 820px) 50vw, 420px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <figcaption className="break-words text-[14.5px] font-semibold text-ka-green">{item.caption}</figcaption>
+                  </figure>
+                ))}
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <Wave from="#E8F0E4" to="#FAF6EE" />
+            </div>
+          </section>
+          <Wave from="#E8F0E4" to="#FAF6EE" />
+        </>
+      )}
 
       <section className="relative isolate overflow-clip pt-[clamp(40px,5vw,72px)]">
         <SectionDecor variant="b" />

@@ -54,6 +54,12 @@ export const cartKeys = {
   checkoutItems: ["checkout-items"] as const,
 };
 
+export const aboutKeys = {
+  /** About singleton - read by the admin About tab, the landing-page teaser
+   * and the About page, so one save refreshes all three. */
+  all: ["about"] as const,
+};
+
 export const settingsKeys = {
   /** Single settings singleton - used by both the admin form and every
    * storefront consumer (navbar, footer, maintenance gate, checkout), so an

@@ -11,6 +11,7 @@ import { getOptimizedImageUrl, getDownloadUrl } from "@/lib/cloudinary";
 import { confirmAction } from "@/lib/confirm";
 import { BANNER_ASPECT_RATIO, MAX_BANNERS } from "@/modules/home-content/constants";
 import HeroSlidesPanel from "@/modules/home-content/components/HeroSlidesPanel";
+import AboutEditor from "@/modules/about/components/AboutEditor";
 import {
   useAdminBanners,
   useAdminTestimonials,
@@ -27,6 +28,7 @@ const TABS = [
   { key: "hero", label: "Hero" },
   { key: "banner", label: "Banners" },
   { key: "testimonials", label: "Testimonials" },
+  { key: "about", label: "About" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -55,7 +57,7 @@ export default function HomeManagementPage() {
   const { mutate: deleteTestimonial } = useDeleteTestimonial();
 
   return (
-    <AdminPageShell title="Home Management" subtitle="Hero slideshow, banners and testimonials on the storefront">
+    <AdminPageShell title="Home Management" subtitle="Hero slideshow, banners, testimonials and your About story on the storefront">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex gap-0.5 rounded-full bg-white p-1">
           {TABS.map((t) => (
@@ -70,20 +72,25 @@ export default function HomeManagementPage() {
               {banners?.data?.length ?? 0}/{MAX_BANNERS} banners &mdash; adding a {MAX_BANNERS + 1}th replaces the oldest
             </span>
           )}
-          <button
-            style={blackPillButton}
-            onClick={() => {
-              if (tab_ === "hero") setHeroEditing("new");
-              else if (tab_ === "banner") setBannerEditing("new");
-              else setTestimonialEditing("new");
-            }}
-          >
-            {tab_ === "hero" ? "+ Add Hero Slide" : tab_ === "banner" ? "+ Add Banner" : "+ Add Testimonial"}
-          </button>
+          {/* About is a single record edited in place - nothing to "add". */}
+          {tab_ !== "about" && (
+            <button
+              style={blackPillButton}
+              onClick={() => {
+                if (tab_ === "hero") setHeroEditing("new");
+                else if (tab_ === "banner") setBannerEditing("new");
+                else setTestimonialEditing("new");
+              }}
+            >
+              {tab_ === "hero" ? "+ Add Hero Slide" : tab_ === "banner" ? "+ Add Banner" : "+ Add Testimonial"}
+            </button>
+          )}
         </div>
       </div>
 
       {tab_ === "hero" && <HeroSlidesPanel editing={heroEditing} onEdit={setHeroEditing} />}
+
+      {tab_ === "about" && <AboutEditor />}
 
       {tab_ === "banner" && (
         <div className="flex flex-col gap-3">

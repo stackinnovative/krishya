@@ -1,6 +1,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import ProductCard from "@/modules/products/components/storefront/ProductCard";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { ABOUT_FALLBACK_IMAGES } from "@/modules/about/constants";
+import type { AboutStat, AboutTeaser } from "@/modules/about/types/about.type";
 import type { UserProductListItem } from "@/modules/products/types/storefront-product.type";
 import type { TestimonialView } from "@/modules/home-content/types/home-content.type";
 import { CONTAINER, Eyebrow, LeafDivider, SECTION_TITLE, SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
@@ -92,7 +95,13 @@ export function ProductShelf({
   );
 }
 
-export function HeritageSection({ storeName }: { storeName: string }) {
+/** Short "Our Heritage" teaser from the admin About content - links to the full About page. */
+export function HeritageSection({ teaser, stat }: { teaser: AboutTeaser; stat: AboutStat }) {
+  // Hidden from admin: keep the colour join into the next (mint) section.
+  if (!teaser.showOnHome) return <Wave from={CREAM} to={MINT} shape="b" />;
+
+  const photo = teaser.image ? getOptimizedImageUrl(teaser.image.url, 900, 1080) : ABOUT_FALLBACK_IMAGES.teaser;
+
   return (
     <>
       <Wave from={CREAM} to={SAND} />
@@ -100,27 +109,19 @@ export function HeritageSection({ storeName }: { storeName: string }) {
         <SectionDecor variant="d" />
         <div className={`${CONTAINER} grid grid-cols-[repeat(auto-fit,minmax(min(100%,440px),1fr))] items-center gap-[clamp(32px,6vw,96px)]`}>
           <div className="relative aspect-[5/6] overflow-hidden rounded-xl bg-[#E4EADB]">
-            <Image src="/images/heritage.jpg" alt="Herbal oils prepared the traditional way" fill sizes="(max-width: 960px) 100vw, 50vw" className="object-cover" />
+            <Image src={photo} alt={teaser.title} fill sizes="(max-width: 960px) 100vw, 50vw" className="object-cover" />
           </div>
-          <div className="flex flex-col gap-[22px]">
-            <Eyebrow>Our Heritage</Eyebrow>
-            <h2 className={`${SECTION_TITLE} text-balance`}>A lineage of care from the House of Cochin Arya Vaidyasala</h2>
-            <p className="m-0 text-pretty text-base leading-[1.75] text-ka-body">
-              For generations, the Vaidyas of Cochin Arya Vaidyasala have prepared medicines the way the classical texts describe: herbs gathered in season, oils cooked
-              slowly over a gentle fire, and every batch watched over by experienced hands.
-            </p>
-            <p className="m-0 text-pretty text-base leading-[1.75] text-ka-body">
-              {storeName} brings that same care to homes across India, with honest formulations and clear guidance on how to use them.
-            </p>
-            <div className="flex items-center gap-5 border-y border-ka-gold/55 py-5">
-              <span className="font-display text-[clamp(56px,6vw,84px)] font-medium leading-[.9] text-ka-gold">75+</span>
-              <span className="text-[15px] font-medium leading-normal text-ka-green">
-                years of Ayurvedic
-                <br />
-                tradition in Kerala
-              </span>
-            </div>
-            <ArrowLink href="/about">Read Our Story</ArrowLink>
+          <div className="flex min-w-0 flex-col gap-[22px]">
+            {teaser.eyebrow && <Eyebrow>{teaser.eyebrow}</Eyebrow>}
+            <h2 className={`${SECTION_TITLE} text-balance break-words`}>{teaser.title}</h2>
+            <p className="m-0 whitespace-pre-line text-pretty break-words text-base leading-[1.75] text-ka-body">{teaser.summary}</p>
+            {stat.value && stat.label && (
+              <div className="flex items-center gap-5 border-y border-ka-gold/55 py-5">
+                <span className="flex-none font-display text-[clamp(56px,6vw,84px)] font-medium leading-[.9] text-ka-gold">{stat.value}</span>
+                <span className="max-w-[220px] text-[15px] font-medium leading-normal text-ka-green">{stat.label}</span>
+              </div>
+            )}
+            <ArrowLink href="/about">{teaser.linkLabel}</ArrowLink>
           </div>
         </div>
       </section>

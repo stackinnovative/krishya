@@ -41,6 +41,7 @@
     "lint": "eslint . --max-warnings=0",
     "dev": "tsx watch src/main.ts",
     "build": "tsc && npm run copy-assets",
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "copy-assets": "copyfiles -u 1 src/assets/**/* dist",
     "start": "node dist/main.js",
     "create:secrets": "tsx src/scripts/create-env-secrets.ts",
