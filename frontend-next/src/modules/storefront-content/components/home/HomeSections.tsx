@@ -10,7 +10,7 @@ import { CONTAINER, Eyebrow, LeafDivider, SECTION_TITLE, SectionDecor, Wave } fr
 import { ArrowRightIcon, FlaskIcon, SproutIcon, TruckIcon, UruliIcon } from "@/modules/storefront-shell/components/icons";
 import ArticleCard from "../ArticleCard";
 import FaqAccordion from "../FaqAccordion";
-import { ARTICLES } from "../../constants/articles";
+import type { BlogListItem } from "@/modules/blog/types/blog.type";
 import type { Faq } from "../../constants/faqs";
 import { NeedCircle, type HealthNeed } from "./HomeHero";
 
@@ -190,7 +190,9 @@ export function TestimonialsSection({ testimonials }: { testimonials: Testimonia
   );
 }
 
-export function JournalPreview() {
+/** Latest three articles - hidden until the store publishes its first one. */
+export function JournalPreview({ articles }: { articles: BlogListItem[] }) {
+  if (articles.length === 0) return null;
   return (
     <section className="relative isolate overflow-clip pb-[clamp(56px,7vw,112px)]">
       <SectionDecor variant="c" />
@@ -203,8 +205,8 @@ export function JournalPreview() {
           <ArrowLink href="/blog">Read all articles</ArrowLink>
         </div>
         <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-[clamp(20px,2.4vw,32px)]">
-          {ARTICLES.slice(0, 3).map((a) => (
-            <ArticleCard key={a.slug} article={a} showDate={false} />
+          {articles.map((a) => (
+            <ArticleCard key={a.id} article={a} showDate={false} />
           ))}
         </div>
       </div>

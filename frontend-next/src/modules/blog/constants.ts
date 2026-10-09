@@ -27,3 +27,18 @@ export const BLOG_INLINE_RATIO = 3 / 2;
 
 /** Articles per page on the Journal index (a 3-column grid). */
 export const BLOG_PAGE_SIZE = 9;
+
+/**
+ * The Journal list query. Built in one place so the server prefetch and the
+ * client hook produce the exact same React Query key (keys absent rather than
+ * undefined, or the prefetched page would be refetched).
+ */
+export const blogListQuery = ({ page = 1, limit = BLOG_PAGE_SIZE, category, excludeId }: { page?: number; limit?: number; category?: string; excludeId?: string }) => ({
+  page,
+  limit,
+  ...(category ? { category } : {}),
+  ...(excludeId ? { excludeId } : {}),
+});
+
+/** The home page's "From Our Blog" row. */
+export const HOME_BLOG_QUERY = blogListQuery({ limit: 3 });

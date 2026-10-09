@@ -5,16 +5,14 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { formatCurrency } from "@/lib/format";
-import { useFeaturedProducts } from "@/modules/products/hooks/useStorefrontProducts";
 import { useQuickAddToCart } from "@/modules/cart/hooks/useCart";
 import { showStoreToast } from "@/modules/storefront-shell/components/StoreToast";
 import { LeafIcon } from "@/modules/storefront-shell/components/icons";
+import type { BlogProduct } from "@/modules/blog/types/blog.type";
 
-/** "Mentioned in this article" - two of the store's featured products, each with a one-tap Add. Hidden when the store has none. */
-export function ArticleProducts() {
-  const { data } = useFeaturedProducts();
+/** "From our range" - the products the admin picked for this spot in the article, each with a one-tap Add. */
+export function ArticleProducts({ products }: { products: BlogProduct[] }) {
   const { quickAdd, pendingProductId } = useQuickAddToCart();
-  const products = (data?.data ?? []).slice(0, 2);
   if (products.length === 0) return null;
 
   return (
@@ -32,7 +30,7 @@ export function ArticleProducts() {
             )}
           </Link>
           <span className="flex min-w-0 flex-1 flex-col leading-[1.35]">
-            <Link href={`/products/${p.id}`} className="font-display text-xl font-semibold text-ka-green">
+            <Link href={`/products/${p.id}`} className="break-words font-display text-xl font-semibold text-ka-green">
               {p.name}
             </Link>
             <span className="text-sm font-bold text-ka-gold">{formatCurrency(p.price)}</span>

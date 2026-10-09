@@ -19,6 +19,8 @@ import {
 import WhatsAppCta from "@/modules/storefront-shell/components/WhatsAppCta";
 import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { useAbout } from "@/modules/about/hooks/useAbout";
+import { useBlogList } from "@/modules/blog/hooks/useStorefrontBlogs";
+import { HOME_BLOG_QUERY } from "@/modules/blog/constants";
 import { ABOUT_FALLBACK } from "@/modules/about/constants";
 import { getHomeFaqs } from "@/modules/storefront-content/constants/faqs";
 import { categoryKeys, homeContentKeys } from "@/shared/query-keys";
@@ -39,6 +41,7 @@ export default function HomeContent() {
   const { data: testimonials } = useQuery({ queryKey: homeContentKeys.testimonialsUser, queryFn: getTestimonialUserApi });
   const store = useStoreContact();
   const { data: aboutRes } = useAbout();
+  const { data: journal } = useBlogList(HOME_BLOG_QUERY);
   const about = aboutRes?.data ?? ABOUT_FALLBACK;
 
   // Health needs = the active categories, using a signature category's image where one exists.
@@ -75,7 +78,7 @@ export default function HomeContent() {
       <HeritageSection teaser={about.teaser} stat={about.stat} />
       <ProcessSection />
       <TestimonialsSection testimonials={testimonials?.data ?? []} />
-      <JournalPreview />
+      <JournalPreview articles={journal?.data ?? []} />
       <FaqPreview faqs={getHomeFaqs(store)} />
       <WhatsAppCta />
     </div>
