@@ -9,6 +9,7 @@ export interface IAbout extends Document {
     story: { heading: string; paragraphs: string[]; closing: string };
     stat: { value: string; label: string };
     tribute: { image: IImageDoc; quote: string; name: string; role: string };
+    craft: { heading: string; items: { image: { url: string; publicId: string }; caption: string }[] };
 }
 
 /** A nullable Cloudinary image (null = storefront falls back to its bundled photo). */
@@ -49,6 +50,21 @@ const aboutSchema = new Schema<IAbout>(
             quote: { type: String, trim: true, default: D.tribute.quote },
             name: { type: String, trim: true, default: D.tribute.name },
             role: { type: String, trim: true, default: D.tribute.role },
+        },
+        craft: {
+            heading: { type: String, trim: true, default: D.craft.heading },
+            items: {
+                type: [
+                    new Schema(
+                        {
+                            image: { url: { type: String, required: true }, publicId: { type: String, required: true } },
+                            caption: { type: String, required: true, trim: true },
+                        },
+                        { _id: false }
+                    ),
+                ],
+                default: D.craft.items,
+            },
         },
     },
     {

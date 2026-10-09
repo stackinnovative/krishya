@@ -24,10 +24,22 @@ describe("AboutMapper", () => {
         assert.deepEqual(about.tribute.image, image("t"));
     });
 
+    it("backfills the craft row and drops a stored craft item without a photo", () => {
+        const empty = AboutMapper.toDomain({ _id: "a1" })!;
+        assert.deepEqual(empty.craft, ABOUT_DEFAULTS.craft);
+
+        const about = AboutMapper.toDomain({
+            _id: "a1",
+            craft: { items: [{ image: image("c1"), caption: "Sorting herbs" }, { caption: "No photo" }] },
+        })!;
+        assert.equal(about.craft.heading, ABOUT_DEFAULTS.craft.heading);
+        assert.deepEqual(about.craft.items, [{ image: image("c1"), caption: "Sorting herbs" }]);
+    });
+
     it("round-trips through persistence and view", () => {
         const about = AboutMapper.toDomain({ _id: "a1" })!;
         const view = AboutMapper.toView(about);
         assert.equal(view.id, "a1");
-        assert.deepEqual(AboutMapper.toPersistence(about), { teaser: view.teaser, header: view.header, story: view.story, stat: view.stat, tribute: view.tribute });
+        assert.deepEqual(AboutMapper.toPersistence(about), { teaser: view.teaser, header: view.header, story: view.story, stat: view.stat, tribute: view.tribute, craft: view.craft });
     });
 });

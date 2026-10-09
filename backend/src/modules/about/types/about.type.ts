@@ -24,6 +24,9 @@ export const ABOUT_LIMITS = {
     quote: 300,
     name: 60,
     role: 80,
+    craftHeading: 80,
+    craftCaption: 60,
+    craftItemsMax: 6,
 } as const;
 
 /** Short version on the landing page ("Our Heritage" section) - links to the full About page. */
@@ -64,6 +67,18 @@ export type AboutTribute = {
     role: string;
 };
 
+/** One step of the traditional process - a real photo with a short caption. */
+export type AboutCraftItem = {
+    image: IImage;
+    caption: string;
+};
+
+/** "The traditional way" photo row on the About page - hidden while it has no items. */
+export type AboutCraft = {
+    heading: string;
+    items: AboutCraftItem[];
+};
+
 export type AboutProps = {
     id?: string | null;
     teaser: AboutTeaser;
@@ -71,6 +86,7 @@ export type AboutProps = {
     story: AboutStory;
     stat: AboutStat;
     tribute: AboutTribute;
+    craft: AboutCraft;
 };
 
 export type AboutView = {
@@ -80,4 +96,5 @@ export type AboutView = {
     story: AboutStory;
     stat: AboutStat;
     tribute: AboutTribute;
+    craft: AboutCraft;
 };

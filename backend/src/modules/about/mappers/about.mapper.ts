@@ -13,6 +13,7 @@ export type AboutRecord = {
     story?: { heading?: string; paragraphs?: string[]; closing?: string };
     stat?: { value?: string; label?: string };
     tribute?: Partial<Record<"quote" | "name" | "role", string>> & { image?: StoredImage };
+    craft?: { heading?: string; items?: { image?: StoredImage; caption?: string }[] };
 };
 
 const toImage = (image: StoredImage): IImage | null => (image?.url && image.publicId ? { url: image.url, publicId: image.publicId } : null);
@@ -28,7 +29,7 @@ export class AboutMapper {
         }
 
         const D = ABOUT_DEFAULTS;
-        const { teaser = {}, header = {}, story = {}, stat = {}, tribute = {} } = record;
+        const { teaser = {}, header = {}, story = {}, stat = {}, tribute = {}, craft = {} } = record;
 
         return new About({
             id,
@@ -61,6 +62,14 @@ export class AboutMapper {
                 name: tribute.name ?? D.tribute.name,
                 role: tribute.role ?? D.tribute.role,
             },
+            craft: {
+                heading: craft.heading ?? D.craft.heading,
+                // A stored item missing its photo or caption can't be shown - drop it rather than fail the whole read.
+                items: (craft.items ?? D.craft.items).flatMap((item) => {
+                    const image = toImage(item.image);
+                    return image && item.caption ? [{ image, caption: item.caption }] : [];
+                }),
+            },
         });
     }
 
@@ -71,6 +80,7 @@ export class AboutMapper {
             story: entity.story,
             stat: entity.stat,
             tribute: entity.tribute,
+            craft: entity.craft,
         };
     }
 
@@ -82,6 +92,7 @@ export class AboutMapper {
             story: entity.story,
             stat: entity.stat,
             tribute: entity.tribute,
+            craft: entity.craft,
         };
     }
 }

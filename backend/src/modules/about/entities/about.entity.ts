@@ -6,6 +6,7 @@ import {
     type AboutStory,
     type AboutTeaser,
     type AboutTribute,
+    type AboutCraft,
     type IImage,
 } from "../types/about.type.js";
 
@@ -52,6 +53,11 @@ export const ABOUT_DEFAULTS: Omit<AboutProps, "id"> = {
         name: "",
         role: "",
     },
+    // No stock photos: the row stays hidden until the store uploads its own.
+    craft: {
+        heading: "The traditional way",
+        items: [],
+    },
 };
 
 const fitText = (value: string, field: string, max: number, min = 0): string => {
@@ -73,8 +79,10 @@ const checkImage = (image: IImage | null, field: string): IImage | null => {
 };
 
 /** Every Cloudinary id the content currently references. */
-const imageIds = (props: Pick<AboutProps, "teaser" | "header" | "tribute">): string[] =>
-    [props.teaser.image, props.header.image, props.tribute.image].filter((i): i is IImage => i !== null).map((i) => i.publicId);
+const imageIds = (props: Pick<AboutProps, "teaser" | "header" | "tribute" | "craft">): string[] =>
+    [props.teaser.image, props.header.image, props.tribute.image, ...props.craft.items.map((item) => item.image)]
+        .filter((i): i is IImage => i !== null)
+        .map((i) => i.publicId);
 
 /**
  * About page content is a singleton (one document for the whole store), like
@@ -89,6 +97,7 @@ export class About {
     public readonly story: AboutStory;
     public readonly stat: AboutStat;
     public readonly tribute: AboutTribute;
+    public readonly craft: AboutCraft;
 
     constructor(props: AboutProps) {
         const L = ABOUT_LIMITS;
@@ -131,6 +140,18 @@ export class About {
             quote: fitText(props.tribute.quote, "tribute quote", L.quote),
             name: fitText(props.tribute.name, "tribute name", L.name),
             role: fitText(props.tribute.role, "tribute role", L.role),
+        };
+
+        if (props.craft.items.length > L.craftItemsMax) {
+            throw new Error(`About craft row can have at most ${L.craftItemsMax} photos`);
+        }
+        this.craft = {
+            heading: fitText(props.craft.heading, "craft heading", L.craftHeading, 1),
+            items: props.craft.items.map((item, i) => {
+                const image = checkImage(item.image, `craft photo ${i + 1}`);
+                if (!image) throw new Error(`About craft photo ${i + 1} needs an image`);
+                return { image, caption: fitText(item.caption, `craft caption ${i + 1}`, L.craftCaption, 1) };
+            }),
         };
     }
 

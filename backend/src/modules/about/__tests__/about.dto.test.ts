@@ -63,4 +63,19 @@ describe("UpdateAboutSchema", () => {
         input.header.image = { url: "not-a-url", publicId: "x" };
         assert.equal(errorsOf(input)["header.image.url"], "Valid image URL is required");
     });
+
+    it("checks each craft photo and caption at its own path", () => {
+        const input = aboutInput();
+        input.craft.items = [{ image: image("craft-1"), caption: "  " }];
+        assert.equal(errorsOf(input)["craft.items.0.caption"], "Caption is required");
+
+        const many = aboutInput();
+        many.craft.items = Array.from({ length: 7 }, (_, i) => ({ image: image(`craft-${i}`), caption: "Step" }));
+        assert.match(errorsOf(many)["craft.items"] ?? "", /at most 6/);
+    });
+
+    it("needs a photo on every craft item", () => {
+        const input = { ...aboutInput(), craft: { heading: "The traditional way", items: [{ image: null, caption: "Step" }] } };
+        assert.ok(errorsOf(input)["craft.items.0.image"]);
+    });
 });

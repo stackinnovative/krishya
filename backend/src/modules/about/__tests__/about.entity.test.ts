@@ -49,4 +49,24 @@ describe("About entity", () => {
         const replaced = new About({ id: "a1", ...before }).replacedImageIds(new About({ id: "a1", ...after }));
         assert.deepEqual(replaced.sort(), ["teaser-old", "tribute-removed"]);
     });
+
+    it("keeps craft photos in order and frees the ones removed", () => {
+        const before = aboutInput();
+        before.craft.items = [
+            { image: image("craft-a"), caption: "Sorting herbs" },
+            { image: image("craft-b"), caption: "Slow cooking" },
+        ];
+        const after = aboutInput();
+        after.craft.items = [{ image: image("craft-b"), caption: "  Slow cooking  " }];
+
+        const next = new About({ id: "a1", ...after });
+        assert.deepEqual(next.craft.items, [{ image: image("craft-b"), caption: "Slow cooking" }]);
+        assert.deepEqual(new About({ id: "a1", ...before }).replacedImageIds(next), ["craft-a"]);
+    });
+
+    it("refuses more than 6 craft photos", () => {
+        const input = aboutInput();
+        input.craft.items = Array.from({ length: 7 }, (_, i) => ({ image: image(`c${i}`), caption: "Step" }));
+        assert.throws(() => new About({ id: "a1", ...input }), /at most 6 photos/);
+    });
 });

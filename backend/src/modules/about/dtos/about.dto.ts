@@ -54,6 +54,17 @@ export const UpdateAboutSchema = z.object({
         name: text("Name", L.name),
         role: text("Role", L.role),
     }),
+    craft: z.object({
+        heading: text("Section heading", L.craftHeading, 1),
+        items: z
+            .array(
+                z.object({
+                    image: AboutImageSchema.unwrap(),
+                    caption: text("Caption", L.craftCaption, 1),
+                })
+            )
+            .max(L.craftItemsMax, `You can add at most ${L.craftItemsMax} photos`),
+    }),
 });
 
 export type UpdateAboutRequestDto = z.infer<typeof UpdateAboutSchema>;
