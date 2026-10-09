@@ -36,6 +36,15 @@ const CATEGORY_OPTIONS = [{ label: "All categories", value: "" }, ...BLOG_CATEGO
 const isScheduled = (b: AdminBlogListItem) => b.status === "published" && !!b.publishedAt && new Date(b.publishedAt).getTime() > Date.now();
 const statusLabel = (b: AdminBlogListItem) => (isScheduled(b) ? "Scheduled" : b.status === "published" ? "Published" : "Draft");
 
+/** Gold "Featured" chip - the article in the big card at the top of the Journal page. */
+function FeaturedChip() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#fbf3df] px-2.5 py-1 text-[11.5px] font-semibold text-[#a77b1f]">
+      <Star size={11} className="fill-[#c69a3a] text-[#c69a3a]" aria-hidden="true" /> Featured
+    </span>
+  );
+}
+
 function CoverThumb({ blog, size }: { blog: AdminBlogListItem; size: number }) {
   const height = Math.round(size / 1.5);
   return (
@@ -78,16 +87,13 @@ export default function BlogAdminPage() {
     {
       key: "article",
       header: "Article",
-      width: 330,
+      width: 300,
       render: (b) => (
         <Link href={`/admin/blog/${b.id}`} className="flex items-center gap-2.5">
           <CoverThumb blog={b} size={54} />
           <div className="min-w-0 flex-1">
             <TruncatedText text={b.title} className="text-[13px] font-semibold" />
-            <div className="flex items-center gap-1 truncate text-[11px] text-[#8a8a8e]">
-              {b.isFeatured && <Star size={11} className="flex-none fill-[#c69a3a] text-[#c69a3a]" aria-label="Featured" />}
-              <span className="truncate">/blog/{b.slug}</span>
-            </div>
+            <div className="truncate text-[11px] text-[#8a8a8e]">/blog/{b.slug}</div>
           </div>
         </Link>
       ),
@@ -98,6 +104,12 @@ export default function BlogAdminPage() {
       header: "Status",
       width: 110,
       render: (b) => <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />,
+    },
+    {
+      key: "featured",
+      header: "Featured",
+      width: 110,
+      render: (b) => (b.isFeatured ? <FeaturedChip /> : <span className="text-[12.5px] text-[#b4b4b0]">—</span>),
     },
     {
       key: "date",
@@ -173,7 +185,7 @@ export default function BlogAdminPage() {
             columns={columns}
             rows={blogs}
             getRowKey={(b) => b.id}
-            minWidth={800}
+            minWidth={880}
             compact
             isLoading={isLoading}
             isError={isError}
@@ -188,6 +200,11 @@ export default function BlogAdminPage() {
                     <div className="min-w-0 flex-1">
                       <div className="line-clamp-2 text-[13.5px] font-semibold leading-snug">{b.title}</div>
                       <div className="truncate text-[11.5px] text-[#8a8a8e]">{b.category}</div>
+                      {b.isFeatured && (
+                        <div className="mt-1.5">
+                          <FeaturedChip />
+                        </div>
+                      )}
                     </div>
                   </Link>
                   <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />
