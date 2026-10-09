@@ -9,18 +9,16 @@ import FormModal, { type FormFieldDef } from "@/modules/admin-shell/components/F
 import { blackPillButton, dangerPillButton, softPillButton, whitePillButton, tab } from "@/modules/admin-shell/style-helpers";
 import { getOptimizedImageUrl, getDownloadUrl } from "@/lib/cloudinary";
 import { confirmAction } from "@/lib/confirm";
-import { HERO_ASPECT_RATIO, BANNER_ASPECT_RATIO, MAX_BANNERS } from "@/modules/home-content/constants";
+import { BANNER_ASPECT_RATIO, MAX_BANNERS } from "@/modules/home-content/constants";
+import HeroSlidesPanel from "@/modules/home-content/components/HeroSlidesPanel";
 import {
   useAdminBanners,
-  useAdminHeroes,
   useAdminTestimonials,
   useDeleteBanner,
   useDeleteTestimonial,
   useSaveBanner,
-  useSaveHero,
   useSaveTestimonial,
   useToggleBanner,
-  useToggleHero,
   useToggleTestimonial,
 } from "@/modules/home-content/hooks/useHomeContent";
 import type { BannerView, HeroView, TestimonialView } from "@/modules/home-content/types/home-content.type";
@@ -32,13 +30,6 @@ const TABS = [
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
-const HERO_FIELDS: FormFieldDef[] = [
-  { key: "title", label: "Headline", type: "text", placeholder: "Headline", required: true },
-  { key: "subtitle", label: "Subheadline", type: "area", placeholder: "Supporting line", required: true, minLength: 5 },
-  { key: "buttonLabel", label: "Button label", type: "text", placeholder: "Shop now" },
-  { key: "buttonUrl", label: "Button link", type: "url", placeholder: "/collections/all" },
-  { key: "image", label: "Image", type: "image", required: true, imageAspectRatio: HERO_ASPECT_RATIO },
-];
 const BANNER_FIELDS: FormFieldDef[] = [
   { key: "image", label: "Image", type: "image", required: true, imageAspectRatio: BANNER_ASPECT_RATIO },
   { key: "buttonUrl", label: "Link (optional)", type: "url", placeholder: "/collections/all" },
@@ -54,11 +45,8 @@ export default function HomeManagementPage() {
   const [bannerEditing, setBannerEditing] = useState<BannerView | "new" | null>(null);
   const [testimonialEditing, setTestimonialEditing] = useState<TestimonialView | "new" | null>(null);
 
-  const { data: heroes } = useAdminHeroes();
   const { data: banners } = useAdminBanners();
   const { data: testimonials } = useAdminTestimonials();
-  const { mutateAsync: saveHero } = useSaveHero();
-  const { mutate: toggleHero } = useToggleHero();
   const { mutateAsync: saveBanner } = useSaveBanner();
   const { mutate: toggleBanner } = useToggleBanner();
   const { mutate: deleteBanner } = useDeleteBanner();
@@ -67,7 +55,7 @@ export default function HomeManagementPage() {
   const { mutate: deleteTestimonial } = useDeleteTestimonial();
 
   return (
-    <AdminPageShell title="Home Management" subtitle="Hero slides, banners and testimonials on the storefront">
+    <AdminPageShell title="Home Management" subtitle="Hero slideshow, banners and testimonials on the storefront">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div className="inline-flex gap-0.5 rounded-full bg-white p-1">
           {TABS.map((t) => (
@@ -95,37 +83,7 @@ export default function HomeManagementPage() {
         </div>
       </div>
 
-      {tab_ === "hero" && (
-        <div className="grid grid-cols-1 gap-4 om:grid-cols-2">
-          {(heroes?.data ?? []).map((h) => (
-            <AdminCard key={h.id}>
-              <div className="relative mb-3.5 w-full overflow-hidden rounded-[14px] bg-[#f1f1ef]" style={{ aspectRatio: HERO_ASPECT_RATIO }}>
-                {h.image?.url && (
-                  <Image
-                    src={getOptimizedImageUrl(h.image.url, 600, Math.round(600 / HERO_ASPECT_RATIO))}
-                    alt={h.title}
-                    fill
-                    sizes="600px"
-                    className="object-cover"
-                  />
-                )}
-              </div>
-              <div className="text-[15px] font-bold">{h.title}</div>
-              <div className="mt-1 text-[12.5px] text-[#555]">{h.subtitle}</div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-2.5">
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={h.isActive ? "Active" : "Draft"} onClick={() => toggleHero({ id: h.id, isActive: h.isActive })} />
-                  {h.buttonLabel && <span className="text-[11.5px] text-[#8a8a8e]">CTA: {h.buttonLabel}</span>}
-                </div>
-                <button style={softPillButton} onClick={() => setHeroEditing(h)}>
-                  Edit
-                </button>
-              </div>
-            </AdminCard>
-          ))}
-          {!heroes?.data?.length && <div className="col-span-full py-8 text-center text-[13px] text-[#8a8a8e]">No hero slides yet.</div>}
-        </div>
-      )}
+      {tab_ === "hero" && <HeroSlidesPanel editing={heroEditing} onEdit={setHeroEditing} />}
 
       {tab_ === "banner" && (
         <div className="flex flex-col gap-3">
@@ -189,28 +147,6 @@ export default function HomeManagementPage() {
           ))}
           {!testimonials?.data?.length && <div className="col-span-full py-8 text-center text-[13px] text-[#8a8a8e]">No testimonials yet.</div>}
         </div>
-      )}
-
-      {heroEditing && (
-        <FormModal
-          title={heroEditing === "new" ? "Add Hero Slide" : "Edit Hero"}
-          fields={HERO_FIELDS}
-          initialValues={
-            heroEditing === "new"
-              ? { title: "", subtitle: "", buttonLabel: "Shop now", buttonUrl: "/", image: null }
-              : { title: heroEditing.title, subtitle: heroEditing.subtitle, buttonLabel: heroEditing.buttonLabel ?? "", buttonUrl: heroEditing.buttonUrl ?? "", image: heroEditing.image }
-          }
-          onSave={async (v) => {
-            const image = v.image as { url: string; publicId: string } | null;
-            if (!image) return;
-            await saveHero({
-              id: heroEditing === "new" ? null : heroEditing.id,
-              data: { title: String(v.title ?? ""), subtitle: String(v.subtitle ?? ""), buttonLabel: String(v.buttonLabel ?? ""), buttonUrl: String(v.buttonUrl ?? ""), image },
-            });
-            setHeroEditing(null);
-          }}
-          onClose={() => setHeroEditing(null)}
-        />
       )}
 
       {bannerEditing && (

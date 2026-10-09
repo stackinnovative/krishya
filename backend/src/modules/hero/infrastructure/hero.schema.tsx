@@ -10,6 +10,11 @@ export interface IHero extends Document {
     };
     buttonLabel?: string;
     buttonUrl?: string;
+    secondaryLabel?: string;
+    secondaryUrl?: string;
+    badgeText?: string;
+    spotlightProductId?: string;
+    spotlightLabel?: string;
     priority?: number;
     isActive: boolean;
 }
@@ -51,6 +56,11 @@ const heroSchema = new Schema<IHero>(
             trim: true,
             default: "",
         },
+        secondaryLabel: { type: String, trim: true, default: "" },
+        secondaryUrl: { type: String, trim: true, default: "" },
+        badgeText: { type: String, trim: true, default: "" },
+        spotlightProductId: { type: String, trim: true, default: "" },
+        spotlightLabel: { type: String, trim: true, default: "" },
         priority: {
             type: Number,
             default: 0,

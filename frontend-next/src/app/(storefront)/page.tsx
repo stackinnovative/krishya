@@ -1,5 +1,5 @@
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
-import { getAllProductsForUserApi, getFeaturedProductsApi } from "@/modules/products/api/storefront-product.api";
+import { getAllProductsForUserApi, getFeaturedProductsApi, getProductByIdForUserApi } from "@/modules/products/api/storefront-product.api";
 import { getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/api/home-content.api";
 import { getActiveCategoriesApi, getSignatureCategoriesApi } from "@/modules/categories/api/category.api";
 import { categoryKeys, homeContentKeys, productKeys } from "@/shared/query-keys";
@@ -14,8 +14,19 @@ export default async function LandingPage() {
   const queryClient = new QueryClient();
   const newestFilters = { search: "", sort: "newest" };
 
+  // Hero slides, then the product each one spotlights - so the slideshow and
+  // its product cards are in the first HTML instead of popping in after load.
+  const prefetchHeroes = async () => {
+    await queryClient.prefetchQuery({ queryKey: homeContentKeys.heroUser, queryFn: getHeroUserApi });
+    const heroes = queryClient.getQueryData<Awaited<ReturnType<typeof getHeroUserApi>>>(homeContentKeys.heroUser)?.data ?? [];
+    const spotlightIds = [...new Set(heroes.map((h) => h.spotlightProductId).filter((id): id is string => Boolean(id)))];
+    await Promise.all(
+      spotlightIds.map((id) => queryClient.prefetchQuery({ queryKey: [...productKeys.userDetails, id], queryFn: () => getProductByIdForUserApi(id) })),
+    );
+  };
+
   await Promise.all([
-    queryClient.prefetchQuery({ queryKey: homeContentKeys.heroUser, queryFn: getHeroUserApi }),
+    prefetchHeroes(),
     queryClient.prefetchQuery({ queryKey: productKeys.featured, queryFn: getFeaturedProductsApi }),
     queryClient.prefetchQuery({ queryKey: categoryKeys.active, queryFn: getActiveCategoriesApi }),
     queryClient.prefetchQuery({ queryKey: categoryKeys.signature, queryFn: getSignatureCategoriesApi }),

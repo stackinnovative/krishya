@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import * as api from "../api/home-content.api";
-import { getApiErrorMessage } from "@/lib/errors";
+import { getApiErrorMessage, getApiFieldErrors } from "@/lib/errors";
 import type { CreateBannerPayload, CreateHeroPayload, CreateTestimonialPayload } from "../types/home-content.type";
 import { homeContentKeys } from "@/shared/query-keys";
 
@@ -26,15 +26,17 @@ export const useSaveHero = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string | null; data: CreateHeroPayload }) => (id ? api.editHeroApi(id, data) : api.createHeroApi(data)),
-    onSuccess: (_r, v) => { toast.success(v.id ? "Hero updated" : "Hero added"); invalidateHeroViews(qc); },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Could not save the hero slide.")),
+    onSuccess: (_r, v) => { toast.success(v.id ? "Slide updated" : "Slide added"); invalidateHeroViews(qc); },
+    // Field-level validation errors are shown under the inputs by FormModal - only toast the rest.
+    onError: (err) => !getApiFieldErrors(err) && toast.error(getApiErrorMessage(err, "Could not save the hero slide.")),
   });
 };
 export const useToggleHero = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => (isActive ? api.blockHeroApi(id) : api.unblockHeroApi(id)),
-    onSuccess: () => invalidateHeroViews(qc),
+    onSuccess: (_r, v) => { toast.success(v.isActive ? "Slide moved to drafts" : "Slide is live"); invalidateHeroViews(qc); },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Could not update the slide.")),
   });
 };
 
@@ -43,7 +45,7 @@ export const useSaveBanner = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string | null; data: CreateBannerPayload }) => (id ? api.editBannerApi(id, data) : api.createBannerApi(data)),
     onSuccess: (_r, v) => { toast.success(v.id ? "Banner updated" : "Banner added"); invalidateBannerViews(qc); },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Could not save the banner.")),
+    onError: (err) => !getApiFieldErrors(err) && toast.error(getApiErrorMessage(err, "Could not save the banner.")),
   });
 };
 export const useToggleBanner = () => {
@@ -68,7 +70,7 @@ export const useSaveTestimonial = () => {
     mutationFn: ({ id, data }: { id: string | null; data: CreateTestimonialPayload }) =>
       id ? api.editTestimonialApi(id, data) : api.createTestimonialApi(data),
     onSuccess: (_r, v) => { toast.success(v.id ? "Testimonial updated" : "Testimonial added"); invalidateTestimonialViews(qc); },
-    onError: (err) => toast.error(getApiErrorMessage(err, "Could not save the testimonial.")),
+    onError: (err) => !getApiFieldErrors(err) && toast.error(getApiErrorMessage(err, "Could not save the testimonial.")),
   });
 };
 export const useToggleTestimonial = () => {

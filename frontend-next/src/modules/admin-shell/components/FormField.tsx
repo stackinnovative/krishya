@@ -40,6 +40,8 @@ export interface FormFieldProps {
   imageAspectRatio?: number;
   disabled?: boolean;
   autoComplete?: string;
+  /** Short helper text under the control (hidden while an error is shown) - say what the field does or where it appears. */
+  hint?: string;
 }
 
 /** Letters and combining marks (any language - incl. Devanagari/Tamil/Arabic
@@ -93,6 +95,7 @@ export default function FormField({
   imageAspectRatio,
   disabled,
   autoComplete,
+  hint,
 }: FormFieldProps) {
   const hasError = !!error;
   const controlStyle: CSSProperties = hasError ? { ...baseControlStyle, ...errorControlStyle } : baseControlStyle;
@@ -159,11 +162,13 @@ export default function FormField({
         />
       )}
 
-      {hasError && (
+      {hasError ? (
         <span className="flex items-center gap-1 text-[11px] font-medium" style={{ color: "#d6432f" }}>
           <AlertCircle size={12} strokeWidth={2.4} />
           {error}
         </span>
+      ) : (
+        hint && <span className="text-[11px] font-normal leading-snug text-[#8a8a8e]">{hint}</span>
       )}
     </label>
   );

@@ -36,7 +36,7 @@ export class EditHeroUseCase implements IEditHeroUseCase {
             const existing = await this._heroRepository.findByPriority(dto.priority, id);
             if (existing) {
                 throw new CustomError(
-                    `Hero with priority ${dto.priority} already exists`,
+                    `Slide position ${dto.priority} is already used by another slide - choose a different position`,
                     HttpStatusCode.BAD_REQUEST
                 );
             }
@@ -49,6 +49,11 @@ export class EditHeroUseCase implements IEditHeroUseCase {
             image: dto.image,
             buttonLabel: dto.buttonLabel,
             buttonUrl: dto.buttonUrl,
+            secondaryLabel: dto.secondaryLabel,
+            secondaryUrl: dto.secondaryUrl,
+            badgeText: dto.badgeText,
+            spotlightProductId: dto.spotlightProductId,
+            spotlightLabel: dto.spotlightLabel,
             priority: dto.priority,
         });
 
