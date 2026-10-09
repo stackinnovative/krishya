@@ -60,6 +60,14 @@ export const aboutKeys = {
   all: ["about"] as const,
 };
 
+export const blogKeys = {
+  adminList: ["admin-blogs"] as const,
+  adminDetails: ["admin-blog-details"] as const,
+  /** Journal index pages and the home "From Our Blog" row. */
+  userList: ["user-blogs"] as const,
+  featured: ["featured-blog"] as const,
+};
+
 export const settingsKeys = {
   /** Single settings singleton - used by both the admin form and every
    * storefront consumer (navbar, footer, maintenance gate, checkout), so an

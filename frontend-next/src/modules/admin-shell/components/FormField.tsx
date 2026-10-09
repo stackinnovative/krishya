@@ -12,6 +12,7 @@ export type FormFieldType =
   | "tel"
   | "password"
   | "url"
+  | "date"
   | "area"
   | "select"
   | "searchable-select"

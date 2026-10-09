@@ -18,6 +18,9 @@ export const getApiErrorMessage = (err: unknown, fallback: string): string => {
 };
 
 
+/** HTTP status of a failed API call (e.g. 409 for a duplicate), or null for a network failure. */
+export const getApiStatus = (err: unknown): number | null => (isAxiosError(err) ? (err.response?.status ?? null) : null);
+
 /** The backend's per-field validation messages ({ errors: { field: msg } }),
  * or null when the failure isn't a field-level one (network, 500, a plain
  * message). Nested paths like "image.url" are kept as-is. */
