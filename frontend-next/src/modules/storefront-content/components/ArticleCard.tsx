@@ -48,6 +48,31 @@ export const articleMeta = (article: BlogListItem, showDate = true) => {
   return showDate && article.publishedAt ? `${formatDate(article.publishedAt)} · ${read}` : read;
 };
 
+/**
+ * Side-by-side card for a lone article (e.g. the home row before a second one
+ * is published) - a full-width stacked card would blow its photo up to the
+ * whole container. Stacks like a normal card on small screens.
+ */
+export function ArticleRow({ article }: { article: BlogListItem }) {
+  return (
+    <Link
+      href={`/blog/${article.slug}`}
+      className="group grid items-center gap-[clamp(18px,3vw,44px)] rounded-2xl bg-ka-sand p-[clamp(12px,1.4vw,18px)] text-left transition-opacity hover:opacity-[.92] sm:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] ka:grid-cols-[minmax(0,440px)_minmax(0,1fr)]"
+    >
+      <ArticleCover image={article.coverImage} alt="" sizes="(max-width: 640px) 100vw, 440px" />
+      <span className="flex min-w-0 flex-col gap-3 px-1 pb-2 sm:p-[clamp(4px,1.2vw,16px)]">
+        <span className="self-start rounded-full bg-ka-cream px-2.5 py-[5px] text-[11px] font-semibold uppercase tracking-[.14em] text-ka-green">{article.category}</span>
+        <span className="text-balance break-words font-display text-[clamp(25px,2.4vw,34px)] font-medium leading-[1.12] text-ka-green">{article.title}</span>
+        <span className="line-clamp-3 break-words text-[15px] leading-[1.65] text-ka-body">{article.excerpt}</span>
+        <span className="flex flex-wrap items-center justify-between gap-3">
+          <span className="text-[13px] text-ka-muted">{articleMeta(article)}</span>
+          <span className="text-[14px] font-semibold text-ka-green underline-offset-4 group-hover:underline">Read article →</span>
+        </span>
+      </span>
+    </Link>
+  );
+}
+
 /** Journal card: cover photo, category pill, serif title and date / read time. */
 export default function ArticleCard({
   article,
