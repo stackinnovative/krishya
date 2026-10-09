@@ -7,7 +7,8 @@ const SWIPE_PX = 40;
 /**
  * Index + controls for the home hero slideshow.
  * - Auto-advances every `intervalMs` while more than one slide exists.
- * - Pauses while the hero is hovered or has keyboard focus, while the tab is
+ * - Pauses while a mouse hovers the hero or it has keyboard focus (never on
+ *   touch - a tap must not freeze it), while the tab is
  *   hidden, and entirely for visitors who ask for reduced motion.
  * - Any manual change (dot, swipe) restarts the timer, so a slide the
  *   visitor picked never flips away a moment later.
@@ -56,9 +57,20 @@ export function useHeroSlideshow(count: number, intervalMs: number) {
 
   /** Spread onto the hero wrapper: hover/focus pause + touch swipe. */
   const bind = {
-    onMouseEnter: () => setHovered(true),
-    onMouseLeave: () => setHovered(false),
-    onFocus: () => setFocused(true),
+    // Pointer (not mouse) events so a touch can be told apart: a finger tap
+    // fires a fake mouseenter with no mouseleave, which would pause the
+    // slideshow for good on phones. Only a real mouse hover pauses it.
+    onPointerEnter: (e: React.PointerEvent) => {
+      if (e.pointerType === "mouse") setHovered(true);
+    },
+    onPointerLeave: (e: React.PointerEvent) => {
+      if (e.pointerType === "mouse") setHovered(false);
+    },
+    // Keyboard focus only - a tapped dot keeps focus on touch devices, which
+    // must not freeze the slideshow either.
+    onFocus: (e: React.FocusEvent) => {
+      if (e.target instanceof Element && e.target.matches(":focus-visible")) setFocused(true);
+    },
     onBlur: (e: React.FocusEvent) => {
       if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocused(false);
     },
