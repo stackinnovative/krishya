@@ -16,3 +16,13 @@ export const getApiErrorMessage = (err: unknown, fallback: string): string => {
   }
   return fallback;
 };
+
+
+/** The backend's per-field validation messages ({ errors: { field: msg } }),
+ * or null when the failure isn't a field-level one (network, 500, a plain
+ * message). Nested paths like "image.url" are kept as-is. */
+export const getApiFieldErrors = (err: unknown): Record<string, string> | null => {
+  if (!isAxiosError<ValidationErrorBody>(err)) return null;
+  const errors = err.response?.data?.errors;
+  return errors && typeof errors === "object" && Object.keys(errors).length > 0 ? errors : null;
+};

@@ -11,6 +11,7 @@ import { uploadToCloudinary } from "@/lib/cloudinary";
 import { ModalPortal } from "@/shared/ui/modal/ModalPortal";
 import { useModalShell } from "@/shared/ui/modal/useModalShell";
 import { scrollToFirstError } from "@/shared/scrollToFirstError";
+import { getApiFieldErrors } from "@/lib/errors";
 
 export type FormFieldDef = (
   | { type: "text" | "number" | "email" | "tel" | "url" | "password"; placeholder?: string; minLength?: number; maxLength?: number }
@@ -143,6 +144,27 @@ export default function FormModal({
         return;
       }
       await onSave(resolved);
+    } catch (err) {
+      // The backend's own validation ({ errors: { field: msg } }) goes under
+      // the matching input, same as client-side errors; the modal stays open
+      // so nothing typed is lost. "image.url" -> the "image" field, etc.
+      const apiErrors = getApiFieldErrors(err);
+      if (apiErrors) {
+        const fieldKeys = new Set(fields.map((f) => f.key));
+        const inline: Record<string, string> = {};
+        const unmatched: string[] = [];
+        for (const [path, message] of Object.entries(apiErrors)) {
+          const key = path.split(".")[0] ?? path;
+          if (fieldKeys.has(key)) inline[key] ??= message;
+          else unmatched.push(message);
+        }
+        if (Object.keys(inline).length > 0) {
+          setErrors((prev) => ({ ...prev, ...inline }));
+          scrollToFirstError();
+        }
+        if (unmatched[0]) toast.error(unmatched[0]);
+      }
+      // Anything else (network, 500) was already reported by the save hook's onError toast.
     } finally {
       setSaving(false);
     }
