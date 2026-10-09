@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import { getApiErrorMessage, getApiFieldErrors, getApiStatus } from "@/lib/errors";
+import { formatDate } from "@/lib/format";
 import { createBlogApi, deleteBlogApi, editBlogApi, getAdminBlogApi, getAdminBlogsApi, publishBlogApi, unpublishBlogApi } from "../api/blog.api";
 import type { BlogStatus, SaveBlogPayload } from "../types/blog.type";
 import { blogKeys } from "@/shared/query-keys";
@@ -28,7 +29,11 @@ export const useSaveBlog = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: string | null; data: SaveBlogPayload }) => (id ? editBlogApi(id, data) : createBlogApi(data)),
     onSuccess: (res, vars) => {
-      toast.success(vars.data.status === "published" ? "Article saved and live" : "Draft saved");
+      const publishedAt = res.data?.publishedAt;
+      const scheduled = vars.data.status === "published" && !!publishedAt && new Date(publishedAt).getTime() > Date.now();
+      toast.success(
+        vars.data.status === "draft" ? "Draft saved" : scheduled ? `Article scheduled for ${formatDate(publishedAt)}` : "Article saved and live",
+      );
       if (res.data) queryClient.setQueryData([...blogKeys.adminDetails, res.data.id], res);
       invalidateAllBlogViews(queryClient);
     },

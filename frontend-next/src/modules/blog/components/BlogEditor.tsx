@@ -130,10 +130,10 @@ export default function BlogEditor({ blogId }: { blogId: string | null }) {
     }
 
     try {
-      const res = await saveBlog.mutateAsync({ id: blogId, data: toPayload(draft, status, images, original) });
+      await saveBlog.mutateAsync({ id: blogId, data: toPayload(draft, status, images, original) });
       setErrors({});
-      if (!blogId && res.data) router.replace(`/admin/blog/${res.data.id}`);
-      else if (res.data) setDraft(toDraft(res.data));
+      // Back to the list after any save - draft, scheduled or live.
+      router.push("/admin/blog");
     } catch (err) {
       const apiErrors = getApiFieldErrors(err);
       if (apiErrors) setErrors(toFieldErrors(apiErrors));
