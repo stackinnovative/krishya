@@ -10,6 +10,7 @@ import { CONTAINER, Eyebrow, LeafDivider, SECTION_TITLE, SectionDecor, Wave } fr
 import { ArrowRightIcon, FlaskIcon, LeafIcon, SproutIcon, TruckIcon, UruliIcon } from "@/modules/storefront-shell/components/icons";
 import ArticleCard, { ArticleRow } from "../ArticleCard";
 import FaqAccordion from "../FaqAccordion";
+import TestimonialCarousel from "./TestimonialCarousel";
 import type { BlogListItem } from "@/modules/blog/types/blog.type";
 import type { FaqAccordionItem } from "../FaqAccordion";
 import { NeedCircle, type HealthNeed } from "./HomeHero";
@@ -174,17 +175,7 @@ export function TestimonialsSection({ testimonials }: { testimonials: Testimonia
           <Eyebrow centered>Kind words</Eyebrow>
           <h2 className={SECTION_TITLE}>From our customers</h2>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,260px),1fr))] gap-[clamp(16px,2vw,24px)]">
-          {testimonials.slice(0, 4).map((t) => (
-            <figure key={t.id} className="m-0 flex flex-col gap-[18px] rounded-xl bg-ka-sand px-[26px] py-7">
-              <span aria-hidden="true" className="h-[22px] font-display text-[56px] leading-[.6] text-ka-gold">
-                &ldquo;
-              </span>
-              <blockquote className="m-0 flex-1 text-pretty font-display text-[21px] italic leading-[1.4] text-ka-green">{t.comment}</blockquote>
-              <figcaption className="border-t border-ka-gold/50 pt-4 text-[14.5px] font-semibold text-ka-ink">{t.author}</figcaption>
-            </figure>
-          ))}
-        </div>
+        <TestimonialCarousel testimonials={testimonials} />
       </div>
     </section>
   );
