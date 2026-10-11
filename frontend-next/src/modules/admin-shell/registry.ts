@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   TrendingUp,
   Home,
+  HelpCircle,
   Newspaper,
   Settings,
   Users,
@@ -32,6 +33,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { key: "revenue", label: "Revenue", href: "/admin/revenue", icon: TrendingUp },
   { key: "home", label: "Home Management", href: "/admin/home", icon: Home },
   { key: "blog", label: "Blog", href: "/admin/blog", icon: Newspaper },
+  { key: "faq", label: "FAQ", href: "/admin/faq", icon: HelpCircle },
   { key: "settings", label: "Business Settings", href: "/admin/settings", icon: Settings },
   { key: "users", label: "Users", href: "/admin/users", icon: Users },
 ];
