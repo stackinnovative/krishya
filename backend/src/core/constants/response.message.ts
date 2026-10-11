@@ -314,6 +314,22 @@ export const ResponseMessages = {
   BLOG_SLUG_INVALID: "The URL needs at least one letter or number",
   BLOG_SAVE_FAILED: "Failed to save article",
 
+  /* ================= FAQ ================= */
+  FAQ_FETCHED_SUCCESSFULLY: "FAQs fetched successfully",
+  FAQ_NOT_FOUND: "Question not found",
+  FAQ_CREATED: "Question added",
+  FAQ_UPDATED: "Question updated",
+  FAQ_DELETED: "Question deleted",
+  FAQ_REORDERED: "Questions reordered",
+  FAQ_HOME_LIMIT: "Only 6 questions can show on the home page. Turn one off first.",
+  FAQ_REORDER_MISMATCH: "The list changed while you were reordering. Refresh and try again.",
+  FAQ_GROUP_NOT_FOUND: "Group not found",
+  FAQ_GROUP_CREATED: "Group added",
+  FAQ_GROUP_UPDATED: "Group updated",
+  FAQ_GROUP_DELETED: "Group deleted",
+  FAQ_GROUP_NOT_EMPTY: "Move or delete this group's questions before deleting it",
+  FAQ_GROUPS_REORDERED: "Groups reordered",
+
   /* ================= SETTINGS ================= */
   SETTINGS_FETCHED_SUCCESSFULLY: "Settings fetched successfully",
   SETTINGS_UPDATED: "Settings updated successfully",

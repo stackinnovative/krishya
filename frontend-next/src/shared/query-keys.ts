@@ -68,6 +68,15 @@ export const blogKeys = {
   featured: ["featured-blog"] as const,
 };
 
+export const faqKeys = {
+  /** Admin FAQ page - every group and question. */
+  admin: ["admin-faqs"] as const,
+  /** Storefront FAQ page groups. */
+  list: ["faq-list"] as const,
+  /** The home page's FAQ section. */
+  home: ["home-faqs"] as const,
+};
+
 export const settingsKeys = {
   /** Single settings singleton - used by both the admin form and every
    * storefront consumer (navbar, footer, maintenance gate, checkout), so an

@@ -11,7 +11,7 @@ import { ArrowRightIcon, FlaskIcon, LeafIcon, SproutIcon, TruckIcon, UruliIcon }
 import ArticleCard, { ArticleRow } from "../ArticleCard";
 import FaqAccordion from "../FaqAccordion";
 import type { BlogListItem } from "@/modules/blog/types/blog.type";
-import type { Faq } from "../../constants/faqs";
+import type { FaqAccordionItem } from "../FaqAccordion";
 import { NeedCircle, type HealthNeed } from "./HomeHero";
 
 const MINT = "#E8F0E4";
@@ -234,7 +234,9 @@ export function JournalPreview({ articles }: { articles: BlogListItem[] }) {
   );
 }
 
-export function FaqPreview({ faqs }: { faqs: Faq[] }) {
+/** The home page's FAQ section - hidden when the store has no visible questions. */
+export function FaqPreview({ faqs }: { faqs: FaqAccordionItem[] }) {
+  if (faqs.length === 0) return null;
   return (
     <>
       <Wave from={CREAM} to={MINT} shape="b" />
@@ -246,7 +248,7 @@ export function FaqPreview({ faqs }: { faqs: Faq[] }) {
             <h2 className={SECTION_TITLE}>Frequently asked questions</h2>
           </div>
           <div className="border-t border-ka-green/[.18]">
-            <FaqAccordion items={faqs} defaultOpen={0} />
+            <FaqAccordion items={faqs} defaultOpenId={faqs[0]?.id ?? null} />
           </div>
           <div className="mt-9 flex justify-center">
             <Link
