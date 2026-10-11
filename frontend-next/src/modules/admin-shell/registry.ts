@@ -6,6 +6,7 @@ import {
   ShoppingBag,
   TrendingUp,
   Home,
+  Newspaper,
   Settings,
   Users,
 } from "lucide-react";
@@ -30,6 +31,7 @@ export const ADMIN_NAV: AdminNavItem[] = [
   { key: "orders", label: "Orders", href: "/admin/orders", icon: ShoppingBag },
   { key: "revenue", label: "Revenue", href: "/admin/revenue", icon: TrendingUp },
   { key: "home", label: "Home Management", href: "/admin/home", icon: Home },
+  { key: "blog", label: "Blog", href: "/admin/blog", icon: Newspaper },
   { key: "settings", label: "Business Settings", href: "/admin/settings", icon: Settings },
   { key: "users", label: "Users", href: "/admin/users", icon: Users },
 ];

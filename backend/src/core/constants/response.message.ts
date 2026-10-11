@@ -300,6 +300,20 @@ export const ResponseMessages = {
   ABOUT_UPDATED: "About content updated successfully",
   ABOUT_UPDATE_FAILED: "Failed to update about content",
 
+  /* ================= BLOG ================= */
+  BLOG_NOT_FOUND: "Article not found",
+  BLOG_CREATED: "Article created successfully",
+  BLOG_UPDATED: "Article updated successfully",
+  BLOG_DELETED_SUCCESSFULLY: "Article deleted successfully",
+  BLOG_PUBLISHED: "Article published",
+  BLOG_UNPUBLISHED: "Article moved back to drafts",
+  BLOG_ALREADY_PUBLISHED: "Article is already published",
+  BLOG_ALREADY_DRAFT: "Article is already a draft",
+  BLOG_COVER_REQUIRED: "Add a cover photo before publishing",
+  BLOG_SLUG_ALREADY_EXISTS: "Another article already uses this URL",
+  BLOG_SLUG_INVALID: "The URL needs at least one letter or number",
+  BLOG_SAVE_FAILED: "Failed to save article",
+
   /* ================= SETTINGS ================= */
   SETTINGS_FETCHED_SUCCESSFULLY: "Settings fetched successfully",
   SETTINGS_UPDATED: "Settings updated successfully",

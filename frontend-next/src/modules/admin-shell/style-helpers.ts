@@ -41,7 +41,7 @@ export function tab(active: boolean): CSSProperties {
 const STATUS_TONE: Record<string, "green" | "amber" | "red" | "blue" | "grey"> = {
   Active: "green", Delivered: "green", Approved: "green", Published: "green", Paid: "green",
   Pending: "amber", Processing: "amber", Draft: "amber",
-  Shipped: "blue",
+  Shipped: "blue", Scheduled: "blue",
   Cancelled: "red", Blocked: "red",
   Inactive: "grey", Hidden: "grey",
 };

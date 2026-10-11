@@ -1,0 +1,322 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { FileText, Pencil, Star, Trash2 } from "lucide-react";
+import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { formatDate } from "@/lib/format";
+import AdminPageShell from "@/modules/admin-shell/components/AdminPageShell";
+import AdminCard from "@/modules/admin-shell/components/AdminCard";
+import AdminErrorBoundary from "@/modules/admin-shell/components/AdminErrorBoundary";
+import AdminListFilterRow from "@/modules/admin-shell/components/AdminListFilterRow";
+import StatusBadge from "@/modules/admin-shell/components/StatusBadge";
+import ConfirmModal from "@/modules/admin-shell/components/ConfirmModal";
+import BlockToggleButton from "@/modules/admin-shell/components/BlockToggleButton";
+import FilterPills from "@/modules/admin-shell/components/FilterPills";
+import Pagination from "@/modules/admin-shell/components/Pagination";
+import AdminTable, { type AdminTableColumn } from "@/modules/admin-shell/components/AdminTable";
+import TruncatedText from "@/modules/admin-shell/components/TruncatedText";
+import SearchableSelect from "@/modules/admin-shell/components/SearchableSelect";
+import { blackPillButton, iconButtonStyle, softPillButton } from "@/modules/admin-shell/style-helpers";
+import { useAdminBlogs, useDeleteBlog, useRestoreBlog, useToggleBlogStatus } from "@/modules/blog/hooks/useAdminBlogs";
+import { BLOG_CATEGORIES } from "@/modules/blog/constants";
+import type { AdminBlogListItem } from "@/modules/blog/types/blog.type";
+
+const FILTERS = ["All", "Published", "Scheduled", "Drafts", "Blocked", "Unblocked"] as const;
+type Filter = (typeof FILTERS)[number];
+
+const SORT_OPTIONS = [
+  { label: "Recently edited", value: "newest" },
+  { label: "Oldest edits first", value: "oldest" },
+] as const;
+type SortValue = (typeof SORT_OPTIONS)[number]["value"];
+
+const CATEGORY_OPTIONS = [{ label: "All categories", value: "" }, ...BLOG_CATEGORIES.map((c) => ({ label: c, value: c }))];
+
+const isScheduled = (b: AdminBlogListItem) => b.status === "published" && !!b.publishedAt && new Date(b.publishedAt).getTime() > Date.now();
+const statusLabel = (b: AdminBlogListItem) => (isScheduled(b) ? "Scheduled" : b.status === "published" ? "Published" : "Draft");
+
+/** Gold "Featured" chip - the article in the big card at the top of the Journal page. */
+function FeaturedChip() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-[#fbf3df] px-2.5 py-1 text-[11.5px] font-semibold text-[#a77b1f]">
+      <Star size={11} className="fill-[#c69a3a] text-[#c69a3a]" aria-hidden="true" /> Featured
+    </span>
+  );
+}
+
+function CoverThumb({ blog, size }: { blog: AdminBlogListItem; size: number }) {
+  const height = Math.round(size / 1.5);
+  return (
+    <div className="relative flex-none overflow-hidden rounded-lg bg-[#f1f1ef] text-[#b4b4b0]" style={{ width: size, height }}>
+      {blog.coverImage ? (
+        <Image src={getOptimizedImageUrl(blog.coverImage.url, size * 2, height * 2)} alt="" fill sizes={`${size}px`} className="object-cover" />
+      ) : (
+        <span className="grid h-full place-items-center">
+          <FileText size={16} />
+        </span>
+      )}
+    </div>
+  );
+}
+
+function ArticleLink({ blog, className, children }: { blog: AdminBlogListItem; className: string; children: React.ReactNode }) {
+  return blog.deletedAt
+    ? <div className={className}>{children}</div>
+    : <Link href={`/admin/blog/${blog.id}`} className={className}>{children}</Link>;
+}
+
+export default function BlogAdminPage() {
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<Filter>("All");
+  const [category, setCategory] = useState("");
+  const [sort, setSort] = useState<SortValue>("newest");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [statusTarget, setStatusTarget] = useState<AdminBlogListItem | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<AdminBlogListItem | null>(null);
+  const [blockTarget, setBlockTarget] = useState<AdminBlogListItem | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<AdminBlogListItem | null>(null);
+  const { mutateAsync: toggleStatus } = useToggleBlogStatus();
+  const { mutateAsync: deleteBlog } = useDeleteBlog();
+  const { mutateAsync: restoreBlog } = useRestoreBlog();
+
+  useEffect(() => setPage(1), [search, filter, category, sort]);
+
+  const query: Record<string, unknown> = { search, page, limit: pageSize, sort };
+  if (filter === "Published") query.status = "published";
+  if (filter === "Scheduled") query.status = "scheduled";
+  if (filter === "Drafts") query.status = "draft";
+  if (filter === "All") query.deleted = "all";
+  if (filter === "Blocked") query.deleted = true;
+  if (filter === "Unblocked") query.deleted = false;
+  if (category) query.category = category;
+
+  const { data, isLoading, isError, refetch } = useAdminBlogs(query);
+  const blogs = data?.data ?? [];
+  const filtered = Boolean(search || category || filter !== "All");
+
+  const renderActions = (b: AdminBlogListItem) => (
+    <div className="inline-grid grid-cols-[32px_92px_78px] items-center gap-2">
+      {b.deletedAt ? <span aria-hidden="true" className="h-8 w-8" /> : (
+        <Link href={`/admin/blog/${b.id}`} style={{ ...iconButtonStyle, display: "inline-grid", placeItems: "center" }} title="Edit" aria-label={`Edit ${b.title}`}>
+          <Pencil size={14} />
+        </Link>
+      )}
+      <BlockToggleButton blocked={!!b.deletedAt} subject={b.title} onClick={() => b.deletedAt ? setRestoreTarget(b) : setBlockTarget(b)} />
+      <button type="button" style={{ ...softPillButton, color: "#dc2626", width: 78, height: 32, boxSizing: "border-box", whiteSpace: "nowrap" }} onClick={() => setDeleteTarget(b)} aria-label={`Delete ${b.title} permanently`}>
+        <span className="inline-flex items-center gap-1"><Trash2 size={13} /> Delete</span>
+      </button>
+    </div>
+  );
+
+  const columns: AdminTableColumn<AdminBlogListItem>[] = [
+    {
+      key: "article",
+      header: "Article",
+      width: 300,
+      render: (b) => (
+        <ArticleLink blog={b} className="flex items-center gap-2.5">
+          <CoverThumb blog={b} size={54} />
+          <div className="min-w-0 flex-1">
+            <TruncatedText text={b.title} className="text-[13px] font-semibold" />
+            <div className="truncate text-[11px] text-[#8a8a8e]">/blog/{b.slug}</div>
+          </div>
+        </ArticleLink>
+      ),
+    },
+    { key: "category", header: "Category", width: 140, render: (b) => <TruncatedText text={b.category} className="text-[12.5px] text-[#555]" /> },
+    {
+      key: "status",
+      header: "Status",
+      width: 110,
+      render: (b) => b.deletedAt ? <span className="text-[12.5px] text-[#8a8a8e]">Blocked</span> : <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />,
+    },
+    {
+      key: "featured",
+      header: "Featured",
+      width: 110,
+      render: (b) => (b.isFeatured ? <FeaturedChip /> : <span className="text-[12.5px] text-[#b4b4b0]">—</span>),
+    },
+    {
+      key: "date",
+      header: "Publish date",
+      width: 120,
+      render: (b) => <span className="text-[12.5px] text-[#555]">{b.publishedAt ? formatDate(b.publishedAt) : "—"}</span>,
+    },
+    {
+      key: "actions",
+      header: "Actions",
+      align: "right",
+      width: 242,
+      cellClassName: "whitespace-nowrap",
+      render: renderActions,
+    },
+  ];
+
+  const handleConfirmStatus = async () => {
+    if (!statusTarget) return;
+    await toggleStatus({ id: statusTarget.id, status: statusTarget.status });
+    setStatusTarget(null);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteBlog({ id: deleteTarget.id, permanent: true });
+      setDeleteTarget(null);
+      if (blogs.length === 1 && page > 1) setPage(page - 1);
+    } catch {
+      // The mutation shows the error; keep the confirmation open for retry.
+    }
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!restoreTarget) return;
+    try {
+      await restoreBlog(restoreTarget.id);
+      setRestoreTarget(null);
+      if (filter === "Blocked" && blogs.length === 1 && page > 1) setPage(page - 1);
+    } catch {
+      // The mutation shows the error; keep the confirmation open for retry.
+    }
+  };
+
+  const handleConfirmBlock = async () => {
+    if (!blockTarget) return;
+    try {
+      await deleteBlog({ id: blockTarget.id, permanent: false });
+      setBlockTarget(null);
+      if (filter !== "All" && blogs.length === 1 && page > 1) setPage(page - 1);
+    } catch {
+      // The mutation shows the error; keep the confirmation open for retry.
+    }
+  };
+
+  return (
+    <AdminPageShell
+      title="Blog"
+      subtitle="Write and publish articles for the Journal"
+      search={search}
+      onSearchChange={setSearch}
+      searchPlaceholder="Search by title or summary"
+      sortOptions={[...SORT_OPTIONS]}
+      sortValue={sort}
+      onSortChange={(v) => setSort(v as SortValue)}
+    >
+      <AdminListFilterRow
+        filters={<FilterPills options={FILTERS} value={filter} onChange={setFilter} />}
+        right={
+          <>
+            <div className="w-44">
+              <SearchableSelect options={CATEGORY_OPTIONS} value={category} onChange={setCategory} searchable={false} placeholder="All categories" />
+            </div>
+            <div className="hidden w-44 om:block">
+              <SearchableSelect options={[...SORT_OPTIONS]} value={sort} onChange={(v) => setSort(v as SortValue)} searchable={false} placeholder="Sort" />
+            </div>
+          </>
+        }
+      />
+
+      <AdminCard>
+        <div className="mb-3 flex flex-wrap items-center justify-end gap-2">
+          <Link href="/admin/blog/new" style={blackPillButton}>
+            + New Article
+          </Link>
+        </div>
+
+        <AdminErrorBoundary>
+          <AdminTable
+            columns={columns}
+            rows={blogs}
+            getRowKey={(b) => b.id}
+            minWidth={1000}
+            compact
+            isLoading={isLoading}
+            isError={isError}
+            onRetry={refetch}
+            errorMessage="Articles couldn't load."
+            emptyMessage={filtered ? "No articles match." : "No articles yet - write the first one with + New Article."}
+            renderMobileCard={(b) => (
+              <div className="rounded-2xl border border-[#f0f0ee] p-3">
+                <div className="flex items-start justify-between gap-2">
+                  <ArticleLink blog={b} className="flex min-w-0 flex-1 items-center gap-2.5">
+                    <CoverThumb blog={b} size={60} />
+                    <div className="min-w-0 flex-1">
+                      <div className="line-clamp-2 text-[13.5px] font-semibold leading-snug">{b.title}</div>
+                      <div className="truncate text-[11.5px] text-[#8a8a8e]">{b.category}</div>
+                      {b.isFeatured && (
+                        <div className="mt-1.5">
+                          <FeaturedChip />
+                        </div>
+                      )}
+                    </div>
+                  </ArticleLink>
+                  {b.deletedAt ? <span className="text-xs text-[#8a8a8e]">Blocked</span> : <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />}
+                </div>
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-[12px] text-[#8a8a8e]">{b.publishedAt ? formatDate(b.publishedAt) : "Not published"}</div>
+                  {renderActions(b)}
+                </div>
+              </div>
+            )}
+          />
+        </AdminErrorBoundary>
+
+        <Pagination page={page} totalPages={data?.totalPages ?? 1} total={data?.total} pageSize={pageSize} onPageChange={setPage} onPageSizeChange={setPageSize} />
+      </AdminCard>
+
+      {statusTarget && (
+        <ConfirmModal
+          title={statusTarget.status === "published" ? "Move to drafts?" : "Publish article?"}
+          message={
+            statusTarget.status === "published"
+              ? `"${statusTarget.title}" will be hidden from the Journal until you publish it again.`
+              : statusTarget.coverImage
+                ? `"${statusTarget.title}" will go live on the Journal${statusTarget.publishedAt && new Date(statusTarget.publishedAt).getTime() > Date.now() ? ` on ${formatDate(statusTarget.publishedAt)}` : ""}.`
+                : `"${statusTarget.title}" has no cover photo yet - open it and add one before publishing.`
+          }
+          confirmLabel={statusTarget.status === "published" ? "Move to drafts" : "Publish"}
+          tone={statusTarget.status === "published" ? "danger" : "default"}
+          onConfirm={handleConfirmStatus}
+          onClose={() => setStatusTarget(null)}
+        />
+      )}
+
+      {deleteTarget && (
+        <ConfirmModal
+          title="Delete article permanently?"
+          message={`Delete "${deleteTarget.title}" and its photos from the database and storage? This cannot be recovered.`}
+          confirmLabel="Delete permanently"
+          tone="danger"
+          onConfirm={handleConfirmDelete}
+          onClose={() => setDeleteTarget(null)}
+        />
+      )}
+      {restoreTarget && (
+        <ConfirmModal
+          title="Unblock article?"
+          message={restoreTarget.status === "draft"
+            ? `"${restoreTarget.title}" will be unblocked as a draft. Publish it to show it on the website.`
+            : isScheduled(restoreTarget)
+              ? `"${restoreTarget.title}" will be unblocked and appear on ${formatDate(restoreTarget.publishedAt!)}. Featured stays off.`
+              : `"${restoreTarget.title}" will be visible on the website again. Featured stays off.`}
+          confirmLabel="Unblock"
+          onConfirm={handleConfirmRestore}
+          onClose={() => setRestoreTarget(null)}
+        />
+      )}
+      {blockTarget && (
+        <ConfirmModal
+          title="Block article?"
+          message={`Hide "${blockTarget.title}" from the website? Its content and photos are kept. You can unblock it here anytime.`}
+          confirmLabel="Block"
+          tone="danger"
+          onConfirm={handleConfirmBlock}
+          onClose={() => setBlockTarget(null)}
+        />
+      )}
+    </AdminPageShell>
+  );
+}

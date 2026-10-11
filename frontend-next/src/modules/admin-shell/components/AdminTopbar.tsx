@@ -2,6 +2,7 @@
 
 import { Menu, Search } from "lucide-react";
 import SearchableSelect, { type SearchableSelectOption } from "./SearchableSelect";
+import AdminBreadcrumbs, { type AdminBreadcrumb } from "./AdminBreadcrumbs";
 
 export default function AdminTopbar({
   title,
@@ -13,6 +14,7 @@ export default function AdminTopbar({
   sortOptions,
   sortValue,
   onSortChange,
+  breadcrumbs,
 }: {
   title: string;
   subtitle: string;
@@ -26,6 +28,7 @@ export default function AdminTopbar({
   sortOptions?: SearchableSelectOption[];
   sortValue?: string;
   onSortChange?: (v: string) => void;
+  breadcrumbs?: AdminBreadcrumb[];
 }) {
   return (
     <div className="mb-[22px] flex flex-wrap items-start justify-between gap-4">
@@ -36,7 +39,8 @@ export default function AdminTopbar({
         >
           <Menu size={18} />
         </button>
-        <div>
+        <div className="min-w-0">
+          {breadcrumbs && breadcrumbs.length > 0 && <AdminBreadcrumbs items={breadcrumbs} />}
           <h1 className="m-0 text-[30px] font-bold leading-[1.1] tracking-[-.02em]">{title}</h1>
           <p className="mt-1.5 mb-0 text-[12.5px] text-[#8a8a8e]">{subtitle}</p>
         </div>

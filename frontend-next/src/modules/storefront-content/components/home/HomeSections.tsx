@@ -7,10 +7,10 @@ import type { AboutStat, AboutTeaser } from "@/modules/about/types/about.type";
 import type { UserProductListItem } from "@/modules/products/types/storefront-product.type";
 import type { TestimonialView } from "@/modules/home-content/types/home-content.type";
 import { CONTAINER, Eyebrow, LeafDivider, SECTION_TITLE, SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
-import { ArrowRightIcon, FlaskIcon, SproutIcon, TruckIcon, UruliIcon } from "@/modules/storefront-shell/components/icons";
-import ArticleCard from "../ArticleCard";
+import { ArrowRightIcon, FlaskIcon, LeafIcon, SproutIcon, TruckIcon, UruliIcon } from "@/modules/storefront-shell/components/icons";
+import ArticleCard, { ArticleRow } from "../ArticleCard";
 import FaqAccordion from "../FaqAccordion";
-import { ARTICLES } from "../../constants/articles";
+import type { BlogListItem } from "@/modules/blog/types/blog.type";
 import type { Faq } from "../../constants/faqs";
 import { NeedCircle, type HealthNeed } from "./HomeHero";
 
@@ -190,7 +190,9 @@ export function TestimonialsSection({ testimonials }: { testimonials: Testimonia
   );
 }
 
-export function JournalPreview() {
+/** Latest three articles - hidden until the store publishes its first one. */
+export function JournalPreview({ articles }: { articles: BlogListItem[] }) {
+  if (articles.length === 0) return null;
   return (
     <section className="relative isolate overflow-clip pb-[clamp(56px,7vw,112px)]">
       <SectionDecor variant="c" />
@@ -202,11 +204,31 @@ export function JournalPreview() {
           </div>
           <ArrowLink href="/blog">Read all articles</ArrowLink>
         </div>
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,300px),1fr))] gap-[clamp(20px,2.4vw,32px)]">
-          {ARTICLES.slice(0, 3).map((a) => (
-            <ArticleCard key={a.slug} article={a} showDate={false} />
-          ))}
-        </div>
+        {articles.length === 1 ? (
+          <ArticleRow article={articles[0]!} />
+        ) : (
+          // Fixed columns so cards never stretch: 3 columns on laptop, 2 on tablet (a third card waits for laptop width), stacked on phones.
+          <div className="grid grid-cols-1 gap-[clamp(20px,2.4vw,32px)] sm:grid-cols-2 ka:grid-cols-3 sm:[&>*:nth-child(n+3)]:hidden ka:[&>*:nth-child(n+3)]:flex">
+            {articles.map((a) => (
+              <ArticleCard key={a.id} article={a} showDate={false} />
+            ))}
+            {/* With only two articles, the empty third column on laptop becomes an invitation to the Journal. */}
+            {articles.length === 2 && (
+              <Link
+                href="/blog"
+                className="hidden aspect-[3/2] flex-col items-center justify-center gap-3 self-start rounded-xl bg-ka-sand p-6 text-center transition-opacity hover:opacity-[.88]"
+              >
+                <span className="grid h-12 w-12 place-items-center rounded-full bg-ka-cream text-ka-green">
+                  <LeafIcon size={22} strokeWidth={1.4} />
+                </span>
+                <span className="font-display text-[24px] font-medium leading-tight text-ka-green">More from the Journal</span>
+                <span className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-ka-green">
+                  Read all articles <ArrowRightIcon size={15} />
+                </span>
+              </Link>
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

@@ -13,6 +13,7 @@ import { registerBannerDependencies } from "./banner.container.js";
 import { registerTestimonialDependencies } from "./testimonial.container.js";
 import { registerWishlistDependencies } from "./wishlist.container.js";
 import { registerAboutDependencies } from "./about.container.js";
+import { registerBlogDependencies } from "./blog.container.js";
 
 registerCommonDependencies()
 registerUserDependencies();
@@ -29,6 +30,7 @@ registerBannerDependencies()
 registerTestimonialDependencies()
 registerWishlistDependencies()
 registerAboutDependencies()
+registerBlogDependencies()
 
 
 export { container } from "tsyringe";
