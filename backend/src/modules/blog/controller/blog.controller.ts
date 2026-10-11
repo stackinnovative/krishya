@@ -98,14 +98,26 @@ export class BlogController implements IBlogController {
             const { id } = req.params;
             validateObjectId(id);
 
-            await this._deleteBlogUseCase.execute(id!);
+            const permanent = req.query.permanent === "true";
+            await this._deleteBlogUseCase.execute(id!, permanent);
 
             res.status(HttpStatusCode.OK).json({
                 success: true,
-                message: ResponseMessages.BLOG_DELETED_SUCCESSFULLY,
+                message: permanent ? "Article permanently deleted" : "Article blocked",
             });
         } catch (error) {
             console.log("Error in deleteBlog:", error);
+            handleError(res, error);
+        }
+    }
+
+    async restoreBlog(req: Request, res: Response): Promise<void> {
+        try {
+            const { id } = req.params;
+            validateObjectId(id);
+            await this._deleteBlogUseCase.restore(id!);
+            res.status(HttpStatusCode.OK).json({ success: true, message: "Article unblocked" });
+        } catch (error) {
             handleError(res, error);
         }
     }
@@ -164,7 +176,7 @@ export class BlogController implements IBlogController {
 
     async getAllBlogsForAdmin(req: Request, res: Response): Promise<void> {
         try {
-            const dto = GetAllQuerySchema.parse(parseReq(req, ["status", "category"]));
+            const dto = GetAllQuerySchema.parse(parseReq(req, ["status", "category", "deleted"]));
 
             const { data, total } = await this._getAllBlogAdminUseCase.execute(dto);
 

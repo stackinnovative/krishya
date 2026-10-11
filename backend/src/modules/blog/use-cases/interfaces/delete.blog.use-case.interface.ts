@@ -1,3 +1,4 @@
 export interface IDeleteBlogUseCase {
-    execute(id: string): Promise<void>;
+    execute(id: string, permanent?: boolean): Promise<void>;
+    restore(id: string): Promise<void>;
 }

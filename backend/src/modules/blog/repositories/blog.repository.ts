@@ -1,15 +1,15 @@
 import { injectable } from "tsyringe";
-import type { QueryFilter } from "mongoose";
+import type { ClientSession, QueryFilter } from "mongoose";
 import type { AdminBlogFilter, IBlogRepository, PublishedBlogFilter } from "./blog.repository.interface.js";
 import { Blog } from "../entities/blog.entity.js";
-import { BlogModel, type IBlog } from "../infrastructure/blog.schema.js";
+import { BlogModel, BlogFeatureLockModel, type IBlog } from "../infrastructure/blog.schema.js";
 import { BLOG_LIST_PROJECTION, BlogMapper, type BlogRecord } from "../mappers/blog.mapper.js";
 import type { AdminBlogListView, BlogListView, PaginatedBlogList } from "../types/blog.type.js";
 
 const escapeRegex = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 /** Live = published and its publish date has passed (a future date is a scheduled article). */
-const liveQuery = (now: Date): QueryFilter<IBlog> => ({ status: "published", publishedAt: { $lte: now } });
+const liveQuery = (now: Date): QueryFilter<IBlog> => ({ deletedAt: null, status: "published", publishedAt: { $lte: now } });
 
 const NEWEST_FIRST = { publishedAt: -1, _id: -1 } as const;
 
@@ -19,12 +19,14 @@ const toCards = (records: BlogRecord[]): BlogListView[] =>
 @injectable()
 export class BlogRepository implements IBlogRepository {
     async create(blogEntity: Blog): Promise<Blog> {
-        const created = await BlogModel.create(BlogMapper.toPersistence(blogEntity));
-        return BlogMapper.toDomain(created.toObject() as BlogRecord)!;
+        return this.writeWithFeatured(blogEntity, async (session) => {
+            const [created] = await BlogModel.create([BlogMapper.toPersistence(blogEntity)], { session });
+            return BlogMapper.toDomain(created!.toObject() as BlogRecord)!;
+        });
     }
 
-    async findById(id: string): Promise<Blog | null> {
-        const blog = await BlogModel.findById(id).lean<BlogRecord>();
+    async findById(id: string, includeDeleted = false): Promise<Blog | null> {
+        const blog = await BlogModel.findOne({ _id: id, ...(includeDeleted ? {} : { deletedAt: null }) }).lean<BlogRecord>();
         return BlogMapper.toDomain(blog);
     }
 
@@ -45,30 +47,67 @@ export class BlogRepository implements IBlogRepository {
             throw new Error("Cannot save blog without an ID");
         }
 
-        const updated = await BlogModel.findByIdAndUpdate(
-            id,
-            { $set: BlogMapper.toPersistence(blogEntity) },
-            { new: true, runValidators: true }
-        ).lean<BlogRecord>();
-
-        if (!updated) {
-            throw new Error("Blog not found for update");
-        }
-
-        return BlogMapper.toDomain(updated)!;
+        return this.writeWithFeatured(blogEntity, async (session) => {
+            const updated = await BlogModel.findOneAndUpdate(
+                { _id: id, deletedAt: null },
+                { $set: BlogMapper.toPersistence(blogEntity) },
+                { new: true, runValidators: true, session }
+            ).lean<BlogRecord>();
+            if (!updated) throw new Error("Blog not found for update");
+            return BlogMapper.toDomain(updated)!;
+        });
     }
 
     async delete(id: string): Promise<void> {
-        await BlogModel.findByIdAndDelete(id);
+        const deleted = await BlogModel.findByIdAndDelete(id);
+        if (!deleted) throw new Error("Article not found for deletion");
     }
 
-    async clearFeatured(exceptId: string): Promise<void> {
-        await BlogModel.updateMany({ _id: { $ne: exceptId }, isFeatured: true }, { $set: { isFeatured: false } });
+    async softDelete(id: string): Promise<void> {
+        await BlogModel.updateOne({ _id: id, deletedAt: null }, { $set: { deletedAt: new Date(), isFeatured: false } });
+    }
+
+    async restore(id: string): Promise<void> {
+        await BlogModel.updateOne({ _id: id, deletedAt: { $ne: null } }, { $set: { deletedAt: null, isFeatured: false } });
+    }
+
+    private async writeWithFeatured(blog: Blog, write: (session: ClientSession | null) => Promise<Blog>): Promise<Blog> {
+        if (!blog.isFeatured) return write(null);
+
+        // Initialize outside the transaction; concurrent first-time initialization is harmless.
+        try {
+            await BlogFeatureLockModel.updateOne({ _id: "featured" }, { $setOnInsert: { version: 0 } }, { upsert: true });
+        } catch (error) {
+            if (!(error instanceof Error && "code" in error && error.code === 11000)) throw error;
+        }
+
+        const session = await BlogModel.db.startSession();
+        try {
+            return await session.withTransaction(async () => {
+                await BlogFeatureLockModel.updateOne({ _id: "featured" }, { $inc: { version: 1 } }, { session });
+                await BlogModel.updateMany(
+                    { ...(blog.id ? { _id: { $ne: blog.id } } : {}), isFeatured: true },
+                    { $set: { isFeatured: false } },
+                    { session }
+                );
+                return write(session);
+            });
+        } finally {
+            await session.endSession();
+        }
     }
 
     async findAllForAdmin(filter: AdminBlogFilter): Promise<PaginatedBlogList<AdminBlogListView>> {
-        const query: QueryFilter<IBlog> = {};
-        if (filter.status) query.status = filter.status;
+        const query: QueryFilter<IBlog> = filter.deleted === "all" ? {} : { deletedAt: filter.deleted ? { $ne: null } : null };
+        if (filter.status === "scheduled") {
+            query.status = "published";
+            query.publishedAt = { $gt: new Date() };
+        } else if (filter.status === "published") {
+            query.status = "published";
+            query.publishedAt = { $lte: new Date() };
+        } else if (filter.status) {
+            query.status = filter.status;
+        }
         if (filter.category) query.category = filter.category;
         if (filter.search.trim()) {
             const pattern = { $regex: escapeRegex(filter.search.trim()), $options: "i" };

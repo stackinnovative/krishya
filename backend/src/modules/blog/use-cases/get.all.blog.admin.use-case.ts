@@ -16,7 +16,7 @@ export class GetAllBlogAdminUseCase implements IGetAllBlogAdminUseCase {
         const { page, limit, search, sortValue, filters } = dto;
 
         // Unknown filter values are ignored rather than returning an error page.
-        const status = BLOG_STATUSES.find((s): s is BlogStatus => s === filters.status);
+        const status = filters.status === "scheduled" ? "scheduled" : BLOG_STATUSES.find((s): s is BlogStatus => s === filters.status);
         const category = BLOG_CATEGORIES.find((c): c is BlogCategory => c === filters.category);
 
         return this._blogRepository.findAllForAdmin({
@@ -26,6 +26,7 @@ export class GetAllBlogAdminUseCase implements IGetAllBlogAdminUseCase {
             status,
             category,
             sort: sortValue === "oldest" ? "oldest" : "newest",
+            deleted: filters.deleted === "all" ? "all" : filters.deleted === true || filters.deleted === "true",
         });
     }
 }

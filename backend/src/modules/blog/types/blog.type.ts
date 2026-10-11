@@ -62,6 +62,7 @@ export type BlogProps = {
     seoDescription?: string;
     createdAt?: Date | null;
     updatedAt?: Date | null;
+    deletedAt?: Date | null;
 };
 
 /** A product shown in a "From our range" block - same shape as the storefront product cards. */
@@ -89,6 +90,7 @@ export type BlogListView = {
 export type AdminBlogListView = BlogListView & {
     status: BlogStatus;
     updatedAt: string | null;
+    deletedAt: string | null;
 };
 
 /** Full article for the admin editor - blocks keep their raw product ids. */

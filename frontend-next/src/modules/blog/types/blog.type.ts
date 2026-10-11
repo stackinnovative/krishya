@@ -35,7 +35,7 @@ export type BlogListItem = {
   publishedAt: string | null;
 };
 
-export type AdminBlogListItem = BlogListItem & { status: BlogStatus; updatedAt: string | null };
+export type AdminBlogListItem = BlogListItem & { status: BlogStatus; updatedAt: string | null; deletedAt: string | null };
 
 export type AdminBlog = AdminBlogListItem & {
   blocks: BlogBlock[];

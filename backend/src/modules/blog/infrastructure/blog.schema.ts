@@ -17,6 +17,7 @@ export interface IBlog extends Document {
     seoDescription: string;
     createdAt: Date;
     updatedAt: Date;
+    deletedAt: Date | null;
 }
 
 const imageSchema = new Schema(
@@ -69,6 +70,7 @@ const blogSchema = new Schema<IBlog>(
             type: Boolean,
             default: false,
         },
+        deletedAt: { type: Date, default: null },
         status: {
             type: String,
             enum: BLOG_STATUSES,
@@ -98,3 +100,9 @@ const blogSchema = new Schema<IBlog>(
 blogSchema.index({ status: 1, publishedAt: -1 });
 
 export const BlogModel = model<IBlog>("Blog", blogSchema);
+
+// One shared write serializes Featured handovers, even when no article is featured yet.
+export const BlogFeatureLockModel = model("BlogFeatureLock", new Schema({
+    _id: { type: String, required: true },
+    version: { type: Number, default: 0 },
+}));

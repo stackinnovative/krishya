@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -12,6 +12,7 @@ import FormField from "@/modules/admin-shell/components/FormField";
 import Skeleton from "@/modules/admin-shell/components/Skeleton";
 import StatusBadge from "@/modules/admin-shell/components/StatusBadge";
 import Toggle from "@/modules/admin-shell/components/Toggle";
+import ConfirmModal from "@/modules/admin-shell/components/ConfirmModal";
 import { isPendingImage, type ImageFieldValue } from "@/modules/admin-shell/components/ImageDropzone";
 import { whitePillButton } from "@/modules/admin-shell/style-helpers";
 import { uploadToCloudinary } from "@/lib/cloudinary";
@@ -71,9 +72,14 @@ export default function BlogEditor({ blogId }: { blogId: string | null }) {
   const [errors, setErrors] = useState<BlogErrors>({});
   const [uploading, setUploading] = useState(false);
   const [savingAs, setSavingAs] = useState<BlogStatus | null>(null);
+  const [confirmFeatured, setConfirmFeatured] = useState(false);
+  const loadedArticle = useRef<string | null>(null);
 
   useEffect(() => {
-    if (original) setDraft(toDraft(original));
+    if (original && loadedArticle.current !== original.id) {
+      loadedArticle.current = original.id;
+      setDraft(toDraft(original));
+    }
   }, [original]);
 
   const productNames = useMemo(() => Object.fromEntries((original?.products ?? []).map((p) => [p.id, p.name])), [original]);
@@ -86,6 +92,11 @@ export default function BlogEditor({ blogId }: { blogId: string | null }) {
       const next = Object.fromEntries(Object.entries(prev).filter(([key]) => !touched.includes(key)));
       return Object.keys(next).length === Object.keys(prev).length ? prev : next;
     });
+  };
+
+  const toggleFeatured = () => {
+    if (!draft || uploading || saveBlog.isPending) return;
+    setConfirmFeatured(true);
   };
 
   /** Replaces the block list. A reorder/add/remove shifts indexes, so every block error is cleared; an edit clears only that block's. */
@@ -159,6 +170,17 @@ export default function BlogEditor({ blogId }: { blogId: string | null }) {
     >
       {draft && (
         <>
+          {confirmFeatured && (
+            <ConfirmModal
+              title={draft.isFeatured ? "Remove Featured?" : "Make this article featured?"}
+              message={draft.isFeatured
+                ? "When you save, this article will no longer be marked Featured."
+                : "When you save, this article will become Featured and the currently featured article will lose that label. Only one article can be featured at a time."}
+              confirmLabel={draft.isFeatured ? "Remove Featured" : "Make featured"}
+              onConfirm={() => { set({ isFeatured: !draft.isFeatured }); setConfirmFeatured(false); }}
+              onClose={() => setConfirmFeatured(false)}
+            />
+          )}
           <div className="grid grid-cols-1 items-start gap-4 om:grid-cols-[minmax(0,1fr)_340px]">
             <div className="flex min-w-0 flex-col gap-4">
               <Section title="Article">
@@ -249,14 +271,14 @@ export default function BlogEditor({ blogId }: { blogId: string | null }) {
                   hint="Optional. Leave empty to use the day you publish. A future date keeps the article hidden until then."
                 />
                 <div
-                  onClick={() => set({ isFeatured: !draft.isFeatured })}
+                  onClick={toggleFeatured}
                   className="flex cursor-pointer items-center justify-between gap-3 rounded-xl bg-[#fafaf8] px-3.5 py-3"
                 >
                   <div>
                     <div className="text-[12.5px] font-semibold">Featured</div>
                     <div className="text-[11px] text-[#8a8a8e]">The big card at the top of the Blog page. Only one article is featured at a time.</div>
                   </div>
-                  <Toggle on={draft.isFeatured} onClick={() => set({ isFeatured: !draft.isFeatured })} />
+                  <Toggle on={draft.isFeatured} onClick={toggleFeatured} />
                 </div>
               </Section>
 

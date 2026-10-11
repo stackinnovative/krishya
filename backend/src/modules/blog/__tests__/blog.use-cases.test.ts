@@ -16,16 +16,17 @@ import { blogDto, blogInput, image, PRODUCT_A } from "./blog.fixtures.js";
 class FakeBlogRepository implements IBlogRepository {
     rows = new Map<string, Blog>();
     nextId = 1;
-    featuredCleared: string[] = [];
 
     async create(entity: Blog) {
         const id = `b${this.nextId++}`;
         const saved = new Blog({ ...entity, id });
         this.rows.set(id, saved);
+        if (saved.isFeatured) await this.clearFeatured(id);
         return saved;
     }
-    async findById(id: string) {
-        return this.rows.get(id) ?? null;
+    async findById(id: string, includeDeleted = false) {
+        const blog = this.rows.get(id) ?? null;
+        return blog && (!blog.deletedAt || includeDeleted) ? blog : null;
     }
     async findPublishedBySlug() {
         return null;
@@ -35,13 +36,24 @@ class FakeBlogRepository implements IBlogRepository {
     }
     async save(entity: Blog) {
         this.rows.set(entity.id!, entity);
+        if (entity.isFeatured) await this.clearFeatured(entity.id!);
         return entity;
     }
     async delete(id: string) {
         this.rows.delete(id);
     }
     async clearFeatured(exceptId: string) {
-        this.featuredCleared.push(exceptId);
+        for (const [id, blog] of this.rows) {
+            if (id !== exceptId && blog.isFeatured) this.rows.set(id, new Blog({ ...blog, isFeatured: false }));
+        }
+    }
+    async softDelete(id: string) {
+        const blog = this.rows.get(id)!;
+        this.rows.set(id, new Blog({ ...blog, deletedAt: new Date(), isFeatured: false }));
+    }
+    async restore(id: string) {
+        const blog = this.rows.get(id)!;
+        this.rows.set(id, new Blog({ ...blog, deletedAt: null, isFeatured: false }));
     }
     async findAllForAdmin() {
         return { data: [], total: 0 };
@@ -116,12 +128,26 @@ describe("CreateBlogUseCase", () => {
 
     it("keeps featured to one article", async () => {
         const repo = new FakeBlogRepository();
+        const previous = await repo.create(new Blog({ ...blogInput(), isFeatured: true, slug: "previous" }));
         const view = await new CreateBlogUseCase(repo, products).execute(blogDto({ isFeatured: true }));
-        assert.deepEqual(repo.featuredCleared, [view.id]);
+        assert.equal(repo.rows.get(previous.id!)?.isFeatured, false);
+        assert.equal(repo.rows.get(view.id)?.isFeatured, true);
     });
 });
 
 describe("EditBlogUseCase", () => {
+    it("switches Featured from another article and keeps it on when re-saving", async () => {
+        const repo = new FakeBlogRepository();
+        const previous = await repo.create(new Blog({ ...blogInput(), isFeatured: true, slug: "previous" }));
+        const selected = await repo.create(new Blog(blogInput()));
+        const useCase = new TestEditBlogUseCase(repo, products);
+        await useCase.execute(selected.id!, blogDto({ isFeatured: true }));
+        await useCase.execute(selected.id!, blogDto({ isFeatured: true }));
+        assert.equal(repo.rows.get(previous.id!)?.isFeatured, false);
+        assert.equal(repo.rows.get(selected.id!)?.isFeatured, true);
+        assert.equal([...repo.rows.values()].filter((b) => b.isFeatured).length, 1);
+    });
+
     it("saves changes and deletes only the photos no longer used", async () => {
         const repo = new FakeBlogRepository();
         const created = await repo.create(new Blog(blogInput()));
@@ -150,12 +176,48 @@ describe("EditBlogUseCase", () => {
 });
 
 describe("DeleteBlogUseCase", () => {
+    it("blocks an article without deleting photos and removes Featured", async () => {
+        const repo = new FakeBlogRepository();
+        const created = await repo.create(new Blog({ ...blogInput(), isFeatured: true }));
+        const useCase = new TestDeleteBlogUseCase(repo);
+        await useCase.execute(created.id!);
+        assert.equal(repo.rows.size, 1);
+        assert.ok(repo.rows.get(created.id!)?.deletedAt);
+        assert.equal(repo.rows.get(created.id!)?.isFeatured, false);
+        assert.equal(await repo.findById(created.id!), null);
+        assert.deepEqual(useCase.removed, []);
+    });
+
+    it("unblocks an article with its previous publishing status and photos intact", async () => {
+        const repo = new FakeBlogRepository();
+        const created = await repo.create(new Blog({ ...blogInput(), status: "published", publishedAt: new Date(), isFeatured: true }));
+        const useCase = new TestDeleteBlogUseCase(repo);
+        await useCase.execute(created.id!);
+        await useCase.restore(created.id!);
+        const restored = await repo.findById(created.id!);
+        assert.equal(restored?.deletedAt, null);
+        assert.equal(restored?.status, "published");
+        assert.equal(restored?.isFeatured, false);
+        assert.deepEqual(restored?.imageIds, created.imageIds);
+        assert.deepEqual(useCase.removed, []);
+    });
+
+    it("permanently deletes an active article directly without requiring a block first", async () => {
+        const repo = new FakeBlogRepository();
+        const created = await repo.create(new Blog(blogInput()));
+        const useCase = new TestDeleteBlogUseCase(repo);
+        await useCase.execute(created.id!, true);
+        assert.equal(repo.rows.size, 0);
+        assert.deepEqual(useCase.removed.sort(), ["cover", "inline"]);
+    });
+
     it("removes the article and every photo it used", async () => {
         const repo = new FakeBlogRepository();
         const created = await repo.create(new Blog(blogInput()));
         const useCase = new TestDeleteBlogUseCase(repo);
 
         await useCase.execute(created.id!);
+        await useCase.execute(created.id!, true);
         assert.equal(repo.rows.size, 0);
         assert.deepEqual(useCase.removed.sort(), ["cover", "inline"]);
     });

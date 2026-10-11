@@ -14,12 +14,16 @@ export class DeleteBlogUseCase implements IDeleteBlogUseCase {
         private readonly _blogRepository: IBlogRepository
     ) { }
 
-    async execute(id: string): Promise<void> {
-        const blog = await this._blogRepository.findById(id);
+    async execute(id: string, permanent = false): Promise<void> {
+        const blog = await this._blogRepository.findById(id, permanent);
         if (!blog) {
             throw new CustomError(ResponseMessages.BLOG_NOT_FOUND, HttpStatusCode.NOT_FOUND);
         }
 
+        if (!permanent) {
+            await this._blogRepository.softDelete(id);
+            return;
+        }
         await this._blogRepository.delete(id);
 
         await Promise.all(
@@ -27,6 +31,13 @@ export class DeleteBlogUseCase implements IDeleteBlogUseCase {
                 this.removeImage(publicId).catch((err) => console.error("Could not delete blog image:", publicId, err))
             )
         );
+    }
+
+    async restore(id: string): Promise<void> {
+        const blog = await this._blogRepository.findById(id, true);
+        if (!blog) throw new CustomError(ResponseMessages.BLOG_NOT_FOUND, HttpStatusCode.NOT_FOUND);
+        if (!blog.deletedAt) throw new CustomError("This article is not blocked.", HttpStatusCode.BAD_REQUEST);
+        await this._blogRepository.restore(id);
     }
 
     /** Deletes a photo from Cloudinary (overridden in tests). */

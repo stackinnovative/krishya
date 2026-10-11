@@ -40,10 +40,6 @@ export class CreateBlogUseCase implements ICreateBlogUseCase {
             throw new CustomError(ResponseMessages.BLOG_SAVE_FAILED, HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
 
-        if (created.isFeatured) {
-            await this._blogRepository.clearFeatured(created.id);
-        }
-
         const products = await this._productRepository.findByIds(created.productIds);
         return BlogMapper.toAdminView(created, products);
     }

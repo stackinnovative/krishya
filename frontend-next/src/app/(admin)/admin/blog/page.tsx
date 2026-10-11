@@ -12,17 +12,18 @@ import AdminErrorBoundary from "@/modules/admin-shell/components/AdminErrorBound
 import AdminListFilterRow from "@/modules/admin-shell/components/AdminListFilterRow";
 import StatusBadge from "@/modules/admin-shell/components/StatusBadge";
 import ConfirmModal from "@/modules/admin-shell/components/ConfirmModal";
+import BlockToggleButton from "@/modules/admin-shell/components/BlockToggleButton";
 import FilterPills from "@/modules/admin-shell/components/FilterPills";
 import Pagination from "@/modules/admin-shell/components/Pagination";
 import AdminTable, { type AdminTableColumn } from "@/modules/admin-shell/components/AdminTable";
 import TruncatedText from "@/modules/admin-shell/components/TruncatedText";
 import SearchableSelect from "@/modules/admin-shell/components/SearchableSelect";
-import { blackPillButton, dangerIconButtonStyle, iconButtonStyle, softPillButton } from "@/modules/admin-shell/style-helpers";
-import { useAdminBlogs, useDeleteBlog, useToggleBlogStatus } from "@/modules/blog/hooks/useAdminBlogs";
+import { blackPillButton, iconButtonStyle, softPillButton } from "@/modules/admin-shell/style-helpers";
+import { useAdminBlogs, useDeleteBlog, useRestoreBlog, useToggleBlogStatus } from "@/modules/blog/hooks/useAdminBlogs";
 import { BLOG_CATEGORIES } from "@/modules/blog/constants";
 import type { AdminBlogListItem } from "@/modules/blog/types/blog.type";
 
-const FILTERS = ["All", "Published", "Drafts"] as const;
+const FILTERS = ["All", "Published", "Scheduled", "Drafts", "Blocked", "Unblocked"] as const;
 type Filter = (typeof FILTERS)[number];
 
 const SORT_OPTIONS = [
@@ -60,6 +61,12 @@ function CoverThumb({ blog, size }: { blog: AdminBlogListItem; size: number }) {
   );
 }
 
+function ArticleLink({ blog, className, children }: { blog: AdminBlogListItem; className: string; children: React.ReactNode }) {
+  return blog.deletedAt
+    ? <div className={className}>{children}</div>
+    : <Link href={`/admin/blog/${blog.id}`} className={className}>{children}</Link>;
+}
+
 export default function BlogAdminPage() {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("All");
@@ -69,19 +76,40 @@ export default function BlogAdminPage() {
   const [pageSize, setPageSize] = useState(25);
   const [statusTarget, setStatusTarget] = useState<AdminBlogListItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminBlogListItem | null>(null);
+  const [blockTarget, setBlockTarget] = useState<AdminBlogListItem | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<AdminBlogListItem | null>(null);
   const { mutateAsync: toggleStatus } = useToggleBlogStatus();
   const { mutateAsync: deleteBlog } = useDeleteBlog();
+  const { mutateAsync: restoreBlog } = useRestoreBlog();
 
   useEffect(() => setPage(1), [search, filter, category, sort]);
 
   const query: Record<string, unknown> = { search, page, limit: pageSize, sort };
   if (filter === "Published") query.status = "published";
+  if (filter === "Scheduled") query.status = "scheduled";
   if (filter === "Drafts") query.status = "draft";
+  if (filter === "All") query.deleted = "all";
+  if (filter === "Blocked") query.deleted = true;
+  if (filter === "Unblocked") query.deleted = false;
   if (category) query.category = category;
 
   const { data, isLoading, isError, refetch } = useAdminBlogs(query);
   const blogs = data?.data ?? [];
   const filtered = Boolean(search || category || filter !== "All");
+
+  const renderActions = (b: AdminBlogListItem) => (
+    <div className="inline-grid grid-cols-[32px_92px_78px] items-center gap-2">
+      {b.deletedAt ? <span aria-hidden="true" className="h-8 w-8" /> : (
+        <Link href={`/admin/blog/${b.id}`} style={{ ...iconButtonStyle, display: "inline-grid", placeItems: "center" }} title="Edit" aria-label={`Edit ${b.title}`}>
+          <Pencil size={14} />
+        </Link>
+      )}
+      <BlockToggleButton blocked={!!b.deletedAt} subject={b.title} onClick={() => b.deletedAt ? setRestoreTarget(b) : setBlockTarget(b)} />
+      <button type="button" style={{ ...softPillButton, color: "#dc2626", width: 78, height: 32, boxSizing: "border-box", whiteSpace: "nowrap" }} onClick={() => setDeleteTarget(b)} aria-label={`Delete ${b.title} permanently`}>
+        <span className="inline-flex items-center gap-1"><Trash2 size={13} /> Delete</span>
+      </button>
+    </div>
+  );
 
   const columns: AdminTableColumn<AdminBlogListItem>[] = [
     {
@@ -89,13 +117,13 @@ export default function BlogAdminPage() {
       header: "Article",
       width: 300,
       render: (b) => (
-        <Link href={`/admin/blog/${b.id}`} className="flex items-center gap-2.5">
+        <ArticleLink blog={b} className="flex items-center gap-2.5">
           <CoverThumb blog={b} size={54} />
           <div className="min-w-0 flex-1">
             <TruncatedText text={b.title} className="text-[13px] font-semibold" />
             <div className="truncate text-[11px] text-[#8a8a8e]">/blog/{b.slug}</div>
           </div>
-        </Link>
+        </ArticleLink>
       ),
     },
     { key: "category", header: "Category", width: 140, render: (b) => <TruncatedText text={b.category} className="text-[12.5px] text-[#555]" /> },
@@ -103,7 +131,7 @@ export default function BlogAdminPage() {
       key: "status",
       header: "Status",
       width: 110,
-      render: (b) => <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />,
+      render: (b) => b.deletedAt ? <span className="text-[12.5px] text-[#8a8a8e]">Blocked</span> : <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />,
     },
     {
       key: "featured",
@@ -121,18 +149,9 @@ export default function BlogAdminPage() {
       key: "actions",
       header: "Actions",
       align: "right",
-      width: 100,
+      width: 242,
       cellClassName: "whitespace-nowrap",
-      render: (b) => (
-        <>
-          <Link href={`/admin/blog/${b.id}`} style={{ ...iconButtonStyle, marginRight: 6, display: "inline-grid", placeItems: "center" }} title="Edit" aria-label={`Edit ${b.title}`}>
-            <Pencil size={14} />
-          </Link>
-          <button style={dangerIconButtonStyle} title="Delete" aria-label={`Delete ${b.title}`} onClick={() => setDeleteTarget(b)}>
-            <Trash2 size={14} />
-          </button>
-        </>
-      ),
+      render: renderActions,
     },
   ];
 
@@ -144,8 +163,35 @@ export default function BlogAdminPage() {
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
-    await deleteBlog(deleteTarget.id);
-    setDeleteTarget(null);
+    try {
+      await deleteBlog({ id: deleteTarget.id, permanent: true });
+      setDeleteTarget(null);
+      if (blogs.length === 1 && page > 1) setPage(page - 1);
+    } catch {
+      // The mutation shows the error; keep the confirmation open for retry.
+    }
+  };
+
+  const handleConfirmRestore = async () => {
+    if (!restoreTarget) return;
+    try {
+      await restoreBlog(restoreTarget.id);
+      setRestoreTarget(null);
+      if (filter === "Blocked" && blogs.length === 1 && page > 1) setPage(page - 1);
+    } catch {
+      // The mutation shows the error; keep the confirmation open for retry.
+    }
+  };
+
+  const handleConfirmBlock = async () => {
+    if (!blockTarget) return;
+    try {
+      await deleteBlog({ id: blockTarget.id, permanent: false });
+      setBlockTarget(null);
+      if (filter !== "All" && blogs.length === 1 && page > 1) setPage(page - 1);
+    } catch {
+      // The mutation shows the error; keep the confirmation open for retry.
+    }
   };
 
   return (
@@ -185,7 +231,7 @@ export default function BlogAdminPage() {
             columns={columns}
             rows={blogs}
             getRowKey={(b) => b.id}
-            minWidth={880}
+            minWidth={1000}
             compact
             isLoading={isLoading}
             isError={isError}
@@ -195,7 +241,7 @@ export default function BlogAdminPage() {
             renderMobileCard={(b) => (
               <div className="rounded-2xl border border-[#f0f0ee] p-3">
                 <div className="flex items-start justify-between gap-2">
-                  <Link href={`/admin/blog/${b.id}`} className="flex min-w-0 flex-1 items-center gap-2.5">
+                  <ArticleLink blog={b} className="flex min-w-0 flex-1 items-center gap-2.5">
                     <CoverThumb blog={b} size={60} />
                     <div className="min-w-0 flex-1">
                       <div className="line-clamp-2 text-[13.5px] font-semibold leading-snug">{b.title}</div>
@@ -206,19 +252,12 @@ export default function BlogAdminPage() {
                         </div>
                       )}
                     </div>
-                  </Link>
-                  <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />
+                  </ArticleLink>
+                  {b.deletedAt ? <span className="text-xs text-[#8a8a8e]">Blocked</span> : <StatusBadge status={statusLabel(b)} onClick={() => setStatusTarget(b)} />}
                 </div>
-                <div className="mt-2.5 flex items-center justify-between gap-2">
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
                   <div className="text-[12px] text-[#8a8a8e]">{b.publishedAt ? formatDate(b.publishedAt) : "Not published"}</div>
-                  <div className="flex gap-1.5">
-                    <Link href={`/admin/blog/${b.id}`} style={{ ...softPillButton, display: "inline-flex", alignItems: "center", gap: 4 }}>
-                      <Pencil size={12} /> Edit
-                    </Link>
-                    <button style={dangerIconButtonStyle} aria-label={`Delete ${b.title}`} onClick={() => setDeleteTarget(b)}>
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                  {renderActions(b)}
                 </div>
               </div>
             )}
@@ -247,12 +286,35 @@ export default function BlogAdminPage() {
 
       {deleteTarget && (
         <ConfirmModal
-          title="Delete article?"
-          message={`"${deleteTarget.title}" and its photos will be deleted for good. This can't be undone.`}
-          confirmLabel="Delete"
+          title="Delete article permanently?"
+          message={`Delete "${deleteTarget.title}" and its photos from the database and storage? This cannot be recovered.`}
+          confirmLabel="Delete permanently"
           tone="danger"
           onConfirm={handleConfirmDelete}
           onClose={() => setDeleteTarget(null)}
+        />
+      )}
+      {restoreTarget && (
+        <ConfirmModal
+          title="Unblock article?"
+          message={restoreTarget.status === "draft"
+            ? `"${restoreTarget.title}" will be unblocked as a draft. Publish it to show it on the website.`
+            : isScheduled(restoreTarget)
+              ? `"${restoreTarget.title}" will be unblocked and appear on ${formatDate(restoreTarget.publishedAt!)}. Featured stays off.`
+              : `"${restoreTarget.title}" will be visible on the website again. Featured stays off.`}
+          confirmLabel="Unblock"
+          onConfirm={handleConfirmRestore}
+          onClose={() => setRestoreTarget(null)}
+        />
+      )}
+      {blockTarget && (
+        <ConfirmModal
+          title="Block article?"
+          message={`Hide "${blockTarget.title}" from the website? Its content and photos are kept. You can unblock it here anytime.`}
+          confirmLabel="Block"
+          tone="danger"
+          onConfirm={handleConfirmBlock}
+          onClose={() => setBlockTarget(null)}
         />
       )}
     </AdminPageShell>

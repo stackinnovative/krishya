@@ -60,6 +60,14 @@ router.delete(
     (req, res) => blogController.deleteBlog(req, res),
 );
 
+/* ---------- ADMIN: RESTORE ARTICLE ---------- */
+router.patch(
+    "/:id/restore",
+    authenticate.authenticate,
+    authorizeRoles("admin"),
+    (req, res) => blogController.restoreBlog(req, res),
+);
+
 /* ---------- ADMIN: PUBLISH ARTICLE ---------- */
 router.patch(
     "/:id/publish",

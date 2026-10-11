@@ -31,6 +31,7 @@ export type BlogRecord = {
     seoDescription?: string;
     createdAt?: Date | null;
     updatedAt?: Date | null;
+    deletedAt?: Date | null;
 };
 
 /** Fields a list query loads - everything but the body. */
@@ -61,6 +62,7 @@ export class BlogMapper {
                 seoDescription: record.seoDescription ?? "",
                 createdAt: record.createdAt ?? null,
                 updatedAt: record.updatedAt ?? null,
+                deletedAt: record.deletedAt ?? null,
             });
         } catch (error) {
             // One malformed document must not take down the whole page.
@@ -106,7 +108,7 @@ export class BlogMapper {
     static toAdminListView(record: BlogRecord): AdminBlogListView | null {
         const card = BlogMapper.toListView(record);
         if (!card) return null;
-        return { ...card, status: record.status ?? "draft", updatedAt: toIso(record.updatedAt) };
+        return { ...card, status: record.status ?? "draft", updatedAt: toIso(record.updatedAt), deletedAt: toIso(record.deletedAt) };
     }
 
     private static entityCard(entity: Blog): BlogListView {
@@ -128,6 +130,7 @@ export class BlogMapper {
             ...BlogMapper.entityCard(entity),
             status: entity.status,
             updatedAt: toIso(entity.updatedAt),
+            deletedAt: toIso(entity.deletedAt),
             blocks: entity.blocks,
             seoTitle: entity.seoTitle,
             seoDescription: entity.seoDescription,

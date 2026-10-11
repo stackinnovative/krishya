@@ -32,8 +32,13 @@ export const editBlogApi = async (id: string, data: SaveBlogPayload): Promise<Sa
   return response.data;
 };
 
-export const deleteBlogApi = async (id: string): Promise<ApiResponse> => {
-  const response = await api.delete<ApiResponse>(`/blogs/${id}`);
+export const deleteBlogApi = async (id: string, permanent = false): Promise<ApiResponse> => {
+  const response = await api.delete<ApiResponse>(`/blogs/${id}`, { params: { permanent } });
+  return response.data;
+};
+
+export const restoreBlogApi = async (id: string): Promise<ApiResponse> => {
+  const response = await api.patch<ApiResponse>(`/blogs/${id}/restore`);
   return response.data;
 };
 

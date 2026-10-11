@@ -45,10 +45,6 @@ export class EditBlogUseCase implements IEditBlogUseCase {
             throw new CustomError(ResponseMessages.BLOG_SAVE_FAILED, HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
 
-        if (saved.isFeatured && !current.isFeatured) {
-            await this._blogRepository.clearFeatured(id);
-        }
-
         // Only once the save succeeded: photos the article no longer uses are
         // orphaned. A failed delete just leaves a stray file, so it never fails the save.
         await Promise.all(

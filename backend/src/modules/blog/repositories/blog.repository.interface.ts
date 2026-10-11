@@ -13,21 +13,22 @@ export type AdminBlogFilter = {
     page: number;
     limit: number;
     search: string;
-    status?: BlogStatus | undefined;
+    status?: BlogStatus | "scheduled" | undefined;
     category?: BlogCategory | undefined;
     sort: "newest" | "oldest";
+    deleted?: boolean | "all";
 };
 
 export interface IBlogRepository {
     create(blogEntity: Blog): Promise<Blog>;
-    findById(id: string): Promise<Blog | null>;
+    findById(id: string, includeDeleted?: boolean): Promise<Blog | null>;
     /** Only an article that is published and whose publish date has passed. */
     findPublishedBySlug(slug: string, now: Date): Promise<Blog | null>;
     isSlugTaken(slug: string, exceptId?: string | null): Promise<boolean>;
     save(blogEntity: Blog): Promise<Blog>;
     delete(id: string): Promise<void>;
-    /** Keeps "featured" to one article at a time. */
-    clearFeatured(exceptId: string): Promise<void>;
+    softDelete(id: string): Promise<void>;
+    restore(id: string): Promise<void>;
     findAllForAdmin(filter: AdminBlogFilter): Promise<PaginatedBlogList<AdminBlogListView>>;
     findPublished(filter: PublishedBlogFilter, now: Date): Promise<PaginatedBlogList<BlogListView>>;
     /** The featured article if it is live, otherwise the newest live one. */

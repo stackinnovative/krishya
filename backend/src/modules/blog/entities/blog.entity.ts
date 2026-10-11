@@ -85,6 +85,7 @@ export class Blog {
     public readonly seoDescription: string;
     public readonly createdAt: Date | null;
     public readonly updatedAt: Date | null;
+    public readonly deletedAt: Date | null;
 
     constructor(props: BlogProps) {
         this.id = props.id ?? null;
@@ -117,6 +118,7 @@ export class Blog {
         this.seoDescription = fitText(props.seoDescription ?? "", "SEO description", L.seoDescription);
         this.createdAt = props.createdAt ?? null;
         this.updatedAt = props.updatedAt ?? null;
+        this.deletedAt = props.deletedAt ?? null;
     }
 
     /** "N min read" - never less than one minute. */
