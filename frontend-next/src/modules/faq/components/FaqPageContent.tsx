@@ -12,7 +12,8 @@ import Skeleton from "@/modules/admin-shell/components/Skeleton";
 import Toggle from "@/modules/admin-shell/components/Toggle";
 import { blackPillButton, dangerIconButtonStyle, iconButtonStyle, softPillButton, whitePillButton } from "@/modules/admin-shell/style-helpers";
 import { useAdminFaqs, useDeleteFaq, useDeleteFaqGroup, useReorderFaqGroups, useReorderFaqs, useSaveFaq, useSaveFaqGroup } from "../hooks/useAdminFaqs";
-import { FAQ_LIMITS as L, FAQ_PLACEHOLDERS } from "../constants";
+import { FAQ_LIMITS as L, FAQ_PLACEHOLDERS, fillFaqAnswer } from "../constants";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import type { AdminFaqGroup, FaqItem, SaveFaqPayload } from "../types/faq.type";
 
 /** Labelled on/off switch - a real button, so it works from the keyboard and reads as a switch. */
@@ -94,6 +95,7 @@ export default function FaqPageContent() {
   const deleteFaq = useDeleteFaq();
   const reorderGroups = useReorderFaqGroups();
   const reorderFaqs = useReorderFaqs();
+  const store = useStoreContact();
 
   const [search, setSearch] = useState("");
   const [groupModal, setGroupModal] = useState<GroupModal | null>(null);
@@ -238,7 +240,8 @@ export default function FaqPageContent() {
                               />
                               <button type="button" className="min-w-0 flex-1 text-left" onClick={() => setFaqModal({ faq: f, groupId: f.groupId })}>
                                 <div className={`text-[13px] font-semibold leading-snug ${f.isActive ? "" : "text-[#8a8a8e]"}`}>{f.question}</div>
-                                <div className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-[#8a8a8e]">{f.answer}</div>
+                                {/* Preview as customers read it - placeholders filled from Business Settings. */}
+                                <div className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-[#8a8a8e]">{fillFaqAnswer(f.answer, store)}</div>
                               </button>
                             </div>
                             <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[#f0f0ee] pt-2.5 om:flex-none om:justify-end om:border-0 om:pt-0">
