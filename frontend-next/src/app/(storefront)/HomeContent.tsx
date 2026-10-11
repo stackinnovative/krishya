@@ -22,7 +22,8 @@ import { useAbout } from "@/modules/about/hooks/useAbout";
 import { useBlogList } from "@/modules/blog/hooks/useStorefrontBlogs";
 import { HOME_BLOG_QUERY } from "@/modules/blog/constants";
 import { ABOUT_FALLBACK } from "@/modules/about/constants";
-import { getHomeFaqs } from "@/modules/storefront-content/constants/faqs";
+import { useHomeFaqs } from "@/modules/faq/hooks/useStorefrontFaqs";
+import { fillFaqAnswer } from "@/modules/faq/constants";
 import { categoryKeys, homeContentKeys } from "@/shared/query-keys";
 
 const NEWEST_FILTERS = { search: "", sort: "newest" };
@@ -42,6 +43,7 @@ export default function HomeContent() {
   const store = useStoreContact();
   const { data: aboutRes } = useAbout();
   const { data: journal } = useBlogList(HOME_BLOG_QUERY);
+  const { data: homeFaqs } = useHomeFaqs();
   const about = aboutRes?.data ?? ABOUT_FALLBACK;
 
   // Health needs = the active categories, using a signature category's image where one exists.
@@ -79,7 +81,7 @@ export default function HomeContent() {
       <ProcessSection />
       <TestimonialsSection testimonials={testimonials?.data ?? []} />
       <JournalPreview articles={journal?.data ?? []} />
-      <FaqPreview faqs={getHomeFaqs(store)} />
+      <FaqPreview faqs={(homeFaqs?.data ?? []).map((f) => ({ ...f, answer: fillFaqAnswer(f.answer, store) }))} />
       <WhatsAppCta />
     </div>
   );

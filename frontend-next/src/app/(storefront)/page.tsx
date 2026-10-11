@@ -4,8 +4,9 @@ import { getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/ap
 import { getActiveCategoriesApi, getSignatureCategoriesApi } from "@/modules/categories/api/category.api";
 import { getAboutApi } from "@/modules/about/api/about.api";
 import { getBlogListApi } from "@/modules/blog/api/blog.api";
+import { getHomeFaqsApi } from "@/modules/faq/api/faq.api";
 import { HOME_BLOG_QUERY } from "@/modules/blog/constants";
-import { aboutKeys, blogKeys, categoryKeys, homeContentKeys, productKeys } from "@/shared/query-keys";
+import { aboutKeys, blogKeys, categoryKeys, faqKeys, homeContentKeys, productKeys } from "@/shared/query-keys";
 import HomeContent from "./HomeContent";
 
 // Server-rendered so the homepage's real content (featured products,
@@ -36,6 +37,7 @@ export default async function LandingPage() {
     queryClient.prefetchQuery({ queryKey: homeContentKeys.testimonialsUser, queryFn: getTestimonialUserApi }),
     queryClient.prefetchQuery({ queryKey: aboutKeys.all, queryFn: getAboutApi }),
     queryClient.prefetchQuery({ queryKey: [...blogKeys.userList, HOME_BLOG_QUERY], queryFn: () => getBlogListApi(HOME_BLOG_QUERY) }),
+    queryClient.prefetchQuery({ queryKey: faqKeys.home, queryFn: getHomeFaqsApi }),
     queryClient.prefetchInfiniteQuery({
       queryKey: [...productKeys.userList, newestFilters],
       queryFn: ({ pageParam }: { pageParam: number }) => getAllProductsForUserApi({ ...newestFilters, page: pageParam }),
