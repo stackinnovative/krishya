@@ -11,7 +11,8 @@ export class GetBannerUserUseCase implements IGetBannerUserUseCase {
     ) { }
 
     async execute(): Promise<UserBannerView[]> {
-        const banner = await this._bannerRepository.getBannerUser();
-        return banner;
+        // One banner at a time: the newest live one (older data may still have several switched on).
+        const banners = await this._bannerRepository.getBannerUser();
+        return banners.slice(0, 1);
     }
 }

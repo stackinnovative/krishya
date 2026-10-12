@@ -278,6 +278,7 @@ export const ResponseMessages = {
   BANNER_DELETED_SUCCESSFULLY: "Banner deleted successfully",
   BANNER_ACTIVATED_SUCCESSFULLY: "Banner activated successfully",
   BANNER_DEACTIVATED_SUCCESSFULLY: "Banner deactivated successfully",
+  BANNER_LIMIT_REACHED: "You can keep up to 3 banners. Delete one before adding another.",
 
   /* ================= TESTIMONIAL ================= */
   TESTIMONIAL_NOT_FOUND: "Testimonial not found",

@@ -28,10 +28,6 @@ export class EditBannerUseCase implements IEditBannerUseCase {
             );
         }
 
-        if (banner.image.publicId !== dto.image.publicId) {
-            await deleteCloudinaryImage(banner.image.publicId);
-        }
-
         const updatedBanner = banner.updateDetails({
             image: dto.image,
             buttonUrl: dto.buttonUrl,
@@ -44,6 +40,11 @@ export class EditBannerUseCase implements IEditBannerUseCase {
                 ResponseMessages.BANNER_UPDATE_FAILED,
                 HttpStatusCode.INTERNAL_SERVER_ERROR
             );
+        }
+
+        // Only once the new photo is saved is the old one safe to remove; a failed delete just leaves a stray file.
+        if (banner.image.publicId !== dto.image.publicId) {
+            await deleteCloudinaryImage(banner.image.publicId).catch((err) => console.error("Could not delete replaced banner image:", err));
         }
     }
 }
