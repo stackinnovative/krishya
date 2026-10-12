@@ -50,6 +50,10 @@ export class BannerRepository implements IBannerRepository {
         await BannerModel.findByIdAndDelete(id);
     }
 
+    async deactivateAllExcept(id: string): Promise<void> {
+        await BannerModel.updateMany({ _id: { $ne: id }, isActive: true }, { $set: { isActive: false } });
+    }
+
     async getBannerUser(): Promise<UserBannerView[]> {
         const banners = await BannerModel.find({ isActive: true }).sort({ createdAt: -1 }).lean();
         return banners

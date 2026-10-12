@@ -40,5 +40,8 @@ export class UnblockBannerUseCase implements IUnblockBannerUseCase {
                 HttpStatusCode.INTERNAL_SERVER_ERROR
             );
         }
+
+        // Only one banner is live at a time - turning this one on switches the others off.
+        await this._bannerRepository.deactivateAllExcept(id);
     }
 }

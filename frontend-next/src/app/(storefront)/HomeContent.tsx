@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { useFeaturedProducts, useProductList } from "@/modules/products/hooks/useStorefrontProducts";
-import { getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/api/home-content.api";
+import { getBannerUserApi, getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/api/home-content.api";
 import { getSignatureCategoriesApi } from "@/modules/categories/api/category.api";
 import { useActiveCategories } from "@/modules/categories/hooks/useStorefrontCategories";
 import type { UserProductListItem } from "@/modules/products/types/storefront-product.type";
@@ -14,6 +14,7 @@ import {
   JournalPreview,
   ProcessSection,
   ProductShelf,
+  PromoBanner,
   TestimonialsSection,
 } from "@/modules/storefront-content/components/home/HomeSections";
 import WhatsAppCta from "@/modules/storefront-shell/components/WhatsAppCta";
@@ -40,6 +41,7 @@ export default function HomeContent() {
   const { data: activeCategories } = useActiveCategories();
   const { data: signature } = useQuery({ queryKey: categoryKeys.signature, queryFn: getSignatureCategoriesApi });
   const { data: testimonials } = useQuery({ queryKey: homeContentKeys.testimonialsUser, queryFn: getTestimonialUserApi });
+  const { data: banners } = useQuery({ queryKey: homeContentKeys.bannerUser, queryFn: getBannerUserApi });
   const store = useStoreContact();
   const { data: aboutRes } = useAbout();
   const { data: journal } = useBlogList(HOME_BLOG_QUERY);
@@ -69,6 +71,7 @@ export default function HomeContent() {
       <HomeHero storeName={store.storeName} heroes={heroes?.data ?? []} loading={heroesPending} needs={needs} defaultSpotlight={bestsellers[0] ?? newestItems[0]} />
       <HealthNeedsSection needs={needs} />
       <ProductShelf eyebrow="Most loved" title="Bestsellers" linkLabel="View all products" products={bestsellers.length ? bestsellers : newestItems.slice(0, 4)} decor="c" />
+      <PromoBanner banner={banners?.data?.[0]} alt={`Current offer at ${store.storeName}`} />
       <ProductShelf
         eyebrow="Handpicked for you"
         title="Featured Products"

@@ -9,8 +9,8 @@
 export const HERO_ASPECT_RATIO = 4 / 5;
 export const BANNER_ASPECT_RATIO = 21 / 6;
 
-/** Mirrors MAX_BANNERS in backend/src/modules/banner/use-cases/create.banner.use-case.ts -
- * adding a 4th banner there auto-deletes the oldest, so this is a display hint, not enforcement. */
+/** Mirrors MAX_BANNERS in backend/src/modules/banner/use-cases/create.banner.use-case.ts - the
+ * backend refuses a 4th banner. Only one of them is live on the home page at a time. */
 export const MAX_BANNERS = 3;
 
 /** Mirrors HERO_LIMITS in backend/src/modules/hero/types/hero.type.ts - sized so

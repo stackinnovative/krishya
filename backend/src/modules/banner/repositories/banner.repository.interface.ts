@@ -7,6 +7,8 @@ export interface IBannerRepository {
     findAll(): Promise<Banner[]>;
     save(bannerEntity: Banner): Promise<Banner>;
     delete(id: string): Promise<void>;
+    /** Switches every other banner off - only one banner is live at a time. */
+    deactivateAllExcept(id: string): Promise<void>;
     getBannerUser(): Promise<UserBannerView[]>;
     getBannerAdmin(): Promise<BannerView[]>;
 }
