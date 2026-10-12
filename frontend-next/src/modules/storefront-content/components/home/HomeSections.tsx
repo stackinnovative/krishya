@@ -3,6 +3,7 @@ import Image from "next/image";
 import ProductCard from "@/modules/products/components/storefront/ProductCard";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { ABOUT_FALLBACK_IMAGES } from "@/modules/about/constants";
+import { BANNER_ASPECT_RATIO } from "@/modules/home-content/constants";
 import type { AboutStat, AboutTeaser } from "@/modules/about/types/about.type";
 import type { UserProductListItem } from "@/modules/products/types/storefront-product.type";
 import type { TestimonialView } from "@/modules/home-content/types/home-content.type";
@@ -55,6 +56,49 @@ export function HealthNeedsSection({ needs }: { needs: HealthNeed[] }) {
       </section>
       <Wave from={MINT} to={CREAM} shape="b" />
     </div>
+  );
+}
+
+/**
+ * The one live promo banner from admin, between the product shelves. The
+ * image is shown at exactly the ratio admin cropped it to, so nothing in it is
+ * cut off. Clickable when the banner has a link - pages on this site open in
+ * place, outside links in a new tab. Hidden when no banner is live.
+ */
+export function PromoBanner({ banner, alt }: { banner?: { image?: { url?: string }; buttonUrl?: string }; alt: string }) {
+  const url = banner?.image?.url;
+  if (!url) return null;
+
+  const photo = (
+    <span className="relative block w-full overflow-hidden rounded-2xl bg-ka-sand shadow-[0_18px_40px_-24px_rgba(31,77,58,.45)]" style={{ aspectRatio: BANNER_ASPECT_RATIO }}>
+      <Image
+        src={getOptimizedImageUrl(url, 1600, Math.round(1600 / BANNER_ASPECT_RATIO))}
+        alt={alt}
+        fill
+        sizes="(max-width: 1280px) 100vw, 1170px"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02] motion-reduce:transition-none"
+      />
+    </span>
+  );
+  const link = banner.buttonUrl?.trim();
+  const linkClass = "group block rounded-2xl outline-none focus-visible:ring-2 focus-visible:ring-ka-gold focus-visible:ring-offset-4 focus-visible:ring-offset-ka-cream";
+
+  return (
+    <section aria-label="Current offer" className="relative pb-[clamp(40px,5vw,72px)]">
+      <div className={CONTAINER}>
+        {!link ? (
+          photo
+        ) : link.startsWith("/") ? (
+          <Link href={link} className={linkClass}>
+            {photo}
+          </Link>
+        ) : (
+          <a href={link} target="_blank" rel="noopener noreferrer" className={linkClass}>
+            {photo}
+          </a>
+        )}
+      </div>
+    </section>
   );
 }
 
