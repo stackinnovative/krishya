@@ -44,7 +44,7 @@ export const useSaveBanner = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string | null; data: CreateBannerPayload }) => (id ? api.editBannerApi(id, data) : api.createBannerApi(data)),
-    onSuccess: (_r, v) => { toast.success(v.id ? "Banner updated" : "Banner added"); invalidateBannerViews(qc); },
+    onSuccess: (_r, v) => { toast.success(v.id ? "Banner updated" : "Banner added and live on the home page"); invalidateBannerViews(qc); },
     onError: (err) => !getApiFieldErrors(err) && toast.error(getApiErrorMessage(err, "Could not save the banner.")),
   });
 };
@@ -52,7 +52,12 @@ export const useToggleBanner = () => {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, isActive }: { id: string; isActive: boolean }) => (isActive ? api.blockBannerApi(id) : api.unblockBannerApi(id)),
-    onSuccess: () => invalidateBannerViews(qc),
+    onSuccess: (_r, v) => {
+      // Turning one on switches the others off on the server - say so, so it isn't a surprise.
+      toast.success(v.isActive ? "Banner hidden from the home page" : "Banner is live - any other banner was switched off");
+      invalidateBannerViews(qc);
+    },
+    onError: (err) => toast.error(getApiErrorMessage(err, "Could not update the banner.")),
   });
 };
 export const useDeleteBanner = () => {

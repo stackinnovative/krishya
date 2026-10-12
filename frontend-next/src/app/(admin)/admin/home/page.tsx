@@ -34,7 +34,7 @@ type TabKey = (typeof TABS)[number]["key"];
 
 const BANNER_FIELDS: FormFieldDef[] = [
   { key: "image", label: "Image", type: "image", required: true, imageAspectRatio: BANNER_ASPECT_RATIO },
-  { key: "buttonUrl", label: "Link (optional)", type: "url", placeholder: "/collections/all" },
+  { key: "buttonUrl", label: "Link (optional)", type: "url", placeholder: "e.g. /products", hint: "Where shoppers go when they tap the banner - a page on this site (/products) or a full https:// link. Leave empty for no link." },
 ];
 const TESTIMONIAL_FIELDS: FormFieldDef[] = [
   { key: "author", label: "Customer name", type: "text", placeholder: "Name", required: true, minLength: 2, maxLength: 100 },
@@ -48,6 +48,7 @@ export default function HomeManagementPage() {
   const [testimonialEditing, setTestimonialEditing] = useState<TestimonialView | "new" | null>(null);
 
   const { data: banners } = useAdminBanners();
+  const bannersFull = tab_ === "banner" && (banners?.data?.length ?? 0) >= MAX_BANNERS;
   const { data: testimonials } = useAdminTestimonials();
   const { mutateAsync: saveBanner } = useSaveBanner();
   const { mutate: toggleBanner } = useToggleBanner();
@@ -69,13 +70,15 @@ export default function HomeManagementPage() {
         <div className="flex items-center gap-3">
           {tab_ === "banner" && (
             <span className="text-[12px] text-[#8a8a8e]">
-              {banners?.data?.length ?? 0}/{MAX_BANNERS} banners &mdash; adding a {MAX_BANNERS + 1}th replaces the oldest
+              {banners?.data?.length ?? 0}/{MAX_BANNERS} banners &middot; only one is live at a time
             </span>
           )}
           {/* About is a single record edited in place - nothing to "add". */}
           {tab_ !== "about" && (
             <button
-              style={blackPillButton}
+              style={{ ...blackPillButton, opacity: bannersFull ? 0.5 : 1 }}
+              disabled={bannersFull}
+              title={bannersFull ? `You can keep up to ${MAX_BANNERS} banners - delete one first` : undefined}
               onClick={() => {
                 if (tab_ === "hero") setHeroEditing("new");
                 else if (tab_ === "banner") setBannerEditing("new");
@@ -94,6 +97,9 @@ export default function HomeManagementPage() {
 
       {tab_ === "banner" && (
         <div className="flex flex-col gap-3">
+          <div className="text-[12px] leading-relaxed text-[#8a8a8e]">
+            The live banner shows on the home page, under Bestsellers. Click a banner&apos;s status to make it live - the one that was live is switched off.
+          </div>
           {(banners?.data ?? []).map((b) => (
             <AdminCard key={b.id} padding="16px 20px">
               <div className="flex flex-wrap items-center gap-4">
