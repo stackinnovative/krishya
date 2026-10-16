@@ -69,6 +69,8 @@ export type BlogProps = {
 export type BlogProductView = {
     id: string;
     name: string;
+    /** For the /products/<slug> link. */
+    slug: string;
     price: number;
     image: string;
 };
