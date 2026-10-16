@@ -96,7 +96,7 @@ export default function OrderDetailModal({ orderId, onClose }: { orderId: string
                     </div>
                     <div className="flex-1">
                       <div className="font-semibold">
-                        {it.name} {it.colorName ? `· ${it.colorName}` : ""} · Size {it.size}
+                        {it.name} · {it.size}
                       </div>
                       <div className="text-[11.5px] text-[#8a8a8e]">Qty {it.quantity}</div>
                     </div>

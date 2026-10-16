@@ -7,8 +7,10 @@ import { useRouter } from "next/navigation";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { formatCurrency } from "@/lib/format";
 import { AYUSH_DISCLAIMER, AYUSH_LICENSE_NO } from "@/lib/contact";
-import { useProductDetails, useRelatedProducts } from "@/modules/products/hooks/useStorefrontProducts";
-import { useActiveCategories } from "@/modules/categories/hooks/useStorefrontCategories";
+import { useProductBySlug, useRelatedProducts } from "@/modules/products/hooks/useStorefrontProducts";
+import { PRODUCT_TYPE_LABELS, formatVariantLabel } from "@/modules/products/constants/product-options";
+import PriceTag from "@/modules/products/components/storefront/PriceTag";
+import type { UserProductDetails } from "@/modules/products/types/storefront-product.type";
 import { useAddToCart } from "@/modules/cart/hooks/useCart";
 import { useToggleWishlist, useWishlistIds } from "@/modules/wishlist/hooks/useWishlist";
 import ProductCard from "@/modules/products/components/storefront/ProductCard";
@@ -16,15 +18,16 @@ import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContac
 import { SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
 import { HeartIcon, LeafIcon, TruckIcon, WhatsAppIcon } from "@/modules/storefront-shell/components/icons";
 
-type TabKey = "desc" | "store" | "delivery";
-const TABS: { key: TabKey; label: string }[] = [
+type TabKey = "desc" | "ing" | "use" | "store" | "delivery";
+
+/** The design's tabs - Key Ingredients, How to Use and Storage only appear when admin filled them in. */
+const tabsFor = (p: UserProductDetails): { key: TabKey; label: string }[] => [
   { key: "desc", label: "Description" },
-  { key: "store", label: "Storage" },
+  ...(p.ingredients.length ? [{ key: "ing" as const, label: "Key Ingredients" }] : []),
+  ...(p.howToUse ? [{ key: "use" as const, label: "How to Use" }] : []),
+  ...(p.storage ? [{ key: "store" as const, label: "Storage" }] : []),
   { key: "delivery", label: "Delivery & Returns" },
 ];
-
-const STORAGE_TEXT =
-  "Store in a cool, dry place away from direct sunlight and keep the pack tightly closed after use. Oils may thicken in cold weather - warm gently before use. Shake liquid preparations well. Always use a dry spoon for powders. Keep out of reach of children.";
 
 /** First sentence of the description - the short "benefit" line under the title. */
 const leadSentence = (text: string) => {
@@ -36,17 +39,15 @@ const leadSentence = (text: string) => {
  * products, once the category is known) and handed down through a
  * HydrationBoundary, so this resolves instantly from cache on first load
  * instead of firing a second client fetch. */
-export default function ProductDetailContent({ id }: { id: string }) {
+export default function ProductDetailContent({ slug }: { slug: string }) {
   const router = useRouter();
-  const { data, isLoading } = useProductDetails(id);
+  const { data, isLoading } = useProductBySlug(slug);
   const { mutate: addToCart, mutateAsync: addToCartAsync, isPending: adding } = useAddToCart();
   const { data: wishIds } = useWishlistIds();
   const { mutate: toggleWish, isPending: toggling } = useToggleWishlist();
-  const { data: categoryData } = useActiveCategories();
   const { freeAbove, deliveryCharge, whatsapp } = useStoreContact();
   const product = data?.data;
 
-  const [colorId, setColorId] = useState<string | undefined>(undefined);
   const [variantId, setVariantId] = useState<string | undefined>(undefined);
   const [imageIndex, setImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
@@ -55,16 +56,16 @@ export default function ProductDetailContent({ id }: { id: string }) {
 
   useEffect(() => {
     if (!product) return;
-    const firstColor = product.colorOptions[0];
-    setColorId(firstColor?.id);
-    const forColor = product.variants.filter((v) => !firstColor || v.colorOptionId === firstColor.id);
-    const firstVariant = forColor.find((v) => v.isDefault && v.stock > 0) ?? forColor.find((v) => v.stock > 0) ?? forColor[0] ?? product.variants[0];
+    const variants = product.variants;
+    const firstVariant =
+      variants.find((v) => v.variantId === product.defaultVariantId && v.stock > 0) ?? variants.find((v) => v.stock > 0) ?? variants[0];
     setVariantId(firstVariant?.variantId);
+    setTab("desc");
     setImageIndex(0);
     setQuantity(1);
   }, [product]);
 
-  const { data: related } = useRelatedProducts(product?.categoryId ?? "", id);
+  const { data: related } = useRelatedProducts(product?.category.id ?? "", product?.id);
 
   if (isLoading) {
     return (
@@ -90,20 +91,21 @@ export default function ProductDetailContent({ id }: { id: string }) {
     );
   }
 
-  const activeColor = product.colorOptions.find((c) => c.id === colorId) ?? product.colorOptions[0];
-  const images = activeColor?.images ?? [];
+  const images = product.images;
   const mainImage = images[imageIndex] ?? images[0];
-  const sizes = product.variants.filter((v) => !activeColor || v.colorOptionId === activeColor.id);
+  const sizes = product.variants;
   const activeVariant = product.variants.find((v) => v.variantId === variantId);
+  const activeLabel = activeVariant ? formatVariantLabel(activeVariant) : "";
+  const tabs = tabsFor(product);
   const outOfStock = !activeVariant || activeVariant.stock === 0;
   const maxQty = Math.max(1, Math.min(activeVariant?.stock ?? 1, 20));
   const wished = wishIds?.data?.includes(product.id) ?? false;
-  const categoryName = categoryData?.data?.find((c) => c.id === product.categoryId)?.name;
-  const lead = product.description ? leadSentence(product.description) : "";
+  const categoryName = product.category.name;
+  const lead = product.shortDescription || (product.description ? leadSentence(product.description) : "");
   const price = activeVariant ? formatCurrency(activeVariant.price) : "";
 
   const cartVars = () =>
-    activeVariant ? { productId: product.id, variantId: activeVariant.variantId, quantity, name: product.name, size: activeVariant.size } : null;
+    activeVariant ? { productId: product.id, variantId: activeVariant.variantId, quantity, name: product.name, size: activeLabel } : null;
 
   const handleAdd = () => {
     const vars = cartVars();
@@ -121,14 +123,7 @@ export default function ProductDetailContent({ id }: { id: string }) {
     }
   };
 
-  const pickColor = (cid: string) => {
-    setColorId(cid);
-    setImageIndex(0);
-    const forColor = product.variants.filter((v) => v.colorOptionId === cid);
-    setVariantId((forColor.find((v) => v.stock > 0) ?? forColor[0])?.variantId);
-  };
-
-  const waText = `Hello, I would like to know more about ${product.name}${activeVariant ? ` (${activeVariant.size})` : ""}.`;
+  const waText = `Hello, I would like to know more about ${product.name}${activeLabel ? ` (${activeLabel})` : ""}.`;
   const addLabel = outOfStock ? "Out of stock" : adding && !buying ? "Adding…" : "Add to Cart";
 
   return (
@@ -139,6 +134,8 @@ export default function ProductDetailContent({ id }: { id: string }) {
           <Link href="/">Home</Link>
           <span aria-hidden="true">/</span>
           <Link href="/products">Shop</Link>
+          <span aria-hidden="true">/</span>
+          <Link href={`/products?categoryId=${product.category.id}`}>{categoryName}</Link>
           <span aria-hidden="true">/</span>
           <span className="text-ka-green">{product.name}</span>
         </nav>
@@ -177,35 +174,25 @@ export default function ProductDetailContent({ id }: { id: string }) {
 
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2.5">
-              {categoryName && <span className="text-xs font-semibold uppercase tracking-[.16em] text-ka-muted">{categoryName}</span>}
+              <span className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-ka-muted">
+                {categoryName} · {PRODUCT_TYPE_LABELS[product.type]}
+                {product.badge && <span className="rounded-full bg-ka-gold px-2.5 py-1 text-[11px] font-bold tracking-[.08em] text-ka-green">{product.badge}</span>}
+              </span>
               <h1 className="m-0 font-display text-[clamp(36px,3.8vw,54px)] font-medium leading-[1.05] text-ka-green">{product.name}</h1>
               {lead && <p className="m-0 text-base leading-[1.6] text-ka-body">{lead}</p>}
             </div>
 
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-ka-gold/45 pb-5">
-              <span className="font-display text-[40px] font-bold leading-none text-ka-gold">{price}</span>
-              {activeVariant && <span className="text-[13.5px] text-ka-muted">{activeVariant.size} · inclusive of all taxes</span>}
+              {activeVariant && (
+                <PriceTag
+                  price={activeVariant.price}
+                  mrp={activeVariant.mrp}
+                  discountPercent={activeVariant.discountPercent}
+                  className="font-display text-[40px] font-bold text-ka-gold"
+                />
+              )}
+              {activeVariant && <span className="text-[13.5px] text-ka-muted">{activeLabel} · inclusive of all taxes</span>}
             </div>
-
-            {product.colorOptions.length > 1 && (
-              <div className="flex flex-col gap-2.5">
-                <span className="text-xs font-bold uppercase tracking-[.16em] text-ka-green">Option{activeColor?.colorName ? `: ${activeColor.colorName}` : ""}</span>
-                <div className="flex flex-wrap gap-2.5">
-                  {product.colorOptions.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => pickColor(c.id)}
-                      title={c.colorName}
-                      aria-label={c.colorName || "Option"}
-                      aria-pressed={c.id === activeColor?.id}
-                      className="h-9 w-9 rounded-full"
-                      style={{ background: c.hex || "#EFE6D8", boxShadow: c.id === activeColor?.id ? "0 0 0 2px #FAF6EE, 0 0 0 4px #1F4D3A" : "0 0 0 1px #D9CFBE" }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
 
             {sizes.length > 0 && (
               <div className="flex flex-col gap-2.5">
@@ -228,8 +215,11 @@ export default function ProductDetailContent({ id }: { id: string }) {
                           on ? "border-ka-green bg-ka-green text-ka-cream" : "border-ka-line bg-white text-ka-green"
                         }`}
                       >
-                        <span className="text-[14.5px] font-semibold">{v.size}</span>
-                        <span className={`text-[12.5px] ${on ? "text-ka-mint" : "text-ka-muted"}`}>{v.stock === 0 ? "Sold out" : formatCurrency(v.price)}</span>
+                        <span className="text-[14.5px] font-semibold">{formatVariantLabel(v)}</span>
+                        <span className={`text-[12.5px] ${on ? "text-ka-mint" : "text-ka-muted"}`}>
+                          {v.stock === 0 ? "Sold out" : formatCurrency(v.price)}
+                          {v.stock > 0 && v.discountPercent > 0 && ` · ${v.discountPercent}% off`}
+                        </span>
                       </button>
                     );
                   })}
@@ -290,7 +280,7 @@ export default function ProductDetailContent({ id }: { id: string }) {
 
             <div className="flex flex-col">
               <div role="tablist" aria-label="Product information" className="no-scrollbar flex gap-[clamp(14px,2vw,28px)] overflow-x-auto border-b border-ka-green/15">
-                {TABS.map((t) => (
+                {tabs.map((t) => (
                   <button
                     key={t.key}
                     type="button"
@@ -307,7 +297,18 @@ export default function ProductDetailContent({ id }: { id: string }) {
               </div>
               <div role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`} className="pt-5 text-[15px] leading-[1.75] text-[#3F423B]">
                 {tab === "desc" && <p className="m-0 whitespace-pre-line text-pretty">{product.description || "Details for this product will be added soon."}</p>}
-                {tab === "store" && <p className="m-0">{STORAGE_TEXT}</p>}
+                {tab === "ing" && (
+                  <ul className="m-0 flex list-none flex-col gap-2 p-0">
+                    {product.ingredients.map((i) => (
+                      <li key={i.name} className="flex flex-wrap items-baseline gap-x-2 border-b border-ka-green/10 pb-2 last:border-b-0">
+                        <span className="font-semibold text-ka-green">{i.name}</span>
+                        {i.botanicalName && <span className="italic text-ka-muted">{i.botanicalName}</span>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {tab === "use" && <p className="m-0 whitespace-pre-line text-pretty">{product.howToUse}</p>}
+                {tab === "store" && <p className="m-0 whitespace-pre-line text-pretty">{product.storage}</p>}
                 {tab === "delivery" && (
                   <p className="m-0">
                     Orders are dispatched within 1–2 working days and delivered in 2–4 days within Kerala, 4–7 days elsewhere in India. Unopened products can be returned
@@ -354,7 +355,17 @@ export default function ProductDetailContent({ id }: { id: string }) {
       <div className="fixed inset-x-0 bottom-[calc(70px+env(safe-area-inset-bottom))] z-40 flex items-center gap-3 border-t border-ka-sand bg-white px-3.5 py-2.5 shadow-[0_-10px_24px_-18px_rgba(31,77,58,.5)] ka:hidden">
         <span className="flex min-w-0 flex-col leading-[1.1]">
           <span className="font-display text-2xl font-bold text-ka-gold-deep">{price}</span>
-          {activeVariant && <span className="truncate text-[11.5px] text-ka-muted">{activeVariant.size}</span>}
+          {activeVariant && (
+            <span className="truncate text-[11.5px] text-ka-muted">
+              {activeLabel}
+              {activeVariant.discountPercent > 0 && (
+                <>
+                  {" · "}
+                  <s>{formatCurrency(activeVariant.mrp)}</s> {activeVariant.discountPercent}% off
+                </>
+              )}
+            </span>
+          )}
         </span>
         <button
           type="button"

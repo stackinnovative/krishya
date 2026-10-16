@@ -17,7 +17,7 @@ export type BlogBlock =
 
 export type BlogBlockType = BlogBlock["type"];
 
-export type BlogProduct = { id: string; name: string; price: number; image: string };
+export type BlogProduct = { id: string; name: string; slug: string; price: number; image: string };
 
 /** A block as the storefront renders it - product ids already resolved to live products. */
 export type UserBlogBlock = Exclude<BlogBlock, { type: "products" }> | { type: "products"; products: BlogProduct[] };

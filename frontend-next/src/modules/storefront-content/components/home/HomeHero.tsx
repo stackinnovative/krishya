@@ -135,12 +135,12 @@ function Badge({ text, className = "" }: { text: string; className?: string }) {
   );
 }
 
-type SpotlightData = { id: string; name: string; price: number; image?: string };
+type SpotlightData = { id: string; slug?: string; name: string; price: number; image?: string };
 
 function SpotlightCard({ data, label, tabbable }: { data: SpotlightData; label?: string; tabbable: boolean }) {
   return (
     <Link
-      href={`/products/${data.id}`}
+      href={data.slug ? `/products/${data.slug}` : "/products"}
       tabIndex={tabbable ? undefined : -1}
       className="absolute bottom-9 left-0 flex max-w-[90%] items-center gap-3 rounded-full bg-white py-2 pl-2 pr-5 text-left shadow-[0_20px_40px_-20px_rgba(31,77,58,.5)] transition-transform hover:-translate-y-0.5"
     >
@@ -164,8 +164,8 @@ function FetchedSpotlight({ productId, label, tabbable }: { productId: string; l
   if (!product || product.variants.length === 0) return null;
   const inStock = product.variants.filter((v) => v.stock > 0);
   const price = Math.min(...(inStock.length ? inStock : product.variants).map((v) => v.price));
-  const image = product.colorOptions.find((c) => c.images.length)?.images[0]?.url;
-  return <SpotlightCard data={{ id: product.id, name: product.name, price, image }} label={label} tabbable={tabbable} />;
+  const image = product.images[0]?.url;
+  return <SpotlightCard data={{ id: product.id, slug: product.slug, name: product.name, price, image }} label={label} tabbable={tabbable} />;
 }
 
 function Spotlight({ slide, tabbable }: { slide: Slide; tabbable: boolean }) {

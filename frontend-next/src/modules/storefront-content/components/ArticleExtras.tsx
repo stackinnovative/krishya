@@ -20,7 +20,7 @@ export function ArticleProducts({ products }: { products: BlogProduct[] }) {
       <span className="text-xs font-bold tracking-[.16em] text-ka-green">FROM OUR RANGE</span>
       {products.map((p) => (
         <div key={p.id} className="flex items-center gap-3.5 rounded-[10px] bg-ka-cream p-3">
-          <Link href={`/products/${p.id}`} aria-label={p.name} className="relative h-16 w-16 flex-none overflow-hidden rounded-lg bg-ka-sand">
+          <Link href={`/products/${p.slug}`} aria-label={p.name} className="relative h-16 w-16 flex-none overflow-hidden rounded-lg bg-ka-sand">
             {p.image ? (
               <Image src={getOptimizedImageUrl(p.image, 140)} alt="" fill sizes="64px" className="object-cover" />
             ) : (
@@ -30,7 +30,7 @@ export function ArticleProducts({ products }: { products: BlogProduct[] }) {
             )}
           </Link>
           <span className="flex min-w-0 flex-1 flex-col leading-[1.35]">
-            <Link href={`/products/${p.id}`} className="break-words font-display text-xl font-semibold text-ka-green">
+            <Link href={`/products/${p.slug}`} className="break-words font-display text-xl font-semibold text-ka-green">
               {p.name}
             </Link>
             <span className="text-sm font-bold text-ka-gold">{formatCurrency(p.price)}</span>

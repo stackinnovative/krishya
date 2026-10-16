@@ -61,7 +61,7 @@ export default function WishlistPage() {
             const isRemoving = removing && removeVars?.productId === p.id;
             return (
               <li key={p.id} className="flex flex-col overflow-hidden rounded-xl border border-ka-sand bg-white">
-                <Link href={`/products/${p.id}`} aria-label={p.name} className="relative block aspect-square bg-ka-sand">
+                <Link href={`/products/${p.slug}`} aria-label={p.name} className="relative block aspect-square bg-ka-sand">
                   {p.image ? (
                     <Image src={getOptimizedImageUrl(p.image, 500)} alt={p.name} fill sizes="(max-width: 820px) 50vw, 300px" className="object-cover" />
                   ) : (
@@ -71,7 +71,7 @@ export default function WishlistPage() {
                   )}
                 </Link>
                 <div className="flex flex-1 flex-col gap-1.5 p-3 sm:p-4">
-                  <Link href={`/products/${p.id}`} className="font-display text-[clamp(19px,2.2vw,22px)] font-semibold leading-[1.1] text-ka-green">
+                  <Link href={`/products/${p.slug}`} className="font-display text-[clamp(19px,2.2vw,22px)] font-semibold leading-[1.1] text-ka-green">
                     {p.name}
                   </Link>
                   <span className="font-display text-2xl font-bold text-ka-gold">{formatCurrency(p.price)}</span>

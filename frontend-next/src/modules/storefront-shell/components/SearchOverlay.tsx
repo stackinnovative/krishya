@@ -92,7 +92,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
               {results.map((p) => (
                 <Link
                   key={p.id}
-                  href={`/products/${p.id}`}
+                  href={`/products/${p.slug}`}
                   onClick={onClose}
                   className="flex items-center gap-3.5 border-b border-ka-gold/30 py-3 hover:bg-[#F3EEE2]"
                 >
