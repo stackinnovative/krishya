@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import { whitePillButton } from "../style-helpers";
 import AdminButton from "./AdminButton";
 import FormField, { containsSpecialChars, type FormFieldType } from "./FormField";
+import type { IconOption } from "./IconPicker";
 import { isPendingImage, type ImageFieldValue } from "./ImageDropzone";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { ModalPortal } from "@/shared/ui/modal/ModalPortal";
@@ -18,6 +19,7 @@ export type FormFieldDef = (
   | { type: "area"; placeholder?: string; rows?: number; minLength?: number; maxLength?: number }
   | { type: "select" | "searchable-select"; options: string[] | { label: string; value: string }[]; placeholder?: string }
   | { type: "image"; imageMaxHeight?: number; imageAspectRatio?: number }
+  | { type: "icon"; iconOptions: IconOption[] }
 ) & {
   key: string;
   label: string;
@@ -218,6 +220,7 @@ export default function FormModal({
                   maxLength={"maxLength" in f ? f.maxLength : undefined}
                   imageMaxHeight={"imageMaxHeight" in f ? f.imageMaxHeight : undefined}
                   imageAspectRatio={"imageAspectRatio" in f ? f.imageAspectRatio : undefined}
+                  iconOptions={"iconOptions" in f ? f.iconOptions : undefined}
                   hint={f.hint}
                 />
               ))}

@@ -58,6 +58,7 @@ export default function PolicySectionsEditor({
 
             <div className="mb-3">
               <IconPicker
+                label="Icon"
                 options={POLICY_ICON_OPTIONS}
                 value={section.icon}
                 onChange={(icon) => updateSection(i, { icon })}

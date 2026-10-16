@@ -1,24 +1,27 @@
 import type { LucideIcon } from "lucide-react";
 
+export type IconOption<T extends string = string> = { name: T; Icon: LucideIcon };
+
 /**
  * Round icon buttons for picking one icon from a fixed allow-list (policy
  * sections, categories). `options` comes from that feature's icon constants,
  * so the stored value is always a name the storefront can resolve.
  */
 export default function IconPicker<T extends string>({
-  label = "Icon",
+  label,
   options,
   value,
   onChange,
 }: {
+  /** Omit when the caller already renders a label (e.g. FormField). */
   label?: string;
-  options: { name: T; Icon: LucideIcon }[];
+  options: IconOption<T>[];
   value: T;
   onChange: (name: T) => void;
 }) {
   return (
     <div>
-      <div className="mb-1.5 text-[11.5px] font-semibold text-[#8a8a8e]">{label}</div>
+      {label && <div className="mb-1.5 text-[11.5px] font-semibold text-[#8a8a8e]">{label}</div>}
       <div className="flex flex-wrap gap-1.5">
         {options.map(({ name, Icon }) => (
           <button

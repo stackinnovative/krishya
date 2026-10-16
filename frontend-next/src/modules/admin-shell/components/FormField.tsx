@@ -2,6 +2,7 @@
 
 import type { CSSProperties } from "react";
 import { AlertCircle } from "lucide-react";
+import IconPicker, { type IconOption } from "./IconPicker";
 import ImageDropzone, { type ImageFieldValue } from "./ImageDropzone";
 import SearchableSelect from "./SearchableSelect";
 
@@ -16,7 +17,8 @@ export type FormFieldType =
   | "area"
   | "select"
   | "searchable-select"
-  | "image";
+  | "image"
+  | "icon";
 
 /**
  * Single reusable, dynamic input used by every admin form (modal or plain
@@ -39,6 +41,8 @@ export interface FormFieldProps {
   maxLength?: number;
   imageMaxHeight?: number;
   imageAspectRatio?: number;
+  /** The allow-list an "icon" field picks from. */
+  iconOptions?: IconOption[];
   disabled?: boolean;
   autoComplete?: string;
   /** Short helper text under the control (hidden while an error is shown) - say what the field does or where it appears. */
@@ -94,15 +98,19 @@ export default function FormField({
   maxLength,
   imageMaxHeight,
   imageAspectRatio,
+  iconOptions,
   disabled,
   autoComplete,
   hint,
 }: FormFieldProps) {
   const hasError = !!error;
+  // A <label> forwards clicks on its text to its first button, which would
+  // silently pick the first icon - so the icon grid gets a plain wrapper.
+  const Wrapper = type === "icon" ? "div" : "label";
   const controlStyle: CSSProperties = hasError ? { ...baseControlStyle, ...errorControlStyle } : baseControlStyle;
 
   return (
-    <label className="flex flex-col gap-1.5 text-xs font-semibold text-[#555]" data-invalid={hasError || undefined}>
+    <Wrapper className="flex flex-col gap-1.5 text-xs font-semibold text-[#555]" data-invalid={hasError || undefined}>
       <span className="flex items-baseline justify-between">
         <span>
           {label}
@@ -149,6 +157,8 @@ export default function FormField({
           aspectRatio={imageAspectRatio}
           error={hasError}
         />
+      ) : type === "icon" ? (
+        <IconPicker options={iconOptions ?? []} value={(value as string) ?? ""} onChange={onChange} />
       ) : (
         <input
           type={type === "number" ? "number" : type}
@@ -171,6 +181,6 @@ export default function FormField({
       ) : (
         hint && <span className="text-[11px] font-normal leading-snug text-[#8a8a8e]">{hint}</span>
       )}
-    </label>
+    </Wrapper>
   );
 }
