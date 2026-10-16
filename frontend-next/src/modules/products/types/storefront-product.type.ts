@@ -1,5 +1,6 @@
 import type { ApiResponse } from "@/shared/types/api.types";
-import type { IVariant } from "./product.type";
+
+type IVariant = { size: string; stock: number; price: number; isDefault?: boolean };
 
 export type UserProductImage = { url: string };
 

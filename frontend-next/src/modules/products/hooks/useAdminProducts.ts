@@ -1,21 +1,18 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import toast from "react-hot-toast";
 import {
-  addColorOptionApi,
   addVariantApi,
   blockProductApi,
   createProductApi,
-  editColorOptionApi,
   editProductApi,
   getAllProductsForAdminApi,
   getProductByIdForAdminApi,
   unblockProductApi,
   updateVariantApi,
 } from "../api/product.api";
-import type { CreateProductPayload, UpdateProductPayload } from "../types/product.type";
-import type { ResolvedWizardColor } from "../components/wizard/wizard.types";
-import { resolveDefaultVariant } from "../components/wizard/validation";
+import type { UpdateProductPayload, VariantPayload } from "../types/product.type";
 import { productKeys } from "@/shared/query-keys";
+import { getApiErrorMessage } from "@/lib/errors";
 
 export const useAdminProducts = (query: Record<string, unknown>) =>
   useQuery({
@@ -52,56 +49,33 @@ export const useToggleProductStatus = () => {
   });
 };
 
-/**
- * The backend treats colour options and their size/price/stock variants as
- * sub-resources of a product (separate POST/PUT endpoints per colour and
- * per variant) rather than one nested payload on update - see
- * modules/products/api/product.api.ts. Creation is the one exception: the
- * whole colours+sizes tree can go in the initial createProductApi call.
- * This syncs the wizard's in-memory colour list onto those endpoints for
- * an existing product: new colours/sizes are POSTed, colours/sizes that
- * already have a backend id are PUT.
- */
-async function syncColorsForExistingProduct(productId: string, colors: ResolvedWizardColor[]) {
-  const defaultVariant = resolveDefaultVariant(colors);
+/** A saved variant (has an id) or a new one, in the shape the variant endpoints take. */
+export type WizardVariantPayload = VariantPayload & { id?: string };
 
-  for (const color of colors) {
-    if (!color.id) {
-      await addColorOptionApi(productId, {
-        colorName: color.name,
-        hex: color.hex,
-        images: color.images,
-        variants: color.sizes.map((s) => ({
-          size: s.size,
-          price: Number(s.price) || 0,
-          stock: Number(s.stock) || 0,
-          isDefault: s === defaultVariant,
-        })),
-      });
-      continue;
-    }
-    await editColorOptionApi(productId, color.id, { colorName: color.name, hex: color.hex, images: color.images });
-    for (const size of color.sizes) {
-      if (!size.id) {
-        await addVariantApi(productId, [
-          {
-            colorOptionId: color.id,
-            size: size.size,
-            price: Number(size.price) || 0,
-            stock: Number(size.stock) || 0,
-            isDefault: size === defaultVariant,
-          },
-        ]);
-      } else {
-        await updateVariantApi(productId, size.id, {
-          size: size.size,
-          price: Number(size.price) || 0,
-          stock: Number(size.stock) || 0,
-          isActive: true,
-          isDefault: size === defaultVariant,
-        });
-      }
-    }
+const toVariantPayload = (v: WizardVariantPayload): VariantPayload => ({
+  quantity: v.quantity,
+  unit: v.unit,
+  mrp: v.mrp,
+  price: v.price,
+  stock: v.stock,
+  isActive: v.isActive,
+  isDefault: v.isDefault,
+});
+
+/**
+ * The backend treats a product's quantity variants as a sub-resource
+ * (separate POST/PUT endpoints) rather than part of the edit payload - see
+ * modules/products/api/product.api.ts. Creation is the one exception: every
+ * variant goes in the initial createProductApi call. This syncs the wizard's
+ * rows onto those endpoints for an existing product: new rows are POSTed in
+ * one batch, saved rows are PUT.
+ */
+async function syncVariantsForExistingProduct(productId: string, variants: WizardVariantPayload[]) {
+  const added = variants.filter((v) => !v.id).map(toVariantPayload);
+  if (added.length) await addVariantApi(productId, added);
+
+  for (const v of variants) {
+    if (v.id) await updateVariantApi(productId, v.id, toVariantPayload(v));
   }
 }
 
@@ -114,33 +88,18 @@ export const useSaveProductWizard = () => {
     mutationFn: async ({
       productId,
       details,
-      colors,
+      variants,
     }: {
       productId: string | null;
       details: ProductDetailsInput;
-      colors: ResolvedWizardColor[];
+      variants: WizardVariantPayload[];
     }) => {
       if (!productId) {
-        const defaultVariant = resolveDefaultVariant(colors);
-        const payload: CreateProductPayload = {
-          ...details,
-          colorOptions: colors.map((c) => ({
-            colorName: c.name,
-            hex: c.hex,
-            images: c.images,
-            variants: c.sizes.map((s) => ({
-              size: s.size,
-              price: Number(s.price) || 0,
-              stock: Number(s.stock) || 0,
-              isDefault: s === defaultVariant,
-            })),
-          })),
-        };
-        return createProductApi(payload);
+        return createProductApi({ ...details, variants: variants.map(toVariantPayload) });
       }
 
       await editProductApi(productId, details);
-      await syncColorsForExistingProduct(productId, colors);
+      await syncVariantsForExistingProduct(productId, variants);
       return { success: true, message: "Product updated" };
     },
     onSuccess: (_res, vars) => {
@@ -148,8 +107,7 @@ export const useSaveProductWizard = () => {
       invalidateAllProductViews(queryClient);
     },
     onError: (err: unknown) => {
-      const message = err instanceof Error ? err.message : "Could not save the product.";
-      toast.error(message);
+      toast.error(getApiErrorMessage(err, "Could not save the product."));
     },
   });
 };

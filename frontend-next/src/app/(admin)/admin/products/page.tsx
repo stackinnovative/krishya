@@ -21,6 +21,8 @@ import { useAdminProducts, useToggleProductStatus } from "@/modules/products/hoo
 import ProductWizard from "@/modules/products/components/wizard/ProductWizard";
 import ProductViewModal from "@/modules/products/components/ProductViewModal";
 import type { ProductListItem } from "@/modules/products/types/product.type";
+import { PRODUCT_TYPE_LABELS } from "@/modules/products/constants/product-options";
+import { formatCurrency } from "@/lib/format";
 
 const FILTERS = ["All", "Featured", "Active", "Inactive"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -80,7 +82,9 @@ export default function ProductsPage() {
           <ProductThumb image={p.image} size={34} />
           <div className="min-w-0 flex-1">
             <TruncatedText text={p.name} className="text-[13px] font-semibold" />
-            <div className="text-[11px] text-[#8a8a8e]">{p.isFeatured ? "Featured" : "Standard"}</div>
+            <div className="text-[11px] text-[#8a8a8e]">
+              {PRODUCT_TYPE_LABELS[p.type]} · {p.isFeatured ? "Featured" : "Standard"}
+            </div>
           </div>
         </div>
       ),
@@ -91,7 +95,21 @@ export default function ProductsPage() {
       width: 130,
       render: (p) => <TruncatedText text={p.category?.name} className="text-[12.5px] text-[#555]" />,
     },
-    { key: "price", header: "Price", width: 100, render: (p) => <span className="text-[12.5px] font-semibold">₹{p.price.toLocaleString("en-IN")}</span> },
+    {
+      key: "price",
+      header: "Price",
+      width: 120,
+      render: (p) => (
+        <div className="text-[12.5px]">
+          <span className="font-semibold">{formatCurrency(p.price)}</span>
+          {p.discountPercent > 0 && (
+            <div className="text-[11px] text-[#8a8a8e]">
+              <s>{formatCurrency(p.mrp)}</s> <span style={{ color: "#2e9e4b" }}>{p.discountPercent}% off</span>
+            </div>
+          )}
+        </div>
+      ),
+    },
     {
       key: "status",
       header: "Status",
@@ -120,8 +138,17 @@ export default function ProductsPage() {
   const exportCsv = () => {
     downloadCsv(
       "artspace-products.csv",
-      ["Name", "Category", "Price", "Featured", "Status"],
-      products.map((p) => [p.name, p.category?.name ?? "", p.price, p.isFeatured ? "Yes" : "No", p.isActive ? "Active" : "Inactive"]),
+      ["Name", "Category", "Type", "Price", "MRP", "Discount %", "Featured", "Status"],
+      products.map((p) => [
+        p.name,
+        p.category?.name ?? "",
+        PRODUCT_TYPE_LABELS[p.type],
+        p.price,
+        p.mrp,
+        p.discountPercent,
+        p.isFeatured ? "Yes" : "No",
+        p.isActive ? "Active" : "Inactive",
+      ]),
     );
   };
 
