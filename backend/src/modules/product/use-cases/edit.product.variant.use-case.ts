@@ -5,6 +5,7 @@ import type { UpdateVariantRequestDto } from "../dtos/variant.dto.js";
 import { CustomError } from "../../../core/errors/custom.error.js";
 import { ResponseMessages } from "../../../core/constants/response.message.js";
 import { HttpStatusCode } from "../../../core/constants/http.status.codes.js";
+import { hasDuplicateVariantSizes } from "../utils/variant.helper.js";
 
 @injectable()
 export class EditProductVariantUseCase
@@ -19,7 +20,6 @@ export class EditProductVariantUseCase
     variantId: string,
     dto: UpdateVariantRequestDto
   ): Promise<void> {
-    console.log("inside edit product variant use case ", dto)
     const product = await this._productRepository.findById(productId);
 
     if (!product) {
@@ -29,30 +29,26 @@ export class EditProductVariantUseCase
       );
     }
 
-    const variant = product.variants.find(
-      (v) => v?.id!.toString() === variantId
-    );
-
-    if (!variant) {
+    if (!product.variants.some((v) => v.id === variantId)) {
       throw new CustomError(
         ResponseMessages.VARIANT_NOT_FOUND,
         HttpStatusCode.NOT_FOUND
       );
     }
 
-
-
-
+    // The edited quantity must not collide with any *other* variant.
+    const others = product.variants.filter((v) => v.id !== variantId);
+    if (hasDuplicateVariantSizes([...others, dto])) {
+      throw new CustomError(
+        ResponseMessages.PRODUCT_DUPLICATE_VARIANT_SIZE,
+        HttpStatusCode.BAD_REQUEST
+      );
+    }
 
     const updated = await this._productRepository.updateVariantById({
       productId,
       variantId,
-      data: {
-        stock: dto.stock,
-        price: dto.price,
-        isActive: dto.isActive,
-        isDefault: dto.isDefault ?? false,
-      },
+      data: dto,
     });
 
     if (!updated) {

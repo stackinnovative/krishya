@@ -108,21 +108,4 @@ router.get("/list/:productId/variants/:variantId",
   (req, res) => productController.getProductVariantForUser(req, res)
 )
 
-/* ---------- ADD COLOR OPTION ---------- */
-router.post(
-  "/:productId/colors",
-  authenticate.authenticate,
-  authorizeRoles("admin"),
-  (req, res) => productController.addColorOption(req, res),
-);
-
-/* ---------- EDIT COLOR OPTION ---------- */
-router.put(
-  "/:productId/colors/:colorOptionId",
-  authenticate.authenticate,
-  authorizeRoles("admin"),
-  (req, res) => productController.editColorOption(req, res),
-);
-
-
 export default router;

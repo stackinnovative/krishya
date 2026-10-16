@@ -40,12 +40,8 @@ export class EditProductUseCase implements IEditProductUseCase {
       );
     }
 
-    const updatedProduct = product.updateDetails({
-      name: dto.name,
-      description: dto.description,
-      categoryId: dto.categoryId,
-      isFeatured: dto.isFeatured,
-    });
+    const { categoryId, ...content } = dto;
+    const updatedProduct = product.updateDetails({ ...content, category: categoryId });
 
     const saved = await this._productRepository.save(updatedProduct);
 

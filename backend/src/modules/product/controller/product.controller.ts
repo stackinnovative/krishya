@@ -39,9 +39,6 @@ import type { IGetAllProductForUserUseCase } from "../use-cases/interfaces/get.a
 import type { IGetProductForUserUseCase } from "../use-cases/interfaces/get.product.user.use-case.interface.js";
 import type { IGetRelatedProductUseCase } from "../use-cases/interfaces/get.related.product.use-case.interface.js";
 import type { IGetProductVariantForUserUseCase } from "../use-cases/interfaces/get.product.variant.for.user.use-case.interface.js";
-import type { IAddColorOptionUseCase } from "../use-cases/interfaces/add.color.option.use-case.interface.js";
-import type { IEditColorOptionUseCase } from "../use-cases/interfaces/edit.color.option.use-case.interface.js";
-import { ColorOptionSchema, EditColorOptionSchema } from "../dtos/color.option.dto.js";
 
 @injectable()
 export class ProductController implements IProductController {
@@ -87,12 +84,6 @@ export class ProductController implements IProductController {
 
     @inject("IGetProductVariantForUserUseCase")
     private readonly _getProductVariantForUserUseCase: IGetProductVariantForUserUseCase,
-
-    @inject("IAddColorOptionUseCase")
-    private readonly _addColorOptionUseCase: IAddColorOptionUseCase,
-
-    @inject("IEditColorOptionUseCase")
-    private readonly _editColorOptionUseCase: IEditColorOptionUseCase,
 
   ) {}
 
@@ -352,40 +343,4 @@ export class ProductController implements IProductController {
     }
   }
 
-  async addColorOption(req: Request, res: Response): Promise<void> {
-    try {
-      const { productId } = req.params;
-      validateObjectId(productId);
-      const dto = ColorOptionSchema.parse(req.body);
-
-      await this._addColorOptionUseCase.execute(productId!, dto);
-
-      res.status(HttpStatusCode.CREATED).json({
-        success: true,
-        message: ResponseMessages.COLOR_OPTION_ADD_SUCCESS,
-      });
-    } catch (error) {
-      handleError(res, error);
-      console.log("error in add color option controller ", error);
-    }
-  }
-
-  async editColorOption(req: Request, res: Response): Promise<void> {
-    try {
-      const { productId, colorOptionId } = req.params;
-      validateObjectId(productId);
-      validateObjectId(colorOptionId);
-      const dto = EditColorOptionSchema.parse(req.body);
-
-      await this._editColorOptionUseCase.execute(productId!, colorOptionId!, dto);
-
-      res.status(HttpStatusCode.OK).json({
-        success: true,
-        message: ResponseMessages.COLOR_OPTION_EDIT_SUCCESS,
-      });
-    } catch (error) {
-      handleError(res, error);
-      console.log("error in edit color option controller ", error);
-    }
-  }
 }

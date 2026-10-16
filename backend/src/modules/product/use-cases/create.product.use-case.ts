@@ -2,12 +2,14 @@ import { inject, injectable } from "tsyringe";
 import { CustomError } from "../../../core/errors/custom.error.js";
 import { ResponseMessages } from "../../../core/constants/response.message.js";
 import { HttpStatusCode } from "../../../core/constants/http.status.codes.js";
+import { toUniqueSlug } from "../../../core/utils/to.slug.helper.js";
 
 import { Product } from "../entities/product.entity.js";
 import type { ICreateProductUseCase } from "./interfaces/create.product.use-case.interface.js";
 import type { IProductRepository } from "../repositories/product.repository.interface.js";
 import type { CreateProductRequestDto } from "../dtos/create.product.dto.js";
 import type { ICategoryRepository } from "../../category/repositories/category.repository.interface.js";
+import { PRODUCT_LIMITS } from "../types/product.type.js";
 
 @injectable()
 export class CreateProductUseCase implements ICreateProductUseCase {
@@ -28,22 +30,19 @@ export class CreateProductUseCase implements ICreateProductUseCase {
       );
     }
 
+    const { categoryId, variants, ...content } = dto;
+
     /* ---------- create product entity ---------- */
     const productEntity = new Product({
+      ...content,
       id: null,
-      name: dto.name,
-      description: dto.description,
-      category: dto.categoryId,
-      colorOptions: dto.colorOptions,
+      slug: await toUniqueSlug(dto.name, PRODUCT_LIMITS.slug, (slug) => this._productRepository.isSlugTaken(slug)),
+      category: categoryId,
+      variants,
       isActive: true,
-      isFeatured: dto.isFeatured,
     });
 
-    const flatVariants = dto.colorOptions.flatMap((c) => c.variants);
-    const defaultVariantIndex = Math.max(
-      flatVariants.length <= 1 ? 0 : flatVariants.findIndex((v) => v.isDefault),
-      0,
-    );
+    const defaultVariantIndex = Math.max(variants.findIndex((v) => v.isDefault), 0);
 
     const product = await this._productRepository.create(productEntity, defaultVariantIndex);
 

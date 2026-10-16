@@ -17,6 +17,7 @@ import { mapRazorpayStatus } from "../../../core/utils/payment.status.helper.js"
 import type { IPaymentRepository } from "../../payment/repositories/payment.repository.interface.js";
 import type { IPaymentGateway } from "../../../core/ports/payment.service.interface.js";
 import type { ISettingsRepository } from "../../settings/repositories/settings.repository.interface.js";
+import { formatVariantLabel } from "../../product/utils/variant.helper.js";
 
 @injectable()
 export class CreateOrderUseCase implements ICreateOrderUseCase {
@@ -171,13 +172,6 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 );
             }
 
-            // Snapshot the color this variant belongs to, so the order always shows
-            // the exact photo/color the customer bought, even if the product's colors
-            // or images change later.
-            const colorOption = product.colorOptions.find((c) =>
-                c.variants.some((v) => v.id === cartItem.variantId),
-            );
-
             /* ----- STOCK CHECK ----- */
             if (variant.stock < cartItem.quantity) {
                 throw new CustomError(
@@ -195,12 +189,13 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
             validatedItems.push({
                 productId: cartItem.productId,
                 variantId: cartItem.variantId,
-                size: variant.size,
+                // Snapshotted so the order always shows what was bought, even if
+                // the product's quantities or photos change later.
+                size: formatVariantLabel(variant),
                 name: product.name,
                 quantity: cartItem.quantity,
                 price: latestPrice,
-                colorName: colorOption?.colorName,
-                image: colorOption?.images?.[0]?.url,
+                image: product.images[0]?.url,
             });
 
             await this._productRepository.decrementStock({

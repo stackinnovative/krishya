@@ -4,8 +4,10 @@ import { HttpStatusCode } from "../../../core/constants/http.status.codes.js";
 import { ResponseMessages } from "../../../core/constants/response.message.js";
 
 import type { IAddProductVariantUseCase } from "./interfaces/add.product.variant.use-case.interface.js";
-import type { IProductRepository } from "../repositories/product.repository.interface.js"; import type { AddVariantRequestDto } from "../dtos/variant.dto.js";
-import { assertUniqueVariantSizes } from "../utils/variant.validate.helper.js";
+import type { IProductRepository } from "../repositories/product.repository.interface.js";
+import type { AddVariantRequestDto } from "../dtos/variant.dto.js";
+import { PRODUCT_LIMITS } from "../types/product.type.js";
+import { hasDuplicateVariantSizes } from "../utils/variant.helper.js";
 
 @injectable()
 export class AddProductVariantUseCase
@@ -13,8 +15,6 @@ export class AddProductVariantUseCase
   constructor(
     @inject("IProductRepository")
     private readonly _productRepository: IProductRepository,
-
-
   ) { }
 
   async execute(
@@ -31,50 +31,24 @@ export class AddProductVariantUseCase
       );
     }
 
-    const targetColorOptionId = dto.find((v) => v.colorOptionId)?.colorOptionId
-      ?? product.colorOptions[0]?.id;
+    // 🔒 Business invariants, checked against the variants already saved
+    const combined = [...product.variants, ...dto];
 
-    const targetColor = product.colorOptions.find(
-      (c) => c.id === targetColorOptionId,
-    );
-
-    if (!targetColor) {
+    if (combined.length > PRODUCT_LIMITS.variantsMax) {
       throw new CustomError(
-        ResponseMessages.COLOR_OPTION_NOT_FOUND,
-        HttpStatusCode.NOT_FOUND
+        ResponseMessages.PRODUCT_TOO_MANY_VARIANTS,
+        HttpStatusCode.BAD_REQUEST
       );
     }
 
-    const combinedVariants = [
-      ...dto,
-      ...targetColor.variants.map((v) => ({
-        size: v.size,
-        stock: v.stock,
-        price: v.price,
-      })),
-    ];
-
-    // 🔒 Business invariant
-    const isValid = assertUniqueVariantSizes(combinedVariants);
-
-    if (!isValid) {
+    if (hasDuplicateVariantSizes(combined)) {
       throw new CustomError(
         ResponseMessages.PRODUCT_DUPLICATE_VARIANT_SIZE,
         HttpStatusCode.BAD_REQUEST
       );
     }
 
-    const updated = await this._productRepository.addVariants(
-      productId,
-      targetColorOptionId!,
-      dto.map((v) => ({
-        size: v.size,
-        stock: v.stock,
-        price: v.price,
-        isActive: true,
-        isDefault: v.isDefault ?? false,
-      }))
-    );
+    const updated = await this._productRepository.addVariants(productId, dto);
 
     if (!updated) {
       throw new CustomError(

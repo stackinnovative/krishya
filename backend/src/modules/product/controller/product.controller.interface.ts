@@ -15,6 +15,4 @@ export interface IProductController {
   getAllProductForUser(req: Request, res: Response): Promise<void>
   getRelatedProducts(req: Request, res: Response): Promise<void>
   getProductVariantForUser(req: Request, res: Response): Promise<void>
-  addColorOption(req: Request, res: Response): Promise<void>
-  editColorOption(req: Request, res: Response): Promise<void>
 }

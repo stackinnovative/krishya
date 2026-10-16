@@ -39,10 +39,6 @@ import type { IGetRelatedProductUseCase } from "../modules/product/use-cases/int
 import { GetRelatedProductUseCase } from "../modules/product/use-cases/get.related.product.use-case.js";
 import type { IGetProductVariantForUserUseCase } from "../modules/product/use-cases/interfaces/get.product.variant.for.user.use-case.interface.js";
 import { GetProductVariantForUserUseCase } from "../modules/product/use-cases/get.product.variant.for.user.use-case.js";
-import type { IAddColorOptionUseCase } from "../modules/product/use-cases/interfaces/add.color.option.use-case.interface.js";
-import { AddColorOptionUseCase } from "../modules/product/use-cases/add.color.option.use-case.js";
-import type { IEditColorOptionUseCase } from "../modules/product/use-cases/interfaces/edit.color.option.use-case.interface.js";
-import { EditColorOptionUseCase } from "../modules/product/use-cases/edit.color.option.use-case.js";
 
 export const registerProductDependencies = () => {
   /* ---------- repository ---------- */
@@ -114,13 +110,5 @@ export const registerProductDependencies = () => {
 
   container.register<IGetRelatedProductUseCase>(
     "IGetRelatedProductUseCase", { useClass: GetRelatedProductUseCase }
-  )
-
-  container.register<IAddColorOptionUseCase>(
-    "IAddColorOptionUseCase", { useClass: AddColorOptionUseCase }
-  )
-
-  container.register<IEditColorOptionUseCase>(
-    "IEditColorOptionUseCase", { useClass: EditColorOptionUseCase }
   )
 };
