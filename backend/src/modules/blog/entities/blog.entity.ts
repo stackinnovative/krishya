@@ -7,17 +7,10 @@ import {
     type BlogStatus,
     type IImage,
 } from "../types/blog.type.js";
+import { toSlug as toSlugWithin } from "../../../core/utils/to.slug.helper.js";
 
-/** "Karkidakam: Monsoon Care!" -> "karkidakam-monsoon-care". Accents are dropped, never kept as odd characters. */
-export const toSlug = (text: string): string =>
-    text
-        .normalize("NFKD")
-        .replace(/[̀-ͯ]/g, "")
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, "-")
-        .replace(/^-+|-+$/g, "")
-        .slice(0, L.slug)
-        .replace(/-+$/, "");
+/** A blog slug, capped at the blog URL limit. */
+export const toSlug = (text: string): string => toSlugWithin(text, L.slug);
 
 const fitText = (value: string, label: string, max: number, min = 0): string => {
     const text = value.trim();
