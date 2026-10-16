@@ -1,6 +1,7 @@
 "use client";
 
 import FormField from "@/modules/admin-shell/components/FormField";
+import IconPicker from "@/modules/admin-shell/components/IconPicker";
 import { blackPillButton, dangerPillButton } from "@/modules/admin-shell/style-helpers";
 import { POLICY_ICON_OPTIONS } from "../constants/policy-icons";
 import type { PolicySection } from "../types/settings.type";
@@ -56,25 +57,11 @@ export default function PolicySectionsEditor({
             </div>
 
             <div className="mb-3">
-              <div className="mb-1.5 text-[11.5px] font-semibold text-[#8a8a8e]">Icon</div>
-              <div className="flex flex-wrap gap-1.5">
-                {POLICY_ICON_OPTIONS.map(({ name, Icon }) => (
-                  <button
-                    key={name}
-                    type="button"
-                    title={name}
-                    onClick={() => updateSection(i, { icon: name })}
-                    className="flex h-9 w-9 flex-none items-center justify-center rounded-full box-border"
-                    style={{
-                      background: section.icon === name ? "#141414" : "#f3f3f1",
-                      color: section.icon === name ? "#fff" : "#555",
-                      border: section.icon === name ? "2px solid #141414" : "2px solid transparent",
-                    }}
-                  >
-                    <Icon size={16} />
-                  </button>
-                ))}
-              </div>
+              <IconPicker
+                options={POLICY_ICON_OPTIONS}
+                value={section.icon}
+                onChange={(icon) => updateSection(i, { icon })}
+              />
             </div>
 
             <FormField
