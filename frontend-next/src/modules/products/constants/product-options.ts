@@ -2,6 +2,10 @@
 export const PRODUCT_TYPES = ["thailam", "churnam", "arishtam", "gulika", "keram", "face-pack"] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
+const PRODUCT_TYPE_VALUES: readonly string[] = PRODUCT_TYPES;
+/** Narrows an untrusted value (e.g. a ?type= query param) to a known product type. */
+export const isProductType = (v: string | null | undefined): v is ProductType => !!v && PRODUCT_TYPE_VALUES.includes(v);
+
 /** How each form reads on cards, filters and the product page (as in the design: "Thailam · Oil"). */
 export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
   thailam: "Thailam · Oil",

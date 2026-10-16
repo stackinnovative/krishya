@@ -46,7 +46,7 @@ export function HealthNeedsSection({ needs }: { needs: HealthNeed[] }) {
           </div>
           <div className="grid grid-cols-[repeat(auto-fill,minmax(min(44%,170px),1fr))] gap-[clamp(12px,1.8vw,24px)]">
             {needs.map((c) => (
-              <Link key={c.id} href={`/products?categoryId=${c.id}`} className="flex flex-col items-center gap-3 text-center transition-transform hover:-translate-y-[3px]">
+              <Link key={c.id} href={`/shop/${c.slug}`} className="flex flex-col items-center gap-3 text-center transition-transform hover:-translate-y-[3px]">
                 <NeedCircle need={c} className="mb-1.5 aspect-square w-[min(100%,148px)]" iconSize={48} />
                 <span className="font-display text-[clamp(19px,1.6vw,22px)] font-semibold leading-[1.15] text-ka-green">{c.name}</span>
               </Link>

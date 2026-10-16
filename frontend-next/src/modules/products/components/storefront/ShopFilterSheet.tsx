@@ -4,14 +4,17 @@ import { useEffect } from "react";
 import type { IdName } from "@/shared/types/api.types";
 import { CheckIcon, CloseIcon } from "@/modules/storefront-shell/components/icons";
 import { SORT_OPTIONS, type SortValue } from "./SortSelect";
+import { PRODUCT_TYPE_OPTIONS, type ProductType } from "../../constants/product-options";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   categories: IdName[];
   categoryId?: string;
+  type?: ProductType;
   sort: SortValue;
   onCategory: (id: string | undefined) => void;
+  onType: (type: ProductType | undefined) => void;
   onSort: (sort: SortValue) => void;
   onClear: () => void;
   resultLabel: string;
@@ -31,7 +34,7 @@ function OptionRow({ label, checked, onClick, round = false }: { label: string; 
 }
 
 /** Shop filters: a bottom sheet on phones, a right-hand panel on desktop (design's sheetUI). Changes apply immediately; the footer button just closes it. */
-export default function ShopFilterSheet({ open, onClose, categories, categoryId, sort, onCategory, onSort, onClear, resultLabel }: Props) {
+export default function ShopFilterSheet({ open, onClose, categories, categoryId, type, sort, onCategory, onType, onSort, onClear, resultLabel }: Props) {
   useEffect(() => {
     if (!open) return;
     const previous = document.body.style.overflow;
@@ -75,6 +78,13 @@ export default function ShopFilterSheet({ open, onClose, categories, categoryId,
               ))}
             </div>
           )}
+          <div role="radiogroup" aria-label="Form" className="flex flex-col gap-1.5">
+            <span className="mb-1.5 text-xs font-bold tracking-[.16em] text-ka-green">FORM</span>
+            <OptionRow round label="All forms" checked={!type} onClick={() => onType(undefined)} />
+            {PRODUCT_TYPE_OPTIONS.map((o) => (
+              <OptionRow key={o.value} round label={o.label} checked={type === o.value} onClick={() => onType(o.value)} />
+            ))}
+          </div>
           <div role="radiogroup" aria-label="Sort by" className="flex flex-col gap-1.5">
             <span className="mb-1.5 text-xs font-bold tracking-[.16em] text-ka-green">SORT BY</span>
             {SORT_OPTIONS.map((o) => (

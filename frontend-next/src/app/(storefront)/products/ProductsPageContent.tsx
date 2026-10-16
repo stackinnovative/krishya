@@ -10,30 +10,32 @@ import ShopFilterSheet from "@/modules/products/components/storefront/ShopFilter
 import SortSelect, { SORT_OPTIONS, type SortValue } from "@/modules/products/components/storefront/SortSelect";
 import { SectionDecor, Wave } from "@/modules/storefront-shell/components/decor";
 import { CloseIcon, FilterIcon } from "@/modules/storefront-shell/components/icons";
+import { PRODUCT_TYPE_LABELS, isProductType, type ProductType } from "@/modules/products/constants/product-options";
 
 const SORT_VALUES: readonly string[] = SORT_OPTIONS.map((o) => o.value);
 const isSortValue = (v: string | null): v is SortValue => !!v && SORT_VALUES.includes(v);
 
-/** The first page of the default (unfiltered, or ?categoryId=-scoped)
- * product list is prefetched server-side by the parent page.tsx and handed
- * down through a HydrationBoundary, so it resolves instantly from cache
- * instead of a second client fetch. Category, search and sort live in the
- * URL, so footer/category links and the header search always land on the
- * matching view, and Back restores the previous filter. */
-export default function ProductsPageContent() {
+/** The first page of the list is prefetched server-side by the parent page
+ * (/products, or /shop/<slug> for one health need) and handed down through a
+ * HydrationBoundary, so it resolves instantly from cache instead of a second
+ * client fetch. The category is the /shop/<slug> path; type, search and sort
+ * live in the query string - so every view has a shareable, crawlable URL and
+ * Back restores the previous filter. */
+export default function ProductsPageContent({ categorySlug }: { categorySlug?: string }) {
   return (
     <Suspense fallback={null}>
-      <ProductsPageInner />
+      <ProductsPageInner categorySlug={categorySlug} />
     </Suspense>
   );
 }
 
-function ProductsPageInner() {
+function ProductsPageInner({ categorySlug }: { categorySlug?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  const categoryId = searchParams.get("categoryId") ?? undefined;
+  const typeParam = searchParams.get("type");
+  const type = isProductType(typeParam) ? typeParam : undefined;
   const search = searchParams.get("search") ?? "";
   const sortParam = searchParams.get("sort");
   const sort: SortValue = isSortValue(sortParam) ? sortParam : "newest";
@@ -43,19 +45,25 @@ function ProductsPageInner() {
 
   const { data: categoryData } = useActiveCategories();
   const categories = categoryData?.data ?? [];
-  const activeCategory = categories.find((c) => c.id === categoryId);
+  const activeCategory = categorySlug ? categories.find((c) => c.slug === categorySlug) : undefined;
+  const categoryId = activeCategory?.id;
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useProductList({ search, sort, categoryId });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } = useProductList({ search, sort, categoryId, type });
   const products = data?.pages.flatMap((p) => p.data) ?? [];
 
-  const setParams = (next: { categoryId?: string; search?: string; sort?: SortValue }) => {
-    const merged = { categoryId, search, sort, ...next };
+  const setParams = (next: { categoryId?: string; type?: ProductType; search?: string; sort?: SortValue }) => {
+    const merged = { categoryId, type, search, sort, ...next };
+    const slug = categories.find((c) => c.id === merged.categoryId)?.slug;
+    const base = slug ? `/shop/${slug}` : "/products";
     const params = new URLSearchParams();
-    if (merged.categoryId) params.set("categoryId", merged.categoryId);
+    if (merged.type) params.set("type", merged.type);
     if (merged.search) params.set("search", merged.search);
     if (merged.sort && merged.sort !== "newest") params.set("sort", merged.sort);
     const qs = params.toString();
-    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    const href = qs ? `${base}?${qs}` : base;
+    // Same page: swap the query in place. Another health need: a real navigation, so it gets its own history entry and metadata.
+    if (base === pathname) router.replace(href, { scroll: false });
+    else router.push(href, { scroll: false });
   };
 
   const observerRef = useRef<HTMLDivElement | null>(null);
@@ -83,10 +91,11 @@ function ProductsPageInner() {
 
   const chips = [
     ...(activeCategory ? [{ label: activeCategory.name, remove: () => setParams({ categoryId: undefined }) }] : []),
+    ...(type ? [{ label: PRODUCT_TYPE_LABELS[type], remove: () => setParams({ type: undefined }) }] : []),
     ...(search ? [{ label: `Search: “${search}”`, remove: () => setParams({ search: "" }) }] : []),
   ];
   const filterCount = chips.length + (sort !== "newest" ? 1 : 0);
-  const clearFilters = () => router.replace(pathname, { scroll: false });
+  const clearFilters = () => (pathname === "/products" ? router.replace("/products", { scroll: false }) : router.push("/products", { scroll: false }));
 
   const countLabel = isLoading
     ? "Loading products…"
@@ -107,7 +116,15 @@ function ProductsPageInner() {
           <nav aria-label="Breadcrumb" className="flex gap-2 text-[13px] text-ka-muted">
             <Link href="/">Home</Link>
             <span aria-hidden="true">/</span>
-            <span className="text-ka-green">Shop</span>
+            {activeCategory ? (
+              <>
+                <Link href="/products">Shop</Link>
+                <span aria-hidden="true">/</span>
+                <span className="text-ka-green">{activeCategory.name}</span>
+              </>
+            ) : (
+              <span className="text-ka-green">Shop</span>
+            )}
           </nav>
           <h1 className="m-0 font-display text-[clamp(38px,4.4vw,62px)] font-medium leading-[1.05] text-ka-green">{title}</h1>
           <p className="m-0 max-w-[560px] text-base leading-[1.6] text-ka-body">Classical Kerala preparations, made in small batches and chosen by health need.</p>
@@ -202,8 +219,10 @@ function ProductsPageInner() {
         onClose={closeSheet}
         categories={categories}
         categoryId={categoryId}
+        type={type}
         sort={sort}
         onCategory={(id) => setParams({ categoryId: id })}
+        onType={(t) => setParams({ type: t })}
         onSort={(v) => setParams({ sort: v })}
         onClear={clearFilters}
         resultLabel={isLoading ? "Show products" : `Show ${products.length}${hasNextPage ? "+" : ""} products`}

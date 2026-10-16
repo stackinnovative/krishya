@@ -1,36 +1,33 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
-import { getActiveCategoriesApi } from "@/modules/categories/api/category.api";
-import { getAllProductsForUserApi } from "@/modules/products/api/storefront-product.api";
-import { categoryKeys, productKeys } from "@/shared/query-keys";
+import { getActiveCategories } from "@/modules/categories/server";
 import ProductsPageContent from "./ProductsPageContent";
+import { prefetchShopPage, toProductType } from "./prefetch";
 
 export const metadata: Metadata = {
   title: "Shop",
   description: "Classical Kerala Ayurveda preparations - thailams, churnams, arishtams and hair oils - chosen by health need.",
 };
 
-type Search = { searchParams: Promise<{ categoryId?: string; search?: string; sort?: string }> };
+type Search = { searchParams: Promise<{ categoryId?: string; type?: string; search?: string; sort?: string }> };
 
 // Server-rendered so the first page of products (and active categories) is
 // present in the initial HTML for crawlers - filters/sort/search/infinite
-// scroll beyond that stay fully client-driven, unchanged, in
-// ProductsPageContent.
+// scroll beyond that stay client-driven in ProductsPageContent.
 export default async function ProductsPage({ searchParams }: Search) {
-  const { categoryId, search = "", sort = "newest" } = await searchParams;
-  // Must mirror the client's useProductList filters so the hydrated cache is hit.
-  const filters = { search, sort, categoryId };
+  const { categoryId, type, search = "", sort = "newest" } = await searchParams;
+
+  // Old ?categoryId= links (shared or indexed before categories got their
+  // own pages) move permanently to /shop/<slug>, keeping any other filters.
+  if (categoryId) {
+    const slug = (await getActiveCategories()).find((c) => c.id === categoryId)?.slug;
+    const rest = new URLSearchParams({ ...(type && { type }), ...(search && { search }), ...(sort !== "newest" && { sort }) }).toString();
+    redirect(`${slug ? `/shop/${slug}` : "/products"}${rest ? `?${rest}` : ""}`);
+  }
 
   const queryClient = new QueryClient();
-  await Promise.all([
-    queryClient.prefetchQuery({ queryKey: categoryKeys.active, queryFn: getActiveCategoriesApi }),
-    queryClient.prefetchInfiniteQuery({
-      queryKey: [...productKeys.userList, filters],
-      queryFn: ({ pageParam }: { pageParam: number }) => getAllProductsForUserApi({ ...filters, page: pageParam }),
-      initialPageParam: 1,
-      getNextPageParam: (last: { nextPage: number | null }) => last.nextPage,
-    }),
-  ]);
+  await prefetchShopPage(queryClient, { search, sort, type: toProductType(type) });
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

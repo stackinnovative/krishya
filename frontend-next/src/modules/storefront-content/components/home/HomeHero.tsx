@@ -300,7 +300,7 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
           </div>
           <div className="no-scrollbar -mx-4 flex gap-3.5 overflow-x-auto px-4 pb-1.5 pt-0.5">
             {needs.map((c) => (
-              <Link key={c.id} href={`/products?categoryId=${c.id}`} className="flex w-[76px] flex-none flex-col items-center gap-2">
+              <Link key={c.id} href={`/shop/${c.slug}`} className="flex w-[76px] flex-none flex-col items-center gap-2">
                 <NeedCircle need={c} className="h-[68px] w-[68px]" iconSize={26} />
                 <span className="text-center text-xs font-semibold leading-tight text-ka-green">{c.name}</span>
               </Link>

@@ -135,7 +135,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
           <span aria-hidden="true">/</span>
           <Link href="/products">Shop</Link>
           <span aria-hidden="true">/</span>
-          <Link href={`/products?categoryId=${product.category.id}`}>{categoryName}</Link>
+          <Link href={`/shop/${product.category.slug}`}>{categoryName}</Link>
           <span aria-hidden="true">/</span>
           <span className="text-ka-green">{product.name}</span>
         </nav>
