@@ -238,13 +238,14 @@ export class CartRepository implements ICartRepository {
           quantity: "$items.quantity",
           variantId: {
             id: "$items.variantId",
-            size: { $concat: [{ $toString: "$selectedVariant.quantity" }, " ", "$selectedVariant.unit"] }
+            label: { $concat: [{ $toString: "$selectedVariant.quantity" }, " ", "$selectedVariant.unit"] }
           },
 
           product: {
             name: "$product.name",
             image: { $arrayElemAt: ["$product.images.url", 0] },
-            price: "$selectedVariant.price"
+            price: "$selectedVariant.price",
+            mrp: "$selectedVariant.mrp"
           }
         }
       },
@@ -393,13 +394,14 @@ export class CartRepository implements ICartRepository {
           cartId: "$_id",
           quantity: "$items.quantity",
           variantId: {
-            size: { $concat: [{ $toString: "$selectedVariant.quantity" }, " ", "$selectedVariant.unit"] }
+            label: { $concat: [{ $toString: "$selectedVariant.quantity" }, " ", "$selectedVariant.unit"] }
           },
 
           product: {
             name: "$product.name",
             image: { $arrayElemAt: ["$product.images.url", 0] },
-            price: "$selectedVariant.price"
+            price: "$selectedVariant.price",
+            mrp: "$selectedVariant.mrp"
           }
         }
       },

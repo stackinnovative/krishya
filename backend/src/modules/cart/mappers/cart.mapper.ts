@@ -63,7 +63,7 @@ export class CartMapper {
         itemId: item.id?.toString(),
         variant: {
           id: item.variantId?.id?.toString(),
-          size: item.variantId?.size
+          label: item.variantId?.label
         },
         quantity: item.quantity,
 
@@ -71,6 +71,7 @@ export class CartMapper {
           name: item.product.name,
           image: item.product.image,
           price: item.product.price,
+          mrp: item.product.mrp,
         },
       })),
 
@@ -86,9 +87,10 @@ export class CartMapper {
       cartId: raw._id?.toString() || raw.id,
       items: raw.items.map((item: any) => ({
         name: item.product.name,
-        size: item.variantId.size,
+        label: item.variantId.label,
         quantity: item.quantity,
         price: item.product.price,
+        mrp: item.product.mrp,
         image: item.product.image,
       })),
       totalItems: raw.totalItems,
