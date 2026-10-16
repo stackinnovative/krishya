@@ -37,6 +37,7 @@ import type { IGetFeaturedProductUseCase } from "../use-cases/interfaces/get.fet
 import console from "console";
 import type { IGetAllProductForUserUseCase } from "../use-cases/interfaces/get.all.product.user.use-case.interface.js";
 import type { IGetProductForUserUseCase } from "../use-cases/interfaces/get.product.user.use-case.interface.js";
+import type { IGetProductBySlugForUserUseCase } from "../use-cases/interfaces/get.product.by.slug.user.use-case.interface.js";
 import type { IGetRelatedProductUseCase } from "../use-cases/interfaces/get.related.product.use-case.interface.js";
 import type { IGetProductVariantForUserUseCase } from "../use-cases/interfaces/get.product.variant.for.user.use-case.interface.js";
 
@@ -78,6 +79,9 @@ export class ProductController implements IProductController {
 
     @inject("IGetProductForUserUseCase")
     private readonly _getProductForUserUseCase: IGetProductForUserUseCase,
+
+    @inject("IGetProductBySlugForUserUseCase")
+    private readonly _getProductBySlugForUserUseCase: IGetProductBySlugForUserUseCase,
 
     @inject("IGetRelatedProductUseCase")
     private readonly _getRelatedProductUseCase: IGetRelatedProductUseCase,
@@ -159,7 +163,7 @@ export class ProductController implements IProductController {
   async getAllProductForAdmin(req: Request, res: Response): Promise<void> {
     try {
       const dto = GetAllQuerySchema.parse(
-        parseReq(req, ["isActive", "categoryId", "isFeatured"]),
+        parseReq(req, ["isActive", "categoryId", "isFeatured", "type"]),
       );
 
       const { data, total } =
@@ -272,7 +276,7 @@ export class ProductController implements IProductController {
   async getAllProductForUser(req: Request, res: Response): Promise<void> {
     try {
       const dto = GetAllQuerySchema.parse(
-        parseReq(req, ["categoryId"]),
+        parseReq(req, ["categoryId", "type"]),
       );
 
       const result = await this._getAllProductForUserUseCase.execute(dto);
@@ -301,6 +305,21 @@ export class ProductController implements IProductController {
     } catch (error) {
       handleError(res, error);
       console.log("error in get product details for user controller ", error);
+    }
+  }
+
+  async getProductBySlugForUser(req: Request, res: Response): Promise<void> {
+    try {
+      const { slug } = req.params;
+      const data = await this._getProductBySlugForUserUseCase.execute(slug ?? "");
+      res.status(HttpStatusCode.OK).json({
+        success: true,
+        message: ResponseMessages.SUCCESS,
+        data,
+      });
+    } catch (error) {
+      handleError(res, error);
+      console.log("error in get product by slug for user controller ", error);
     }
   }
 

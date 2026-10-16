@@ -187,6 +187,14 @@ export class ProductRepository implements IProductRepository {
     return ProductMapper.toUserView(document);
   }
 
+  async findProductForUserBySlug(slug: string): Promise<UserProductView | null> {
+    const document = await ProductModel.findOne({ slug: slug.toLowerCase(), isActive: true })
+      .populate("category", "name slug")
+      .lean<ProductRecord>();
+
+    return ProductMapper.toUserView(document);
+  }
+
   async addVariants(productId: string, variants: AddVariantProps[]): Promise<Product | null> {
     const toInsert = variants.map(toVariantDoc);
 

@@ -25,6 +25,8 @@ import { GetProductDetailsForAdminUseCase } from "../modules/product/use-cases/g
 
 import type { IGetProductForUserUseCase } from "../modules/product/use-cases/interfaces/get.product.user.use-case.interface.js";
 import { GetProductForUserUseCase } from "../modules/product/use-cases/get.product.user.use-case.js";
+import type { IGetProductBySlugForUserUseCase } from "../modules/product/use-cases/interfaces/get.product.by.slug.user.use-case.interface.js";
+import { GetProductBySlugForUserUseCase } from "../modules/product/use-cases/get.product.by.slug.user.use-case.js";
 import type { IAddProductVariantUseCase } from "../modules/product/use-cases/interfaces/add.product.variant.use-case.interface.js";
 import { AddProductVariantUseCase } from "../modules/product/use-cases/add.product.variant.use-case.js";
 import type { IEditProductVariantUseCase } from "../modules/product/use-cases/interfaces/edit.product.variant.use-case.interface.js";
@@ -75,6 +77,10 @@ export const registerProductDependencies = () => {
     {
       useClass: GetProductDetailsForAdminUseCase,
     }
+  );
+
+  container.register<IGetProductBySlugForUserUseCase>(
+    "IGetProductBySlugForUserUseCase", { useClass: GetProductBySlugForUserUseCase }
   );
 
   container.register<IGetProductForUserUseCase>(

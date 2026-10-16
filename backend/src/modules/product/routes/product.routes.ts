@@ -56,6 +56,12 @@ router.get(
   (req, res) => productController.getAllProductForUser(req, res),
 );
 
+/* ---------- USER: GET PRODUCT BY SLUG (the /products/<slug> page) ---------- */
+router.get(
+  "/slug/:slug",
+  (req, res) => productController.getProductBySlugForUser(req, res),
+);
+
 /* ---------- GET FEATURED PRODUCTS ---------- */
 router.get(
   "/featured",

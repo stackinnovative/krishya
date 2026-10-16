@@ -6,6 +6,7 @@ import type {
   PaginatedUserProductList,
 } from "../types/product.type.js";
 import type { GetAllQueryDto } from "../../../core/shared/dtos/get.all.doc.dto.js";
+import { PRODUCT_TYPES } from "../types/product.type.js";
 
 @injectable()
 export class GetAllProductForUserUseCase implements IGetAllProductForUserUseCase {
@@ -26,6 +27,11 @@ export class GetAllProductForUserUseCase implements IGetAllProductForUserUseCase
     /* ---------- category filter ---------- */
     if (filters.categoryId) {
       query.category = filters.categoryId;
+    }
+
+    /* ---------- type filter (thailam, churnam ...) ---------- */
+    if (PRODUCT_TYPES.includes(filters.type)) {
+      query.type = filters.type;
     }
 
     /* ---------- sorting ---------- */
