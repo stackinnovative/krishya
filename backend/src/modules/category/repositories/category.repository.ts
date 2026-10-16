@@ -7,8 +7,7 @@ import { Category } from "../entities/category.entity.js";
 import { CategoryModel } from "../infrastructure/category.schema.js";
 import type { ICategoryRepository } from "./category.repository.interface.js";
 import { CategoryMapper } from "../mappers/category.mapper.js";
-import type { IdName } from "../../../core/shared/types/id.name.type.js";
-import type { CategorySignature } from "../types/category.type.js";
+import type { CategoryUserView } from "../types/category.type.js";
 
 export class CategoryRepository implements ICategoryRepository {
   async create(categoryEntity: Category): Promise<Category> {
@@ -34,6 +33,10 @@ export class CategoryRepository implements ICategoryRepository {
   async findByName(name: string): Promise<Category | null> {
     const foundDocument = await CategoryModel.findOne({ name }).lean();
     return CategoryMapper.toDomain(foundDocument);
+  }
+
+  async isSlugTaken(slug: string): Promise<boolean> {
+    return (await CategoryModel.exists({ slug })) !== null;
   }
 
   async save(categoryEntity: Category): Promise<Category> {
@@ -86,15 +89,17 @@ export class CategoryRepository implements ICategoryRepository {
       .filter((c): c is Category => c !== null);
   }
 
-  // 🔹 ALL ACTIVE CATEGORIES (USER) - the flat list storefront nav/filters and product browsing pick from.
-  async findAllActiveForUser(): Promise<IdName[]> {
+  // 🔹 ALL ACTIVE CATEGORIES (USER) - the flat list storefront nav/filters and product browsing pick from, in the admin's order.
+  async findAllActiveForUser(): Promise<CategoryUserView[]> {
     const documents = await CategoryModel.find({ isActive: true })
-      .sort({ name: 1 })
+      .sort({ sortOrder: 1, name: 1 })
       .lean();
 
     return documents.map((item) => ({
       id: item._id.toString(),
       name: item.name,
+      slug: item.slug,
+      icon: item.icon,
     }));
   }
 
@@ -102,16 +107,10 @@ export class CategoryRepository implements ICategoryRepository {
     return await CategoryModel.countDocuments(query);
   }
 
-  async findSignatureCategories(): Promise<CategorySignature[]> {
-    const signatureCategories = await CategoryModel.aggregate([
-      // 1. Active categories only
-      {
-        $match: {
-          isActive: true,
-        },
-      },
-
-      // 2. Join products belonging directly to this category
+  // The home page "Shop by need" tiles: active categories that have at least one active product, so a tile never leads to an empty shelf.
+  async findSignatureCategories(): Promise<CategoryUserView[]> {
+    return CategoryModel.aggregate<CategoryUserView>([
+      { $match: { isActive: true } },
       {
         $lookup: {
           from: "products",
@@ -128,59 +127,22 @@ export class CategoryRepository implements ICategoryRepository {
               },
             },
             { $limit: 1 },
-            {
-              $project: {
-                colorOptions: 1,
-              },
-            },
+            { $project: { _id: 1 } },
           ],
           as: "product",
         },
       },
-
-      // 3. Keep only categories that actually have a product
-      {
-        $match: {
-          product: { $ne: [] },
-        },
-      },
-
-      // 4. Grab the matched product's first colour's first photo.
+      { $match: { product: { $ne: [] } } },
+      { $sort: { sortOrder: 1, name: 1 } },
       {
         $project: {
           _id: 0,
-          categoryId: "$_id",
-          categoryName: "$name",
-          productImage: {
-            $let: {
-              vars: {
-                firstColorOptions: { $arrayElemAt: ["$product.colorOptions", 0] },
-              },
-              in: {
-                $let: {
-                  vars: { firstColor: { $arrayElemAt: ["$$firstColorOptions", 0] } },
-                  in: { $arrayElemAt: ["$$firstColor.images", 0] },
-                },
-              },
-            },
-          },
+          id: { $toString: "$_id" },
+          name: 1,
+          slug: 1,
+          icon: 1,
         },
       },
-
-      // 5. Limit to 4
-      { $limit: 4 },
     ]);
-    return signatureCategories
-      .map((item) => {
-        const imageUrl = item.productImage?.url;
-        if (!item.categoryId || !imageUrl) return null;
-
-        return {
-          id: item.categoryId.toString(),
-          name: item.categoryName,
-          image: imageUrl,
-        };
-      })
-      .filter((c): c is CategorySignature => c !== null);
   }
 }
