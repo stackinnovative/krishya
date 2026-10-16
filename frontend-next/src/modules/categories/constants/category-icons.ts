@@ -1,0 +1,77 @@
+import {
+  Activity,
+  Baby,
+  Bone,
+  Brain,
+  Droplets,
+  Flame,
+  Flower2,
+  HandHeart,
+  HeartPulse,
+  Leaf,
+  Moon,
+  Pill,
+  ShieldPlus,
+  Smile,
+  Soup,
+  Sparkles,
+  Sprout,
+  Sun,
+  Wheat,
+  Wind,
+  type LucideIcon,
+} from "lucide-react";
+
+/** Mirrors backend/src/modules/category/types/category.type.ts CATEGORY_ICON_NAMES exactly. */
+export const CATEGORY_ICON_NAMES = [
+  "Leaf",
+  "Sprout",
+  "Flower2",
+  "Droplets",
+  "Sparkles",
+  "Sun",
+  "Moon",
+  "Flame",
+  "Wind",
+  "HeartPulse",
+  "HandHeart",
+  "ShieldPlus",
+  "Bone",
+  "Activity",
+  "Brain",
+  "Soup",
+  "Wheat",
+  "Pill",
+  "Baby",
+  "Smile",
+] as const;
+
+export type CategoryIconName = (typeof CATEGORY_ICON_NAMES)[number];
+
+export const CATEGORY_ICON_MAP: Record<CategoryIconName, LucideIcon> = {
+  Leaf,
+  Sprout,
+  Flower2,
+  Droplets,
+  Sparkles,
+  Sun,
+  Moon,
+  Flame,
+  Wind,
+  HeartPulse,
+  HandHeart,
+  ShieldPlus,
+  Bone,
+  Activity,
+  Brain,
+  Soup,
+  Wheat,
+  Pill,
+  Baby,
+  Smile,
+};
+
+export const CATEGORY_ICON_OPTIONS: { name: CategoryIconName; Icon: LucideIcon }[] = CATEGORY_ICON_NAMES.map((name) => ({
+  name,
+  Icon: CATEGORY_ICON_MAP[name],
+}));
