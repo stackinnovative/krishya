@@ -1,7 +1,7 @@
 import api from "@/lib/api-client";
-import type { ApiResponse, GetIdNameResponse } from "@/shared/types/api.types";
+import type { ApiResponse } from "@/shared/types/api.types";
 import type { CreateCategoryPayload, GetCategoryListResponse } from "../types/category.type";
-import type { GetSignatureCategoriesResponse } from "../types/storefront-category.type";
+import type { GetSignatureCategoriesResponse, GetStorefrontCategoriesResponse } from "../types/storefront-category.type";
 
 export const getSignatureCategoriesApi = async (): Promise<GetSignatureCategoriesResponse> => {
   const response = await api.get<GetSignatureCategoriesResponse>("/categories/signature");
@@ -34,7 +34,7 @@ export const getAllCategoriesForAdminApi = async (query: Record<string, unknown>
 };
 
 /** Every active category, flat - what storefront nav/filter pills and any "pick a category" control should offer. */
-export const getActiveCategoriesApi = async (): Promise<GetIdNameResponse> => {
-  const response = await api.get<GetIdNameResponse>("/categories/list");
+export const getActiveCategoriesApi = async (): Promise<GetStorefrontCategoriesResponse> => {
+  const response = await api.get<GetStorefrontCategoriesResponse>("/categories/list");
   return response.data;
 };

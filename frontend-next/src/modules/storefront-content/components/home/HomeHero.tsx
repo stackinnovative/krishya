@@ -12,10 +12,12 @@ import type { UserProductListItem } from "@/modules/products/types/storefront-pr
 import { HERO_SLIDE_INTERVAL_MS } from "@/modules/home-content/constants";
 import type { HeroView } from "@/modules/home-content/types/home-content.type";
 import { useHeroSlideshow } from "../../hooks/useHeroSlideshow";
+import { CATEGORY_ICON_MAP } from "@/modules/categories/constants/category-icons";
+import type { StorefrontCategory } from "@/modules/categories/types/storefront-category.type";
 
 const DEFAULT_HERO_IMAGE = "/images/hero-oil-herbs.jpg";
 
-export type HealthNeed = { id: string; name: string; image?: string };
+export type HealthNeed = StorefrontCategory;
 
 /** One hero slide as rendered - an admin slide, or the built-in default when none are active. */
 type Slide = {
@@ -324,18 +326,15 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
   );
 }
 
-/** Circle used for a health-need category: its own image when the category has one, otherwise the striped leaf medallion. */
+/** Circle used for a health-need category: the striped medallion with the icon admin picked (a leaf if it's unknown). */
 export function NeedCircle({ need, className, iconSize }: { need: HealthNeed; className: string; iconSize: number }) {
+  const Icon = CATEGORY_ICON_MAP[need.icon];
   return (
     <span
       className={`relative grid flex-none place-items-center overflow-hidden rounded-full border-[1.5px] border-ka-sage bg-ka-sand text-ka-green ${className}`}
       style={{ backgroundImage: "repeating-linear-gradient(135deg,rgba(31,77,58,.06) 0 1px,transparent 1px 9px)" }}
     >
-      {need.image ? (
-        <Image src={getOptimizedImageUrl(need.image, 300)} alt="" fill sizes="150px" className="object-cover" />
-      ) : (
-        <LeafIcon size={iconSize} strokeWidth={1.2} />
-      )}
+      {Icon ? <Icon size={iconSize} strokeWidth={1.2} /> : <LeafIcon size={iconSize} strokeWidth={1.2} />}
     </span>
   );
 }
