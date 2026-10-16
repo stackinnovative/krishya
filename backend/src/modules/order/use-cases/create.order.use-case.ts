@@ -195,6 +195,7 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 name: product.name,
                 quantity: cartItem.quantity,
                 price: latestPrice,
+                mrp: variant.mrp,
                 image: product.images[0]?.url,
             });
 

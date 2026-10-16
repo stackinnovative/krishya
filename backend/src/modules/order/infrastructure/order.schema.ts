@@ -9,8 +9,8 @@ export interface IOrderItem {
   size?: string | undefined;
   name: string;
   price: number;
+  mrp?: number | undefined;
   quantity: number;
-  colorName?: string | undefined;
   image?: string | undefined;
 }
 
@@ -159,9 +159,9 @@ const orderSchema = new Schema<IOrder>(
             min: 1,
           },
 
-          colorName: {
-            type: String,
-            trim: true,
+          mrp: {
+            type: Number,
+            min: 0,
           },
 
           image: {

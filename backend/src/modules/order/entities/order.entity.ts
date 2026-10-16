@@ -6,12 +6,13 @@ export type OrderItem = {
   id?: string;
   productId: string;
   variantId: string;
+  /** The variant label at checkout - "200 ml", "60 tablets". */
   size?: string | undefined;
   name: string;
   price: number;
+  /** Snapshotted at checkout, same reasoning as name/price - so later price, quantity or photo edits never change what a past order shows. */
+  mrp?: number | undefined;
   quantity: number;
-  /** Snapshotted at checkout, same reasoning as name/price - so later edits to the product's colors/images never change what a past order shows. */
-  colorName?: string | undefined;
   image?: string | undefined;
 };
 

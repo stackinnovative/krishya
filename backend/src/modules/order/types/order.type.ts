@@ -215,8 +215,8 @@ export type AdminOrderFullView = {
     name: string;
     size?: string | undefined;
     price: number;
+    mrp?: number | undefined;
     quantity: number;
-    colorName?: string | undefined;
     image?: string | undefined;
   }[];
 };
@@ -254,8 +254,8 @@ export interface IOrderLean {
     name: string;
     size?: string | undefined;
     price: number;
+    mrp?: number | undefined;
     quantity: number;
-    colorName?: string | undefined;
     image?: string | undefined;
   }[];
 }
