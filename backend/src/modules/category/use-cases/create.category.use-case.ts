@@ -7,7 +7,7 @@ import { Category } from "../entities/category.entity.js";
 import type { ICreateCategoryUseCase } from "./interfaces/create.category.use-case.interface.js";
 import type { ICategoryRepository } from "../repositories/category.repository.interface.js";
 import type { CreateCategoryRequestDto } from "../dtos/create.category.dto.js";
-import { toSlug } from "../../../core/utils/to.slug.helper.js";
+import { toUniqueSlug } from "../../../core/utils/to.slug.helper.js";
 import { CATEGORY_LIMITS } from "../types/category.type.js";
 
 
@@ -33,7 +33,7 @@ export class CreateCategoryUseCase implements ICreateCategoryUseCase {
     const categoryEntity = new Category({
       id: null,
       name: dto.name,
-      slug: await this.uniqueSlug(dto.name),
+      slug: await toUniqueSlug(dto.name, CATEGORY_LIMITS.slug, (slug) => this._categoryRepository.isSlugTaken(slug)),
       description: dto.description,
       icon: dto.icon,
       sortOrder: dto.sortOrder,
@@ -48,15 +48,5 @@ export class CreateCategoryUseCase implements ICreateCategoryUseCase {
         HttpStatusCode.INTERNAL_SERVER_ERROR
       );
     }
-  }
-
-  /** "Hair Care" -> "hair-care", or "hair-care-2" when another category already owns it. */
-  private async uniqueSlug(name: string): Promise<string> {
-    const base = toSlug(name, CATEGORY_LIMITS.slug - 4);
-    let slug = base;
-    for (let n = 2; await this._categoryRepository.isSlugTaken(slug); n++) {
-      slug = `${base}-${n}`;
-    }
-    return slug;
   }
 }
