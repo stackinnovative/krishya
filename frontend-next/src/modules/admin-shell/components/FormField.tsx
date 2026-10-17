@@ -1,7 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { AlertCircle } from "lucide-react";
+import { useState, type CSSProperties } from "react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import IconPicker, { type IconOption } from "./IconPicker";
 import ImageDropzone, { type ImageFieldValue } from "./ImageDropzone";
 import SearchableSelect from "./SearchableSelect";
@@ -104,6 +104,7 @@ export default function FormField({
   hint,
 }: FormFieldProps) {
   const hasError = !!error;
+  const [showPassword, setShowPassword] = useState(false);
   // A <label> forwards clicks on its text to its first button, which would
   // silently pick the first icon - so the icon grid gets a plain wrapper.
   const Wrapper = type === "icon" ? "div" : "label";
@@ -159,6 +160,31 @@ export default function FormField({
         />
       ) : type === "icon" ? (
         <IconPicker options={iconOptions ?? []} value={(value as string) ?? ""} onChange={onChange} />
+      ) : type === "password" ? (
+        // The input comes before the toggle, so clicking the label text still focuses the input.
+        <span className="relative block">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={(value as string | undefined) ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            disabled={disabled}
+            autoComplete={autoComplete}
+            maxLength={maxLength}
+            aria-invalid={hasError}
+            style={{ ...controlStyle, paddingRight: 42 }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            disabled={disabled}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            className="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8a8a8e] hover:text-[#141414] disabled:opacity-50"
+          >
+            {showPassword ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
+          </button>
+        </span>
       ) : (
         <input
           type={type === "number" ? "number" : type}
