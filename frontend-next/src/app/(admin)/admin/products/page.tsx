@@ -10,7 +10,7 @@ import AdminErrorBoundary from "@/modules/admin-shell/components/AdminErrorBound
 import AdminListFilterRow from "@/modules/admin-shell/components/AdminListFilterRow";
 import StatusBadge from "@/modules/admin-shell/components/StatusBadge";
 import ConfirmModal from "@/modules/admin-shell/components/ConfirmModal";
-import FilterPills from "@/modules/admin-shell/components/FilterPills";
+import FilterPills, { type FilterPillOption } from "@/modules/admin-shell/components/FilterPills";
 import Pagination from "@/modules/admin-shell/components/Pagination";
 import AdminTable, { type AdminTableColumn } from "@/modules/admin-shell/components/AdminTable";
 import TruncatedText from "@/modules/admin-shell/components/TruncatedText";
@@ -18,6 +18,7 @@ import SearchableSelect from "@/modules/admin-shell/components/SearchableSelect"
 import { blackPillButton, iconButtonStyle, softPillButton, whitePillButton } from "@/modules/admin-shell/style-helpers";
 import { downloadCsv } from "@/modules/admin-shell/utils/csv";
 import { useAdminProducts, useToggleProductStatus } from "@/modules/products/hooks/useAdminProducts";
+import { useAdminCategories } from "@/modules/categories/hooks/useCategories";
 import ProductWizard from "@/modules/products/components/wizard/ProductWizard";
 import ProductViewModal from "@/modules/products/components/ProductViewModal";
 import type { ProductListItem } from "@/modules/products/types/product.type";
@@ -53,7 +54,8 @@ function ProductThumb({ image, size }: { image?: string; size: number }) {
 
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("All");
+  // A status pill (All/Featured/Active/Inactive) or a category id - one pill row, one choice, like Orders.
+  const [filter, setFilter] = useState<string>("All");
   const [sort, setSort] = useState<ProductSortValue>("newest");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -68,6 +70,14 @@ export default function ProductsPage() {
   if (filter === "Featured") query.isFeatured = true;
   if (filter === "Active") query.isActive = true;
   if (filter === "Inactive") query.isActive = false;
+  if (!FILTERS.includes(filter as Filter)) query.categoryId = filter;
+
+  // The category pills need every category, not a paginated page of them.
+  const { data: categoriesRes } = useAdminCategories({ search: "", limit: 100 });
+  const filterOptions: FilterPillOption<string>[] = [
+    ...FILTERS,
+    ...(categoriesRes?.data ?? []).map((c) => ({ value: c.id, label: c.name })),
+  ];
 
   const { data, isLoading, isError, refetch } = useAdminProducts(query);
   const products = data?.data ?? [];
@@ -170,7 +180,7 @@ export default function ProductsPage() {
       onSortChange={(v) => setSort(v as ProductSortValue)}
     >
       <AdminListFilterRow
-        filters={<FilterPills options={FILTERS} value={filter} onChange={setFilter} />}
+        filters={<FilterPills options={filterOptions} value={filter} onChange={setFilter} />}
         right={
           <div className="hidden w-40 om:block">
             <SearchableSelect options={[...PRODUCT_SORT_OPTIONS]} value={sort} onChange={(v) => setSort(v as ProductSortValue)} searchable={false} placeholder="Sort" />
