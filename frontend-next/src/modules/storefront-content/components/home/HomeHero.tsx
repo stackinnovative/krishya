@@ -12,10 +12,12 @@ import type { UserProductListItem } from "@/modules/products/types/storefront-pr
 import { HERO_SLIDE_INTERVAL_MS } from "@/modules/home-content/constants";
 import type { HeroView } from "@/modules/home-content/types/home-content.type";
 import { useHeroSlideshow } from "../../hooks/useHeroSlideshow";
+import { CATEGORY_ICON_MAP } from "@/modules/categories/constants/category-icons";
+import type { StorefrontCategory } from "@/modules/categories/types/storefront-category.type";
 
 const DEFAULT_HERO_IMAGE = "/images/hero-oil-herbs.jpg";
 
-export type HealthNeed = { id: string; name: string; image?: string };
+export type HealthNeed = StorefrontCategory;
 
 /** One hero slide as rendered - an admin slide, or the built-in default when none are active. */
 type Slide = {
@@ -133,12 +135,12 @@ function Badge({ text, className = "" }: { text: string; className?: string }) {
   );
 }
 
-type SpotlightData = { id: string; name: string; price: number; image?: string };
+type SpotlightData = { id: string; slug?: string; name: string; price: number; image?: string };
 
 function SpotlightCard({ data, label, tabbable }: { data: SpotlightData; label?: string; tabbable: boolean }) {
   return (
     <Link
-      href={`/products/${data.id}`}
+      href={data.slug ? `/products/${data.slug}` : "/products"}
       tabIndex={tabbable ? undefined : -1}
       className="absolute bottom-9 left-0 flex max-w-[90%] items-center gap-3 rounded-full bg-white py-2 pl-2 pr-5 text-left shadow-[0_20px_40px_-20px_rgba(31,77,58,.5)] transition-transform hover:-translate-y-0.5"
     >
@@ -162,8 +164,8 @@ function FetchedSpotlight({ productId, label, tabbable }: { productId: string; l
   if (!product || product.variants.length === 0) return null;
   const inStock = product.variants.filter((v) => v.stock > 0);
   const price = Math.min(...(inStock.length ? inStock : product.variants).map((v) => v.price));
-  const image = product.colorOptions.find((c) => c.images.length)?.images[0]?.url;
-  return <SpotlightCard data={{ id: product.id, name: product.name, price, image }} label={label} tabbable={tabbable} />;
+  const image = product.images[0]?.url;
+  return <SpotlightCard data={{ id: product.id, slug: product.slug, name: product.name, price, image }} label={label} tabbable={tabbable} />;
 }
 
 function Spotlight({ slide, tabbable }: { slide: Slide; tabbable: boolean }) {
@@ -298,7 +300,7 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
           </div>
           <div className="no-scrollbar -mx-4 flex gap-3.5 overflow-x-auto px-4 pb-1.5 pt-0.5">
             {needs.map((c) => (
-              <Link key={c.id} href={`/products?categoryId=${c.id}`} className="flex w-[76px] flex-none flex-col items-center gap-2">
+              <Link key={c.id} href={`/shop/${c.slug}`} className="flex w-[76px] flex-none flex-col items-center gap-2">
                 <NeedCircle need={c} className="h-[68px] w-[68px]" iconSize={26} />
                 <span className="text-center text-xs font-semibold leading-tight text-ka-green">{c.name}</span>
               </Link>
@@ -324,18 +326,15 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
   );
 }
 
-/** Circle used for a health-need category: its own image when the category has one, otherwise the striped leaf medallion. */
+/** Circle used for a health-need category: the striped medallion with the icon admin picked (a leaf if it's unknown). */
 export function NeedCircle({ need, className, iconSize }: { need: HealthNeed; className: string; iconSize: number }) {
+  const Icon = CATEGORY_ICON_MAP[need.icon];
   return (
     <span
       className={`relative grid flex-none place-items-center overflow-hidden rounded-full border-[1.5px] border-ka-sage bg-ka-sand text-ka-green ${className}`}
       style={{ backgroundImage: "repeating-linear-gradient(135deg,rgba(31,77,58,.06) 0 1px,transparent 1px 9px)" }}
     >
-      {need.image ? (
-        <Image src={getOptimizedImageUrl(need.image, 300)} alt="" fill sizes="150px" className="object-cover" />
-      ) : (
-        <LeafIcon size={iconSize} strokeWidth={1.2} />
-      )}
+      {Icon ? <Icon size={iconSize} strokeWidth={1.2} /> : <LeafIcon size={iconSize} strokeWidth={1.2} />}
     </span>
   );
 }

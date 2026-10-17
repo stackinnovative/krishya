@@ -10,7 +10,7 @@ import AdminErrorBoundary from "@/modules/admin-shell/components/AdminErrorBound
 import AdminListFilterRow from "@/modules/admin-shell/components/AdminListFilterRow";
 import StatusBadge from "@/modules/admin-shell/components/StatusBadge";
 import ConfirmModal from "@/modules/admin-shell/components/ConfirmModal";
-import FilterPills from "@/modules/admin-shell/components/FilterPills";
+import FilterPills, { type FilterPillOption } from "@/modules/admin-shell/components/FilterPills";
 import Pagination from "@/modules/admin-shell/components/Pagination";
 import AdminTable, { type AdminTableColumn } from "@/modules/admin-shell/components/AdminTable";
 import TruncatedText from "@/modules/admin-shell/components/TruncatedText";
@@ -18,9 +18,12 @@ import SearchableSelect from "@/modules/admin-shell/components/SearchableSelect"
 import { blackPillButton, iconButtonStyle, softPillButton, whitePillButton } from "@/modules/admin-shell/style-helpers";
 import { downloadCsv } from "@/modules/admin-shell/utils/csv";
 import { useAdminProducts, useToggleProductStatus } from "@/modules/products/hooks/useAdminProducts";
+import { useAdminCategories } from "@/modules/categories/hooks/useCategories";
 import ProductWizard from "@/modules/products/components/wizard/ProductWizard";
 import ProductViewModal from "@/modules/products/components/ProductViewModal";
 import type { ProductListItem } from "@/modules/products/types/product.type";
+import { PRODUCT_TYPE_LABELS } from "@/modules/products/constants/product-options";
+import { formatCurrency } from "@/lib/format";
 
 const FILTERS = ["All", "Featured", "Active", "Inactive"] as const;
 type Filter = (typeof FILTERS)[number];
@@ -51,7 +54,8 @@ function ProductThumb({ image, size }: { image?: string; size: number }) {
 
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<Filter>("All");
+  // A status pill (All/Featured/Active/Inactive) or a category id - one pill row, one choice, like Orders.
+  const [filter, setFilter] = useState<string>("All");
   const [sort, setSort] = useState<ProductSortValue>("newest");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -66,6 +70,14 @@ export default function ProductsPage() {
   if (filter === "Featured") query.isFeatured = true;
   if (filter === "Active") query.isActive = true;
   if (filter === "Inactive") query.isActive = false;
+  if (!FILTERS.includes(filter as Filter)) query.categoryId = filter;
+
+  // The category pills need every category, not a paginated page of them.
+  const { data: categoriesRes } = useAdminCategories({ search: "", limit: 100 });
+  const filterOptions: FilterPillOption<string>[] = [
+    ...FILTERS,
+    ...(categoriesRes?.data ?? []).map((c) => ({ value: c.id, label: c.name })),
+  ];
 
   const { data, isLoading, isError, refetch } = useAdminProducts(query);
   const products = data?.data ?? [];
@@ -80,7 +92,9 @@ export default function ProductsPage() {
           <ProductThumb image={p.image} size={34} />
           <div className="min-w-0 flex-1">
             <TruncatedText text={p.name} className="text-[13px] font-semibold" />
-            <div className="text-[11px] text-[#8a8a8e]">{p.isFeatured ? "Featured" : "Standard"}</div>
+            <div className="text-[11px] text-[#8a8a8e]">
+              {PRODUCT_TYPE_LABELS[p.type]} · {p.isFeatured ? "Featured" : "Standard"}
+            </div>
           </div>
         </div>
       ),
@@ -91,7 +105,21 @@ export default function ProductsPage() {
       width: 130,
       render: (p) => <TruncatedText text={p.category?.name} className="text-[12.5px] text-[#555]" />,
     },
-    { key: "price", header: "Price", width: 100, render: (p) => <span className="text-[12.5px] font-semibold">₹{p.price.toLocaleString("en-IN")}</span> },
+    {
+      key: "price",
+      header: "Price",
+      width: 120,
+      render: (p) => (
+        <div className="text-[12.5px]">
+          <span className="font-semibold">{formatCurrency(p.price)}</span>
+          {p.discountPercent > 0 && (
+            <div className="text-[11px] text-[#8a8a8e]">
+              <s>{formatCurrency(p.mrp)}</s> <span style={{ color: "#2e9e4b" }}>{p.discountPercent}% off</span>
+            </div>
+          )}
+        </div>
+      ),
+    },
     {
       key: "status",
       header: "Status",
@@ -120,8 +148,17 @@ export default function ProductsPage() {
   const exportCsv = () => {
     downloadCsv(
       "artspace-products.csv",
-      ["Name", "Category", "Price", "Featured", "Status"],
-      products.map((p) => [p.name, p.category?.name ?? "", p.price, p.isFeatured ? "Yes" : "No", p.isActive ? "Active" : "Inactive"]),
+      ["Name", "Category", "Type", "Price", "MRP", "Discount %", "Featured", "Status"],
+      products.map((p) => [
+        p.name,
+        p.category?.name ?? "",
+        PRODUCT_TYPE_LABELS[p.type],
+        p.price,
+        p.mrp,
+        p.discountPercent,
+        p.isFeatured ? "Yes" : "No",
+        p.isActive ? "Active" : "Inactive",
+      ]),
     );
   };
 
@@ -143,7 +180,7 @@ export default function ProductsPage() {
       onSortChange={(v) => setSort(v as ProductSortValue)}
     >
       <AdminListFilterRow
-        filters={<FilterPills options={FILTERS} value={filter} onChange={setFilter} />}
+        filters={<FilterPills options={filterOptions} value={filter} onChange={setFilter} />}
         right={
           <div className="hidden w-40 om:block">
             <SearchableSelect options={[...PRODUCT_SORT_OPTIONS]} value={sort} onChange={(v) => setSort(v as ProductSortValue)} searchable={false} placeholder="Sort" />

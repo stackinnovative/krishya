@@ -17,7 +17,10 @@ export class CategoryMapper {
     return new Category({
       id: idString,
       name: categoryModelData.name,
+      slug: categoryModelData.slug,
       description: categoryModelData.description,
+      icon: categoryModelData.icon,
+      sortOrder: categoryModelData.sortOrder,
       isActive: categoryModelData.isActive,
     });
   }
@@ -25,7 +28,10 @@ export class CategoryMapper {
   static toPersistence(categoryEntity: Category): any {
     return {
       name: categoryEntity.name,
+      slug: categoryEntity.slug,
       description: categoryEntity.description,
+      icon: categoryEntity.icon,
+      sortOrder: categoryEntity.sortOrder,
       isActive: categoryEntity.isActive,
     };
   }

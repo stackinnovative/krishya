@@ -1,7 +1,7 @@
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { getAllProductsForUserApi, getFeaturedProductsApi, getProductByIdForUserApi } from "@/modules/products/api/storefront-product.api";
 import { getBannerUserApi, getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/api/home-content.api";
-import { getActiveCategoriesApi, getSignatureCategoriesApi } from "@/modules/categories/api/category.api";
+import { getActiveCategoriesApi } from "@/modules/categories/api/category.api";
 import { getAboutApi } from "@/modules/about/api/about.api";
 import { getBlogListApi } from "@/modules/blog/api/blog.api";
 import { getHomeFaqsApi } from "@/modules/faq/api/faq.api";
@@ -33,7 +33,6 @@ export default async function LandingPage() {
     prefetchHeroes(),
     queryClient.prefetchQuery({ queryKey: productKeys.featured, queryFn: getFeaturedProductsApi }),
     queryClient.prefetchQuery({ queryKey: categoryKeys.active, queryFn: getActiveCategoriesApi }),
-    queryClient.prefetchQuery({ queryKey: categoryKeys.signature, queryFn: getSignatureCategoriesApi }),
     queryClient.prefetchQuery({ queryKey: homeContentKeys.testimonialsUser, queryFn: getTestimonialUserApi }),
     queryClient.prefetchQuery({ queryKey: homeContentKeys.bannerUser, queryFn: getBannerUserApi }),
     queryClient.prefetchQuery({ queryKey: aboutKeys.all, queryFn: getAboutApi }),

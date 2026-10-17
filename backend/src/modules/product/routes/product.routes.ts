@@ -56,6 +56,12 @@ router.get(
   (req, res) => productController.getAllProductForUser(req, res),
 );
 
+/* ---------- USER: GET PRODUCT BY SLUG (the /products/<slug> page) ---------- */
+router.get(
+  "/slug/:slug",
+  (req, res) => productController.getProductBySlugForUser(req, res),
+);
+
 /* ---------- GET FEATURED PRODUCTS ---------- */
 router.get(
   "/featured",
@@ -107,22 +113,5 @@ router.get("/related/:categoryId",
 router.get("/list/:productId/variants/:variantId",
   (req, res) => productController.getProductVariantForUser(req, res)
 )
-
-/* ---------- ADD COLOR OPTION ---------- */
-router.post(
-  "/:productId/colors",
-  authenticate.authenticate,
-  authorizeRoles("admin"),
-  (req, res) => productController.addColorOption(req, res),
-);
-
-/* ---------- EDIT COLOR OPTION ---------- */
-router.put(
-  "/:productId/colors/:colorOptionId",
-  authenticate.authenticate,
-  authorizeRoles("admin"),
-  (req, res) => productController.editColorOption(req, res),
-);
-
 
 export default router;

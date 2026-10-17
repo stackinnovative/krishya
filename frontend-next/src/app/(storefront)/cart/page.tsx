@@ -18,6 +18,8 @@ export default function CartPage() {
   const items = cart?.items ?? [];
   const itemCount = items.reduce((n, i) => n + i.quantity, 0);
   const itemsLabel = `${itemCount} ${itemCount === 1 ? "item" : "items"}`;
+  // What the MRPs add up to beyond what's actually charged - from the backend's own mrp/price, never a recomputed %.
+  const savings = items.reduce((sum, i) => sum + Math.max(0, (i.product.mrp ?? i.product.price) - i.product.price) * i.quantity, 0);
 
   return (
     <section className="relative isolate mx-auto max-w-[1200px] overflow-clip px-4 pb-[clamp(32px,7vw,104px)] pt-[clamp(20px,4.4vw,64px)] sm:px-[clamp(16px,4vw,56px)]">
@@ -86,12 +88,17 @@ export default function CartPage() {
                     <div className="flex min-w-0 flex-1 flex-col gap-[3px] pr-0.5 pt-0.5">
                       <div className="flex items-start justify-between gap-2.5">
                         <span className="font-display text-[clamp(19px,1.8vw,23px)] font-semibold leading-[1.1] text-ka-green">{item.product.name}</span>
-                        <span className="flex-none whitespace-nowrap font-display text-[clamp(19px,1.8vw,23px)] font-bold leading-[1.1] text-ka-gold-deep">
-                          {formatCurrency(item.product.price * item.quantity)}
+                        <span className="flex flex-none flex-col items-end gap-0.5 whitespace-nowrap">
+                          <span className="font-display text-[clamp(19px,1.8vw,23px)] font-bold leading-[1.1] text-ka-gold-deep">
+                            {formatCurrency(item.product.price * item.quantity)}
+                          </span>
+                          {item.product.mrp > item.product.price && (
+                            <s className="text-[12.5px] text-ka-muted">{formatCurrency(item.product.mrp * item.quantity)}</s>
+                          )}
                         </span>
                       </div>
                       <span className="text-[13px] text-ka-muted">
-                        {item.variant.size}
+                        {item.variant.label}
                         {item.quantity > 1 ? ` · ${formatCurrency(item.product.price)} each` : ""}
                       </span>
                       <div className="mt-auto flex items-center justify-between gap-2.5 pt-2">
@@ -145,6 +152,12 @@ export default function CartPage() {
                 <span className="whitespace-nowrap">Subtotal ({itemsLabel})</span>
                 <span className="text-ka-ink">{formatCurrency(cart.totalPrice)}</span>
               </div>
+              {savings > 0 && (
+                <div className="flex justify-between gap-3 text-[13px] leading-[1.4] text-[#2F7A4F] ka:text-[15px]">
+                  <span>You save on MRP</span>
+                  <span className="font-semibold">{formatCurrency(savings)}</span>
+                </div>
+              )}
               <div className="flex justify-between gap-3 text-[13px] leading-[1.4] text-ka-muted ka:text-[15px] ka:text-ka-body">
                 <span>Delivery</span>
                 <span className={`font-semibold ${cart.deliveryCharge ? "text-ka-ink" : "text-[#2F7A4F]"}`}>{cart.deliveryCharge ? formatCurrency(cart.deliveryCharge) : "Free"}</span>

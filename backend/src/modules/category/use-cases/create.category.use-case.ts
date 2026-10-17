@@ -7,6 +7,8 @@ import { Category } from "../entities/category.entity.js";
 import type { ICreateCategoryUseCase } from "./interfaces/create.category.use-case.interface.js";
 import type { ICategoryRepository } from "../repositories/category.repository.interface.js";
 import type { CreateCategoryRequestDto } from "../dtos/create.category.dto.js";
+import { toUniqueSlug } from "../../../core/utils/to.slug.helper.js";
+import { CATEGORY_LIMITS } from "../types/category.type.js";
 
 
 @injectable()
@@ -31,7 +33,10 @@ export class CreateCategoryUseCase implements ICreateCategoryUseCase {
     const categoryEntity = new Category({
       id: null,
       name: dto.name,
+      slug: await toUniqueSlug(dto.name, CATEGORY_LIMITS.slug, (slug) => this._categoryRepository.isSlugTaken(slug)),
       description: dto.description,
+      icon: dto.icon,
+      sortOrder: dto.sortOrder,
       isActive: true,
     });
 

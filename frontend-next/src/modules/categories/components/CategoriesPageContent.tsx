@@ -17,12 +17,22 @@ import { blackPillButton, iconButtonStyle, whitePillButton } from "@/modules/adm
 import { downloadCsv } from "@/modules/admin-shell/utils/csv";
 import { useAdminCategories, useSaveCategory, useToggleCategoryStatus } from "../hooks/useCategories";
 import type { CategoryListItem } from "../types/category.type";
+import { CATEGORY_ICON_MAP, CATEGORY_ICON_OPTIONS, type CategoryIconName } from "../constants/category-icons";
 
 // Status isn't part of this form - it's toggled from the table badge (with
-// a confirmation step) since add/edit only ever persist name/description.
+// a confirmation step). The slug is built from the name on create and never
+// changes, so it isn't editable here either.
 const FIELDS: FormFieldDef[] = [
-  { key: "name", label: "Name", type: "text", placeholder: "e.g. Bangles", required: true },
-  { key: "description", label: "Description", type: "area", placeholder: "Short description shown on the storefront" },
+  { key: "name", label: "Name", type: "text", placeholder: "e.g. Hair Care", required: true, maxLength: 100 },
+  { key: "description", label: "Description", type: "area", placeholder: "Short description shown on the storefront", maxLength: 200 },
+  { key: "icon", label: "Icon", type: "icon", iconOptions: CATEGORY_ICON_OPTIONS, required: true, hint: "Shown on the home page tiles and shop filters." },
+  {
+    key: "sortOrder",
+    label: "Sort order",
+    type: "number",
+    hint: "Lower numbers show first on the storefront.",
+    validate: (v) => (typeof v === "number" && Number.isInteger(v) && v >= 0 && v <= 999 ? null : "Sort order must be a whole number from 0 to 999."),
+  },
 ];
 
 export const CATEGORY_SORT_OPTIONS = [
@@ -63,7 +73,18 @@ export default function CategoriesPageContent({
   const categories = data?.data ?? [];
 
   const columns: AdminTableColumn<CategoryListItem>[] = [
+    {
+      key: "icon",
+      header: "Icon",
+      width: 60,
+      render: (c) => {
+        const Icon = CATEGORY_ICON_MAP[c.icon];
+        return Icon ? <Icon size={16} color="#555" /> : null;
+      },
+    },
     { key: "name", header: "Name", width: 160, render: (c) => <TruncatedText text={c.name} className="text-[13px] font-semibold" /> },
+    { key: "slug", header: "Link", width: 150, render: (c) => <TruncatedText text={`/shop/${c.slug}`} className="text-[12px] text-[#8a8a8e]" /> },
+    { key: "sortOrder", header: "Order", width: 70, render: (c) => <span className="text-[12.5px] text-[#555]">{c.sortOrder}</span> },
     { key: "description", header: "Description", width: 330, render: (c) => <TruncatedText text={c.description} className="text-[12.5px] text-[#555]" /> },
     {
       key: "status",
@@ -88,8 +109,8 @@ export default function CategoriesPageContent({
   const exportCsv = () => {
     downloadCsv(
       "artspace-categories.csv",
-      ["Name", "Description", "Status"],
-      categories.map((c) => [c.name, c.description ?? "", c.isActive ? "Active" : "Inactive"]),
+      ["Name", "Slug", "Icon", "Sort order", "Description", "Status"],
+      categories.map((c) => [c.name, c.slug, c.icon, String(c.sortOrder), c.description ?? "", c.isActive ? "Active" : "Inactive"]),
     );
   };
 
@@ -102,6 +123,8 @@ export default function CategoriesPageContent({
       data: {
         name: String(values.name ?? ""),
         description: String(values.description ?? ""),
+        icon: values.icon as CategoryIconName,
+        sortOrder: Number(values.sortOrder ?? 0),
       },
     });
     closeModal();
@@ -139,7 +162,7 @@ export default function CategoriesPageContent({
             columns={columns}
             rows={categories}
             getRowKey={(c) => c.id}
-            minWidth={690}
+            minWidth={960}
             isLoading={isLoading}
             isError={isError}
             onRetry={refetch}
@@ -164,8 +187,8 @@ export default function CategoriesPageContent({
           fields={FIELDS}
           initialValues={
             editing === "new"
-              ? { name: "", description: "" }
-              : { name: editing.name, description: editing.description }
+              ? { name: "", description: "", icon: "", sortOrder: 0 }
+              : { name: editing.name, description: editing.description, icon: editing.icon, sortOrder: editing.sortOrder }
           }
           onSave={handleSave}
           onClose={closeModal}

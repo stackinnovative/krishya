@@ -4,7 +4,7 @@ import { Blog } from "../entities/blog.entity.js";
 import { BlogMapper } from "../mappers/blog.mapper.js";
 import { blogInput, PRODUCT_A, PRODUCT_B } from "./blog.fixtures.js";
 
-const product = (id: string, name: string) => ({ id, name, price: 240, image: `https://x/${name}.jpg` });
+const product = (id: string, name: string) => ({ id, name, slug: name, price: 240, image: `https://x/${name}.jpg` });
 
 describe("BlogMapper", () => {
     it("returns null for a missing record, an id-less record, or one that fails validation", () => {

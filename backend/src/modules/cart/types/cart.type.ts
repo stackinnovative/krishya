@@ -48,12 +48,15 @@ export type PushNewItemPayload = {
 export type ProductView = {
   image: string
   price: number
+  /** The struck-through price; equal to price when there's no discount. */
+  mrp: number
   name: string
 }
 
 export type VariantView = {
   id: string;
-  size: string;
+  /** "200 ml", "60 tablets". */
+  label: string;
 }
 export type CartItemView = {
   itemId: string;
@@ -73,9 +76,11 @@ export type CartView = {
 
 export type CheckoutItemView = {
   name: string;
-  size: string;
+  /** "200 ml", "60 tablets". */
+  label: string;
   quantity: number;
   price: number;
+  mrp: number;
   image: string;
 }
 

@@ -14,6 +14,7 @@ import {
 import type { ActionType } from "../types/cart.type";
 import { getProductByIdForUserApi } from "@/modules/products/api/storefront-product.api";
 import { showStoreToast } from "@/modules/storefront-shell/components/StoreToast";
+import { formatVariantLabel } from "@/modules/products/constants/product-options";
 import { cartKeys, productKeys } from "@/shared/query-keys";
 
 export const useCart = () => {
@@ -72,12 +73,12 @@ export const useQuickAddToCart = () => {
         queryFn: () => getProductByIdForUserApi(productId),
       });
       const variants = res.data?.variants ?? [];
-      const variant = variants.find((v) => v.isDefault && v.stock > 0) ?? variants.find((v) => v.stock > 0);
+      const variant = variants.find((v) => v.variantId === res.data?.defaultVariantId && v.stock > 0) ?? variants.find((v) => v.stock > 0);
       if (!variant) {
         toast.error(`${name} is out of stock.`);
         return false;
       }
-      await mutateAsync({ productId, variantId: variant.variantId, quantity: 1, name, size: variant.size, silent: options?.silent });
+      await mutateAsync({ productId, variantId: variant.variantId, quantity: 1, name, size: formatVariantLabel(variant), silent: options?.silent });
       return true;
     } catch {
       return false;

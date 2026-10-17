@@ -3,6 +3,7 @@ import {
   getAllProductsForUserApi,
   getFeaturedProductsApi,
   getProductByIdForUserApi,
+  getProductBySlugForUserApi,
   getRelatedProductsApi,
   getToteBagCollectionApi,
 } from "../api/storefront-product.api";
@@ -43,6 +44,10 @@ export const useActiveProductOptions = () =>
 
 export const useProductDetails = (id: string) =>
   useQuery({ queryKey: [...productKeys.userDetails, id], queryFn: () => getProductByIdForUserApi(id), enabled: !!id });
+
+/** The /products/<slug> page - its server prefetch in products/[slug]/page.tsx uses the same key. */
+export const useProductBySlug = (slug: string) =>
+  useQuery({ queryKey: [...productKeys.userDetails, "slug", slug], queryFn: () => getProductBySlugForUserApi(slug), enabled: !!slug });
 
 export const useRelatedProducts = (categoryId: string, excludeProductId?: string) =>
   useQuery({

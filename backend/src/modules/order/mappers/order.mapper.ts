@@ -56,7 +56,7 @@ export class OrderMapper {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          colorName: item.colorName,
+          mrp: item.mrp,
           image: item.image,
         })) ?? [],
 
@@ -99,7 +99,7 @@ export class OrderMapper {
         name: item.name,
         price: item.price,
         quantity: item.quantity,
-        colorName: item.colorName,
+        mrp: item.mrp,
         image: item.image,
       })),
 
@@ -284,7 +284,7 @@ export class OrderMapper {
         size: item.size,
         price: item.price,
         quantity: item.quantity,
-        colorName: item.colorName,
+        mrp: item.mrp,
         image: item.image,
       })),
     };

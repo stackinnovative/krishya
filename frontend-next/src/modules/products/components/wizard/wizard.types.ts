@@ -1,44 +1,46 @@
-import type { AdminProductImage } from "../../types/product.type";
 import type { ImageFieldValue } from "@/modules/admin-shell/components/ImageDropzone";
+import type { ProductType, VariantUnit } from "../../constants/product-options";
 
-export type WizardSize = {
+/** One quantity row as typed - numbers stay strings until save so an empty input isn't silently 0. */
+export type WizardVariant = {
   id?: string; // present once persisted as a real variant
-  size: string;
+  quantity: string;
+  unit: VariantUnit;
+  mrp: string;
   price: string;
   stock: string;
-  isDefault?: boolean;
+  isActive: boolean;
+  isDefault: boolean;
 };
 
-export type WizardColor = {
-  id?: string; // present once persisted as a real colour option
-  name: string;
-  hex: string;
-  images: ImageFieldValue[];
-  sizes: WizardSize[];
-};
-
-/** A WizardColor whose images have all been resolved to real uploads - the shape the save API actually accepts. */
-export type ResolvedWizardColor = Omit<WizardColor, "images"> & { images: AdminProductImage[] };
+export type WizardIngredient = { name: string; botanicalName: string };
 
 export type WizardDetails = {
   name: string;
-  description: string;
   categoryId: string;
+  type: ProductType | "";
+  shortDescription: string;
+  description: string;
+  badge: string;
   isFeatured: boolean;
 };
 
-export const SWATCHES: [string, string][] = [
-  ["Gold", "#d4af37"],
-  ["Rose Gold", "#b76e79"],
-  ["Silver", "#c0c0c0"],
-  ["Antique", "#8b6b3d"],
-  ["Ruby", "#b8412f"],
-  ["Emerald", "#2e8b57"],
-  ["Teal", "#1f7a86"],
-  ["Black", "#222222"],
-];
-
-export const newColor = (i = 0): WizardColor => {
-  const [name, hex] = SWATCHES[i % SWATCHES.length]!;
-  return { name, hex, images: [], sizes: [{ size: "", price: "", stock: "" }] };
+export type WizardTabs = {
+  ingredients: WizardIngredient[];
+  howToUse: string;
+  storage: string;
 };
+
+export type WizardImages = ImageFieldValue[];
+
+export const newVariant = (prev?: WizardVariant): WizardVariant => ({
+  quantity: "",
+  unit: prev?.unit ?? "ml",
+  mrp: "",
+  price: "",
+  stock: "",
+  isActive: true,
+  isDefault: false,
+});
+
+export const newIngredient = (): WizardIngredient => ({ name: "", botanicalName: "" });

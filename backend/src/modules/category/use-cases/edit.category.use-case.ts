@@ -39,11 +39,15 @@ export class EditCategoryUseCase implements IEditCategoryUseCase {
       }
     }
 
-    //  Rebuild domain entity (immutable update)
+    //  Rebuild domain entity (immutable update). The slug stays as created so
+    //  shared /shop/<slug> links keep working after a rename.
     const updated = new Category({
       id: existing.id,
       name: dto.name,
+      slug: existing.slug,
       description: dto.description,
+      icon: dto.icon,
+      sortOrder: dto.sortOrder,
       isActive: existing.isActive,
     });
 

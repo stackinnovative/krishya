@@ -241,7 +241,7 @@ export default function CheckoutPage() {
                   </span>
                   <span className="flex min-w-0 flex-1 flex-col">
                     <span className="truncate text-[14.5px] font-semibold text-ka-green">{item.product.name}</span>
-                    <span className="text-[12.5px] text-ka-muted">{item.variant.size}</span>
+                    <span className="text-[12.5px] text-ka-muted">{item.variant.label}</span>
                   </span>
                   <span className="text-[14.5px] font-semibold">{formatCurrency(item.product.price * item.quantity)}</span>
                 </li>

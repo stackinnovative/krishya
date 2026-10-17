@@ -24,11 +24,12 @@ export class GetProductVariantForUserUseCase implements IGetProductVariantForUse
 
         return {
             variantId: productVariant.variantId,
-            size: productVariant.size,
-            stock: productVariant.stock,
+            quantity: productVariant.quantity,
+            unit: productVariant.unit,
+            mrp: productVariant.mrp,
             price: productVariant.price,
-            colorOptionId: productVariant.colorOptionId,
-            colorName: productVariant.colorName,
+            discountPercent: productVariant.discountPercent,
+            stock: productVariant.stock,
         }
     }
 }   

@@ -102,7 +102,8 @@ export const ResponseMessages = {
   PRODUCT_HAS_ACTIVE_VARIANTS: "Product has active variants and cannot be deactivated",
   PRODUCT_OUT_OF_STOCK: "Product is out of stock",
   PRODUCT_VARIANT_NOT_FOUND: "Product variant not found",
-  PRODUCT_DUPLICATE_VARIANT_SIZE: "Duplicate product variant size",
+  PRODUCT_DUPLICATE_VARIANT_SIZE: "Two variants cannot have the same quantity and unit",
+  PRODUCT_TOO_MANY_VARIANTS: "A product can have at most 10 variants",
   PRODUCT_DEFAULT_VARIANT_REQUIRED: "Select exactly one default variant",
 
 
@@ -126,10 +127,6 @@ export const ResponseMessages = {
   VARIANT_ADD_SUCCESS: " Product variant added",
   VARIANT_EDIT_SUCCESS: " Product variant updated",
 
-  COLOR_OPTION_NOT_FOUND: "Color option not found",
-  COLOR_NAME_DUPLICATE: "Duplicate color name",
-  COLOR_OPTION_ADD_SUCCESS: "Color option added",
-  COLOR_OPTION_EDIT_SUCCESS: "Color option updated",
 
   CART_NOT_FOUND: "Cart not found",
   CART_FETCH_FAILED: "Failed to fetch cart",

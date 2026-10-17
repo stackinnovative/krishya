@@ -457,20 +457,8 @@ export class OrderRepository implements IOrderRepository {
           name: 1,
           totalQuantitySold: 1,
           totalRevenue: 1,
-          // Grab the first color's first photo as the product's icon
-          iconUrl: {
-            $let: {
-              vars: {
-                firstImage: {
-                  $arrayElemAt: [
-                    { $arrayElemAt: ["$productDoc.colorOptions.images", 0] },
-                    0,
-                  ],
-                },
-              },
-              in: "$$firstImage.url",
-            },
-          },
+          // The product's first photo as its icon
+          iconUrl: { $arrayElemAt: ["$productDoc.images.url", 0] },
         },
       },
     ]);
@@ -523,21 +511,9 @@ export class OrderRepository implements IOrderRepository {
           _id: "$productDoc.category",
           totalQuantitySold: { $sum: "$totalQuantitySold" },
           totalRevenue: { $sum: "$totalRevenue" },
-          // Grab the first product's first color photo to represent this category
+          // The first product's first photo represents this category
           iconUrl: {
-            $first: {
-              $let: {
-                vars: {
-                  firstImage: {
-                    $arrayElemAt: [
-                      { $arrayElemAt: ["$productDoc.colorOptions.images", 0] },
-                      0,
-                    ],
-                  },
-                },
-                in: "$$firstImage.url",
-              },
-            },
+            $first: { $arrayElemAt: ["$productDoc.images.url", 0] },
           },
         },
       },

@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import { Types, type ClientSession } from "mongoose";
 import { HttpStatusCode } from "../../../core/constants/http.status.codes.js";
 import { ResponseMessages } from "../../../core/constants/response.message.js";
 import { CustomError } from "../../../core/errors/custom.error.js";
@@ -6,13 +6,11 @@ import { CustomError } from "../../../core/errors/custom.error.js";
 import { Product } from "../entities/product.entity.js";
 import { ProductModel } from "../infrastructure/product.schema.js";
 import type { IProductRepository } from "./product.repository.interface.js";
-import { ProductMapper } from "../mappers/product.mapper.js";
+import { ProductMapper, type ProductRecord, type VariantRecord } from "../mappers/product.mapper.js";
 import type { IGetAllDocDB } from "../../../core/shared/interfaces/get.all.doc.interface.js";
 import type {
-  AddColorOptionProps,
   AddVariantProps,
   AdminVariantView,
-  EditColorOptionProps,
   PaginatedUserProductList,
   ProductListView,
   ProductView,
@@ -21,51 +19,74 @@ import type {
   UserProductListView,
   UserProductView,
 } from "../types/product.type.js";
-import type { ClientSession } from "mongoose";
+import { calcDiscountPercent } from "../utils/variant.helper.js";
 
 const { ObjectId } = Types;
 
+type DefaultFields = {
+  defaultVariantId: Types.ObjectId | null;
+  defaultPrice: number;
+  defaultMrp: number;
+  defaultDiscountPercent: number;
+};
+
+/**
+ * Which variant a product opens on: the one admin just asked for, else the
+ * current default if it's still on sale, else the first one on sale, else the
+ * first one at all - so a product never points at a deleted or switched-off
+ * quantity, and its list price always matches what the detail page selects.
+ */
+const pickDefaults = (variants: VariantRecord[], currentId: string | null, preferredId?: string): DefaultFields => {
+  const byId = (id: string | null | undefined) => (id ? variants.find((v) => v._id.toString() === id) : undefined);
+  const preferred = byId(preferredId);
+  const current = byId(currentId);
+  const chosen =
+    (preferred && preferred.isActive !== false ? preferred : undefined) ??
+    (current && current.isActive !== false ? current : undefined) ??
+    variants.find((v) => v.isActive !== false) ??
+    variants[0];
+
+  if (!chosen) return { defaultVariantId: null, defaultPrice: 0, defaultMrp: 0, defaultDiscountPercent: 0 };
+  return {
+    defaultVariantId: new ObjectId(chosen._id.toString()),
+    defaultPrice: chosen.price,
+    defaultMrp: chosen.mrp,
+    defaultDiscountPercent: chosen.discountPercent ?? 0,
+  };
+};
+
+const toVariantDoc = (v: AddVariantProps) => ({
+  _id: new ObjectId(),
+  quantity: v.quantity,
+  unit: v.unit,
+  mrp: v.mrp,
+  price: v.price,
+  discountPercent: calcDiscountPercent(v.mrp, v.price),
+  stock: v.stock,
+  isActive: v.isActive,
+});
+
+const mapList = (records: ProductRecord[]): UserProductListView[] => records.map(ProductMapper.toUserListView);
+
 export class ProductRepository implements IProductRepository {
-  /** Points defaultVariantId/defaultPrice at a specific variant. Cheap: single-doc update by _id. */
-  private async _setDefaultVariant(
-    productId: Types.ObjectId | string,
-    defaultVariantId: Types.ObjectId,
-    defaultPrice: number,
-    session?: ClientSession,
-  ): Promise<void> {
-    await ProductModel.updateOne(
-      { _id: productId },
-      { $set: { defaultVariantId, defaultPrice } },
-      session ? { session } : undefined,
-    );
+  /** Re-points the default variant and copies its price/MRP/discount onto the product. Called after every variant write. */
+  private async _syncDefaults(productId: Types.ObjectId | string, preferredId?: string, session?: ClientSession): Promise<ProductRecord | null> {
+    const query = ProductModel.findById(productId, { variants: 1, defaultVariantId: 1 }).lean<ProductRecord>();
+    if (session) query.session(session);
+    const record = await query;
+    if (!record) return null;
+
+    const defaults = pickDefaults(record.variants ?? [], record.defaultVariantId?.toString() ?? null, preferredId);
+    return ProductModel.findByIdAndUpdate(productId, { $set: defaults }, { new: true, ...(session && { session }) }).lean<ProductRecord>();
   }
 
   async create(productEntity: Product, defaultVariantIndex: number): Promise<Product> {
     const persistenceData = ProductMapper.toPersistence(productEntity);
+    const defaults = pickDefaults(persistenceData.variants, null, persistenceData.variants[defaultVariantIndex]?._id.toString());
 
-    // Every variant here is brand new (no _id yet) - assign ids up front so
-    // we know exactly which one to point defaultVariantId at, without a
-    // second lookup/match query after insert.
-    let flatIndex = 0;
-    let defaultVariantId: Types.ObjectId | null = null;
-    let defaultPrice = 0;
-    for (const color of persistenceData.colorOptions) {
-      for (const variant of color.variants) {
-        const id = new ObjectId();
-        variant._id = id;
-        if (flatIndex === defaultVariantIndex) {
-          defaultVariantId = id;
-          defaultPrice = variant.price;
-        }
-        flatIndex++;
-      }
-    }
-    persistenceData.defaultVariantId = defaultVariantId;
-    persistenceData.defaultPrice = defaultPrice;
+    const created = await ProductModel.create({ ...persistenceData, ...defaults });
 
-    const created = await ProductModel.create(persistenceData);
-
-    const domainProduct = ProductMapper.toDomain(created);
+    const domainProduct = ProductMapper.toDomain(created.toObject<ProductRecord>());
     if (!domainProduct) {
       throw new CustomError(
         ResponseMessages.FAILED_TO_MAP,
@@ -76,18 +97,21 @@ export class ProductRepository implements IProductRepository {
     return domainProduct;
   }
 
-  async findById(id: string, session: ClientSession): Promise<Product | null> {
+  async findById(id: string, session?: ClientSession): Promise<Product | null> {
     if (!ObjectId.isValid(id)) {
       return null;
     }
-    const query = ProductModel.findById(id).lean();
+    const query = ProductModel.findById(id).lean<ProductRecord>();
 
     if (session) {
       query.session(session);
     }
 
-    const foundDocument = await query;
-    return ProductMapper.toDomain(foundDocument);
+    return ProductMapper.toDomain(await query);
+  }
+
+  async isSlugTaken(slug: string): Promise<boolean> {
+    return (await ProductModel.exists({ slug })) !== null;
   }
 
   async save(productEntity: Product): Promise<Product> {
@@ -98,13 +122,11 @@ export class ProductRepository implements IProductRepository {
       );
     }
 
-    const persistenceData = ProductMapper.toPersistence(productEntity);
-
     const updatedDocument = await ProductModel.findByIdAndUpdate(
       productEntity.id,
-      { $set: persistenceData },
+      { $set: ProductMapper.toDetailsPersistence(productEntity) },
       { new: true },
-    ).lean();
+    ).lean<ProductRecord>();
 
     if (!updatedDocument) {
       throw new CustomError(
@@ -133,14 +155,14 @@ export class ProductRepository implements IProductRepository {
       .skip(skip)
       .limit(limit)
       .populate("category", "name")
-      .lean();
+      .lean<ProductRecord[]>();
 
     return documents
       .map(ProductMapper.toAdminListView)
       .filter((p): p is ProductListView => p !== null);
   }
 
-  async countDocument(query: Record<string, any>): Promise<number> {
+  async countDocument(query: Record<string, unknown>): Promise<number> {
     return ProductModel.countDocuments(query);
   }
 
@@ -150,7 +172,7 @@ export class ProductRepository implements IProductRepository {
 
     const document = await ProductModel.findById(id)
       .populate("category", "name")
-      .lean();
+      .lean<ProductRecord>();
 
     return ProductMapper.toAdminView(document);
   }
@@ -158,139 +180,65 @@ export class ProductRepository implements IProductRepository {
   async findProductForUser(id: string): Promise<UserProductView | null> {
     if (!ObjectId.isValid(id)) return null;
 
-    const document = await ProductModel.findOne({
-      _id: id,
-      isActive: true,
-    }).lean();
+    const document = await ProductModel.findOne({ _id: id, isActive: true })
+      .populate("category", "name slug")
+      .lean<ProductRecord>();
 
     return ProductMapper.toUserView(document);
   }
 
-  async addVariants(
-    productId: string,
-    colorOptionId: string,
-    variants: AddVariantProps[],
-  ): Promise<Product | null> {
-    const toInsert = variants.map((v) => ({
-      _id: new ObjectId(),
-      size: v.size,
-      stock: v.stock,
-      price: v.price,
-      isActive: v.isActive ?? true,
-    }));
+  async findProductForUserBySlug(slug: string): Promise<UserProductView | null> {
+    const document = await ProductModel.findOne({ slug: slug.toLowerCase(), isActive: true })
+      .populate("category", "name slug")
+      .lean<ProductRecord>();
 
-    const updated = await ProductModel.findOneAndUpdate(
-      { _id: productId, "colorOptions._id": colorOptionId },
-      {
-        $push: {
-          "colorOptions.$.variants": { $each: toInsert },
-        },
-      },
-      { new: true },
-    ).lean();
-
-    if (updated) {
-      const defaultIndex = variants.findIndex((v) => v.isDefault);
-      if (defaultIndex !== -1) {
-        const target = toInsert[defaultIndex]!;
-        await this._setDefaultVariant(updated._id, target._id, target.price);
-      }
-    }
-
-    return ProductMapper.toDomain(updated);
+    return ProductMapper.toUserView(document);
   }
 
-  async addColorOption(
-    productId: string,
-    dto: AddColorOptionProps,
-  ): Promise<Product | null> {
-    const variantDocs = dto.variants.map((v) => ({
-      _id: new ObjectId(),
-      size: v.size,
-      stock: v.stock,
-      price: v.price,
-      isActive: v.isActive ?? true,
-    }));
+  async addVariants(productId: string, variants: AddVariantProps[]): Promise<Product | null> {
+    const toInsert = variants.map(toVariantDoc);
 
     const updated = await ProductModel.findByIdAndUpdate(
       productId,
-      {
-        $push: {
-          colorOptions: {
-            colorName: dto.colorName,
-            hex: dto.hex,
-            images: dto.images ?? [],
-            variants: variantDocs,
-          },
-        },
-      },
+      { $push: { variants: { $each: toInsert } } },
       { new: true, runValidators: true },
-    ).lean();
+    ).lean<ProductRecord>();
+    if (!updated) return null;
 
-    if (updated) {
-      const defaultIndex = dto.variants.findIndex((v) => v.isDefault);
-      if (defaultIndex !== -1) {
-        const target = variantDocs[defaultIndex]!;
-        await this._setDefaultVariant(updated._id, target._id, target.price);
-      }
-    }
-
-    return ProductMapper.toDomain(updated);
+    const defaultIndex = variants.findIndex((v) => v.isDefault);
+    const synced = await this._syncDefaults(updated._id.toString(), toInsert[defaultIndex]?._id.toString());
+    return ProductMapper.toDomain(synced);
   }
 
-  async updateColorOptionById(
-    productId: string,
-    colorOptionId: string,
-    data: EditColorOptionProps,
-  ): Promise<Product | null> {
-    const $set: Record<string, any> = {};
-    if (data.colorName !== undefined) $set["colorOptions.$[color].colorName"] = data.colorName;
-    if (data.hex !== undefined) $set["colorOptions.$[color].hex"] = data.hex;
-    if (data.images !== undefined) $set["colorOptions.$[color].images"] = data.images;
-
-    const updated = await ProductModel.findOneAndUpdate(
-      { _id: productId },
-      { $set },
-      {
-        arrayFilters: [{ "color._id": colorOptionId }],
-        new: true,
-        runValidators: true,
-      },
-    ).lean();
-
-    return ProductMapper.toDomain(updated);
-  }
-
-  async updateVariantById(
-    params: UpdateVariantParams,
-  ): Promise<Product | null> {
+  async updateVariantById(params: UpdateVariantParams): Promise<Product | null> {
     const { productId, variantId, data } = params;
 
     const updated = await ProductModel.findOneAndUpdate(
       { _id: productId },
       {
         $set: {
-          "colorOptions.$[].variants.$[variant].stock": data.stock,
-          "colorOptions.$[].variants.$[variant].price": data.price,
-          "colorOptions.$[].variants.$[variant].isActive": data.isActive,
+          "variants.$[variant].quantity": data.quantity,
+          "variants.$[variant].unit": data.unit,
+          "variants.$[variant].mrp": data.mrp,
+          "variants.$[variant].price": data.price,
+          "variants.$[variant].discountPercent": calcDiscountPercent(data.mrp, data.price),
+          "variants.$[variant].stock": data.stock,
+          "variants.$[variant].isActive": data.isActive,
         },
       },
       {
-        arrayFilters: [{ "variant._id": variantId }],
+        arrayFilters: [{ "variant._id": new ObjectId(variantId) }],
         new: true,
         runValidators: true,
       },
-    ).lean();
+    ).lean<ProductRecord>();
+    if (!updated) return null;
 
-    if (updated) {
-      const becomingDefault = data.isDefault === true;
-      const staysDefault = !becomingDefault && updated.defaultVariantId?.toString() === variantId;
-      if (becomingDefault || staysDefault) {
-        await this._setDefaultVariant(updated._id, new ObjectId(variantId), data.price);
-      }
-    }
-
-    return ProductMapper.toDomain(updated);
+    // Re-sync even when this variant isn't becoming the default: if it *is*
+    // the default, its new price must reach the list views; if it was just
+    // switched off, the default must move to one that's still on sale.
+    const synced = await this._syncDefaults(updated._id.toString(), data.isDefault ? variantId : undefined);
+    return ProductMapper.toDomain(synced);
   }
 
   async findProductVariant(
@@ -298,35 +246,16 @@ export class ProductRepository implements IProductRepository {
     variantId: string,
     isActive?: boolean,
   ): Promise<AdminVariantView | null> {
-    const query: Record<string, any> = {
-      _id: new Types.ObjectId(productId),
-    };
-    if (isActive !== undefined) {
-      query.isActive = isActive;
-    }
-    const document = await ProductModel.aggregate([
-      { $match: query },
-      { $unwind: "$colorOptions" },
-      { $unwind: "$colorOptions.variants" },
-      { $match: { "colorOptions.variants._id": new Types.ObjectId(variantId) } },
-      {
-        $project: {
-          _id: 0,
-          variant: "$colorOptions.variants",
-          colorOptionId: "$colorOptions._id",
-          colorName: "$colorOptions.colorName",
-          defaultVariantId: "$defaultVariantId",
-        },
-      },
-    ]);
-    const data = document?.[0];
-    if (!data?.variant) return null;
-    return ProductMapper.toVariantView({
-      ...data.variant,
-      colorOptionId: data.colorOptionId,
-      colorName: data.colorName,
-      defaultVariantId: data.defaultVariantId,
-    });
+    if (!ObjectId.isValid(productId) || !ObjectId.isValid(variantId)) return null;
+
+    const record = await ProductModel.findOne(
+      { _id: productId, ...(isActive !== undefined && { isActive }) },
+      { variants: 1, defaultVariantId: 1 },
+    ).lean<ProductRecord>();
+
+    const variant = record?.variants?.find((v) => v._id.toString() === variantId);
+    if (!record || !variant) return null;
+    return ProductMapper.toVariantView(variant, record.defaultVariantId);
   }
 
   async findFeaturedProducts(): Promise<UserProductListView[]> {
@@ -336,11 +265,9 @@ export class ProductRepository implements IProductRepository {
     })
       .sort({ createdAt: -1 })
       .limit(4)
-      .lean();
+      .lean<ProductRecord[]>();
 
-    return documents
-      .map(ProductMapper.toUserListView)
-      .filter((p): p is UserProductListView => p !== null);
+    return mapList(documents);
   }
 
   async findAllForUser(allDoc: IGetAllDocDB): Promise<PaginatedUserProductList> {
@@ -349,26 +276,20 @@ export class ProductRepository implements IProductRepository {
     const skip = (page - 1) * limit;
 
     // Fetch one extra document instead of running a second countDocuments()
-    // query to compute hasMore - countDocuments is one of the more expensive
-    // Mongo operations, and the exact total is never actually returned to
-    // the client (PaginatedUserProductList only has data/nextPage/hasMore),
-    // so it was paying for a full count on every request just to derive a
-    // boolean. This halves the DB round-trips per list request.
+    // query to compute hasMore - the exact total is never returned to the
+    // client (PaginatedUserProductList only has data/nextPage/hasMore), so
+    // this halves the DB round-trips per list request.
     const documents = await ProductModel.find(query)
       .sort(sort)
       .skip(skip)
       .limit(limit + 1)
-      .lean();
+      .lean<ProductRecord[]>();
 
     const hasMore = documents.length > limit;
     const pageDocuments = hasMore ? documents.slice(0, limit) : documents;
 
-    const data = pageDocuments
-      .map(ProductMapper.toUserListView)
-      .filter((p): p is UserProductListView => p !== null);
-
     return {
-      data,
+      data: mapList(pageDocuments),
       nextPage: hasMore ? page + 1 : null,
       hasMore
     };
@@ -384,11 +305,9 @@ export class ProductRepository implements IProductRepository {
     })
       .sort({ createdAt: -1 })
       .limit(4)
-      .lean();
+      .lean<ProductRecord[]>();
 
-    return documents
-      .map(ProductMapper.toUserListView)
-      .filter((p): p is UserProductListView => p !== null);
+    return mapList(documents);
   }
 
   async findByCategoryIds(categoryIds: string[], limit: number): Promise<UserProductListView[]> {
@@ -400,11 +319,9 @@ export class ProductRepository implements IProductRepository {
     })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .lean();
+      .lean<ProductRecord[]>();
 
-    return documents
-      .map(ProductMapper.toUserListView)
-      .filter((p): p is UserProductListView => p !== null);
+    return mapList(documents);
   }
 
   async findByIds(ids: string[]): Promise<UserProductListView[]> {
@@ -413,49 +330,32 @@ export class ProductRepository implements IProductRepository {
     const documents = await ProductModel.find({
       _id: { $in: ids.map((id) => new ObjectId(id)) },
       isActive: true,
-    }).lean();
+    }).lean<ProductRecord[]>();
 
-    return documents
-      .map(ProductMapper.toUserListView)
-      .filter((p): p is UserProductListView => p !== null);
+    return mapList(documents);
   }
 
   async decrementStock(params: StockUpdateProps): Promise<void> {
     const { productId, variantId, quantity, session } = params;
 
     await ProductModel.updateOne(
+      { _id: new ObjectId(productId) },
+      { $inc: { "variants.$[variant].stock": -quantity } },
       {
-        _id: new Types.ObjectId(productId),
-      },
-      {
-        $inc: {
-          "colorOptions.$[].variants.$[variant].stock": -quantity,
-        },
-      },
-      {
-        arrayFilters: [{ "variant._id": new Types.ObjectId(variantId) }],
+        arrayFilters: [{ "variant._id": new ObjectId(variantId) }],
         ...(session && { session }),
       },
     );
   }
 
   async incrementStock(params: StockUpdateProps): Promise<void> {
-
     const { productId, variantId, quantity, session } = params;
 
     await ProductModel.updateOne(
+      { _id: new ObjectId(productId) },
+      { $inc: { "variants.$[variant].stock": quantity } },
       {
-        _id: new Types.ObjectId(productId),
-      },
-      {
-        $inc: {
-          "colorOptions.$[].variants.$[variant].stock": quantity,
-        },
-      },
-      {
-        arrayFilters: [
-          { "variant._id": new Types.ObjectId(variantId) },
-        ],
+        arrayFilters: [{ "variant._id": new ObjectId(variantId) }],
         ...(session && { session }),
       },
     );

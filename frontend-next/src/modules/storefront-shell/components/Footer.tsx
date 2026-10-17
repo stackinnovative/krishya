@@ -43,7 +43,7 @@ export default async function Footer() {
               <nav aria-label="Categories" className="flex flex-[1_1_160px] flex-col gap-3">
                 <span className={HEADING_CLASS}>CATEGORIES</span>
                 {categories.map((c) => (
-                  <Link key={c.id} href={`/products?categoryId=${c.id}`} className={LINK_CLASS}>
+                  <Link key={c.id} href={`/shop/${c.slug}`} className={LINK_CLASS}>
                     {c.name}
                   </Link>
                 ))}

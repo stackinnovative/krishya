@@ -123,7 +123,7 @@ export type AdminOrderFullView = {
     size: string;
     price: number;
     quantity: number;
-    colorName?: string;
+    mrp?: number;
     image?: string;
   }[];
 };

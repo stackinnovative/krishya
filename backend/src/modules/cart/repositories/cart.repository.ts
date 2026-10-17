@@ -215,25 +215,13 @@ export class CartRepository implements ICartRepository {
 
       { $unwind: "$product" },
 
-      // flatten colorOptions[].variants[] then find the selected variant
-      {
-        $addFields: {
-          allVariants: {
-            $reduce: {
-              input: "$product.colorOptions",
-              initialValue: [],
-              in: { $concatArrays: ["$$value", "$$this.variants"] }
-            }
-          }
-        }
-      },
-
+      // find the selected quantity variant
       {
         $addFields: {
           selectedVariant: {
             $first: {
               $filter: {
-                input: "$allVariants",
+                input: "$product.variants",
                 as: "v",
                 cond: { $eq: ["$$v._id", "$items.variantId"] }
               }
@@ -250,25 +238,14 @@ export class CartRepository implements ICartRepository {
           quantity: "$items.quantity",
           variantId: {
             id: "$items.variantId",
-            size: "$selectedVariant.size"
+            label: { $concat: [{ $toString: "$selectedVariant.quantity" }, " ", "$selectedVariant.unit"] }
           },
 
           product: {
             name: "$product.name",
-            image: {
-              $let: {
-                vars: {
-                  firstImage: {
-                    $arrayElemAt: [
-                      { $arrayElemAt: ["$product.colorOptions.images", 0] },
-                      0,
-                    ],
-                  },
-                },
-                in: "$$firstImage.url",
-              },
-            },
-            price: "$selectedVariant.price"
+            image: { $arrayElemAt: ["$product.images.url", 0] },
+            price: "$selectedVariant.price",
+            mrp: "$selectedVariant.mrp"
           }
         }
       },
@@ -397,25 +374,13 @@ export class CartRepository implements ICartRepository {
 
       { $unwind: "$product" },
 
-      // flatten colorOptions[].variants[] then find the selected variant
-      {
-        $addFields: {
-          allVariants: {
-            $reduce: {
-              input: "$product.colorOptions",
-              initialValue: [],
-              in: { $concatArrays: ["$$value", "$$this.variants"] }
-            }
-          }
-        }
-      },
-
+      // find the selected quantity variant
       {
         $addFields: {
           selectedVariant: {
             $first: {
               $filter: {
-                input: "$allVariants",
+                input: "$product.variants",
                 as: "v",
                 cond: { $eq: ["$$v._id", "$items.variantId"] }
               }
@@ -429,25 +394,14 @@ export class CartRepository implements ICartRepository {
           cartId: "$_id",
           quantity: "$items.quantity",
           variantId: {
-            size: "$selectedVariant.size"
+            label: { $concat: [{ $toString: "$selectedVariant.quantity" }, " ", "$selectedVariant.unit"] }
           },
 
           product: {
             name: "$product.name",
-            image: {
-              $let: {
-                vars: {
-                  firstImage: {
-                    $arrayElemAt: [
-                      { $arrayElemAt: ["$product.colorOptions.images", 0] },
-                      0,
-                    ],
-                  },
-                },
-                in: "$$firstImage.url",
-              },
-            },
-            price: "$selectedVariant.price"
+            image: { $arrayElemAt: ["$product.images.url", 0] },
+            price: "$selectedVariant.price",
+            mrp: "$selectedVariant.mrp"
           }
         }
       },

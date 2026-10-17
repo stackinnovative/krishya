@@ -1,14 +1,11 @@
 import api from "@/lib/api-client";
 import type { ApiResponse } from "@/shared/types/api.types";
 import type {
-  AddColorOptionPayload,
-  AddVariantPayload,
   CreateProductPayload,
-  EditColorOptionPayload,
   GetProductDetailsResponse,
   GetProductListResponse,
   UpdateProductPayload,
-  UpdateVariantPayload,
+  VariantPayload,
   VariantResponse,
 } from "../types/product.type";
 
@@ -42,7 +39,7 @@ export const getProductByIdForAdminApi = async (id: string): Promise<GetProductD
   return response.data;
 };
 
-export const addVariantApi = async (productId: string, data: AddVariantPayload[]): Promise<ApiResponse> => {
+export const addVariantApi = async (productId: string, data: VariantPayload[]): Promise<ApiResponse> => {
   const response = await api.post<ApiResponse>(`/products/${productId}/variants`, data);
   return response.data;
 };
@@ -50,7 +47,7 @@ export const addVariantApi = async (productId: string, data: AddVariantPayload[]
 export const updateVariantApi = async (
   productId: string,
   variantId: string,
-  data: UpdateVariantPayload
+  data: VariantPayload
 ): Promise<ApiResponse> => {
   const response = await api.put<ApiResponse>(`/products/${productId}/variants/${variantId}`, data);
   return response.data;
@@ -58,19 +55,5 @@ export const updateVariantApi = async (
 
 export const getProductVariantForAdminApi = async (productId: string, variantId: string): Promise<VariantResponse> => {
   const response = await api.get<VariantResponse>(`/products/${productId}/variants/${variantId}`);
-  return response.data;
-};
-
-export const addColorOptionApi = async (productId: string, data: AddColorOptionPayload): Promise<ApiResponse> => {
-  const response = await api.post<ApiResponse>(`/products/${productId}/colors`, data);
-  return response.data;
-};
-
-export const editColorOptionApi = async (
-  productId: string,
-  colorOptionId: string,
-  data: EditColorOptionPayload
-): Promise<ApiResponse> => {
-  const response = await api.put<ApiResponse>(`/products/${productId}/colors/${colorOptionId}`, data);
   return response.data;
 };

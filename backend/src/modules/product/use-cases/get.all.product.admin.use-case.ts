@@ -3,7 +3,7 @@ import type { IGetAllProductForAdminUseCase } from "./interfaces/get.all.product
 import type { GetAllQueryDto } from "../../../core/shared/dtos/get.all.doc.dto.js";
 import type { IGetAllDocDB } from "../../../core/shared/interfaces/get.all.doc.interface.js";
 import type { IProductRepository } from "../repositories/product.repository.interface.js";
-import type { ProductListView } from "../types/product.type.js";
+import { PRODUCT_TYPES, type ProductListView } from "../types/product.type.js";
 
 @injectable()
 export class GetAllProductForAdminUseCase implements IGetAllProductForAdminUseCase {
@@ -55,6 +55,10 @@ export class GetAllProductForAdminUseCase implements IGetAllProductForAdminUseCa
 
       if (filters.isFeatured !== undefined) {
         query.isFeatured = filters.isFeatured;
+      }
+
+      if (PRODUCT_TYPES.includes(filters.type)) {
+        query.type = filters.type;
       }
     }
 

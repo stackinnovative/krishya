@@ -1,43 +1,71 @@
 import { z } from "zod";
 import { ObjectIdSchema } from "../../../core/utils/object.id.validation.js";
-import { RequiredNameColorOptionSchema } from "./color.option.dto.js";
+import { toTitleCase } from "../../../core/utils/to.title.case.helper.js";
+import { PRODUCT_LIMITS as L, PRODUCT_TYPES } from "../types/product.type.js";
+import { ImageSchema } from "./image.dto.js";
+import { VariantArraySchema } from "./variant.dto.js";
 
-export const CreateProductSchema = z.object({
+const optionalText = (label: string, max: number) =>
+  z.string().trim().max(max, `${label} must not exceed ${max} characters`).optional().default("");
+
+const IngredientSchema = z.object({
   name: z
     .string()
     .trim()
-    .min(2, "Product name must be at least 2 characters")
-    .max(150, "Product name must not exceed 150 characters"),
-  isFeatured: z.boolean().default(false),
+    .min(1, "Ingredient name is required")
+    .max(L.ingredientName, `Ingredient name must not exceed ${L.ingredientName} characters`)
+    .transform(toTitleCase),
+  botanicalName: optionalText("Botanical name", L.botanicalName),
+});
+
+/** Everything on the product form except variants - shared by create and edit. */
+export const ProductContentSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(L.nameMin, `Product name must be at least ${L.nameMin} characters`)
+    .max(L.name, `Product name must not exceed ${L.name} characters`)
+    .transform(toTitleCase),
+
+  categoryId: ObjectIdSchema.trim(),
+
+  type: z.enum(PRODUCT_TYPES, { message: "Select a product type" }),
+
+  shortDescription: z
+    .string()
+    .trim()
+    .min(1, "Short description is required")
+    .max(L.shortDescription, `Short description must not exceed ${L.shortDescription} characters`),
+
   description: z
     .string()
     .trim()
-    .min(10, "Product description must be at least 10 characters")
-    .max(1000, "Product description must not exceed 1000 characters"),
+    .min(L.descriptionMin, `Product description must be at least ${L.descriptionMin} characters`)
+    .max(L.description, `Product description must not exceed ${L.description} characters`),
 
-  categoryId: ObjectIdSchema
-    .trim(),
+  ingredients: z
+    .array(IngredientSchema)
+    .max(L.ingredients, `List at most ${L.ingredients} ingredients`)
+    .optional()
+    .default([]),
 
-  colorOptions: z
-    .array(RequiredNameColorOptionSchema)
-    .min(1, "At least one color is required")
-    .refine(
-      (colorOptions) => {
-        const names = colorOptions.map((c) => c.colorName.trim().toLowerCase());
-        return new Set(names).size === names.length;
-      },
-      { message: "Duplicate color name" },
-    )
-    .refine(
-      (colorOptions) => {
-        const variants = colorOptions.flatMap((c) => c.variants);
-        if (variants.length <= 1) return true;
-        return variants.filter((v) => v.isDefault).length === 1;
-      },
-      { message: "Select exactly one default variant" },
-    ),
+  howToUse: optionalText("How to use", L.howToUse),
+  storage: optionalText("Storage", L.storage),
+  badge: optionalText("Badge", L.badge),
+
+  images: z
+    .array(ImageSchema)
+    .min(1, "At least one product photo is required")
+    .max(L.imagesMax, `Product photos must not exceed ${L.imagesMax}`),
+
+  isFeatured: z.boolean().default(false),
 });
 
-export type CreateProductRequestDto = z.infer<
-  typeof CreateProductSchema
->;
+export const CreateProductSchema = ProductContentSchema.extend({
+  variants: VariantArraySchema.refine(
+    (variants) => variants.length <= 1 || variants.filter((v) => v.isDefault).length === 1,
+    { message: "Select exactly one default variant" },
+  ),
+});
+
+export type CreateProductRequestDto = z.infer<typeof CreateProductSchema>;

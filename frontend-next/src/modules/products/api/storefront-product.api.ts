@@ -19,6 +19,10 @@ export const getAllProductsForUserApi = (query: Record<string, unknown>): Promis
 export const getProductByIdForUserApi = (id: string): Promise<UserProductDetailsResponse> =>
   api.get<UserProductDetailsResponse>(`/products/list/${id}`).then((r) => r.data);
 
+/** The /products/<slug> page. */
+export const getProductBySlugForUserApi = (slug: string): Promise<UserProductDetailsResponse> =>
+  api.get<UserProductDetailsResponse>(`/products/slug/${encodeURIComponent(slug)}`).then((r) => r.data);
+
 export const getRelatedProductsApi = (categoryId: string, excludeProductId?: string): Promise<UserProductListResponse> =>
   api
     .get<UserProductListResponse>(`/products/related/${categoryId}`, { params: excludeProductId ? { excludeProductId } : undefined })

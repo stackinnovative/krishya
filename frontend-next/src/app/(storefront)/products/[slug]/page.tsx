@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
-import { getProductByIdForUserApi, getRelatedProductsApi } from "@/modules/products/api/storefront-product.api";
+import { getProductBySlugForUserApi, getRelatedProductsApi } from "@/modules/products/api/storefront-product.api";
 import { getStoreInfo } from "@/modules/settings/server";
 import { productKeys } from "@/shared/query-keys";
 import ProductDetailContent from "./ProductDetailContent";
 
-type Params = { params: Promise<{ id: string }> };
+type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { id } = await params;
+  const { slug } = await params;
   const [product, store] = await Promise.all([
-    getProductByIdForUserApi(id)
+    getProductBySlugForUserApi(slug)
       .then((r) => r.data)
       .catch(() => null),
     getStoreInfo(),
@@ -19,12 +19,13 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
   if (!product) return { title: "Product not found" };
 
-  const description = product.description ? product.description.slice(0, 160) : `Shop ${product.name} at ${store.storeName}.`;
-  const image = product.colorOptions[0]?.images[0]?.url;
+  const description = (product.shortDescription || product.description).slice(0, 160) || `Shop ${product.name} at ${store.storeName}.`;
+  const image = product.images[0]?.url;
 
   return {
     title: product.name,
     description,
+    alternates: { canonical: `/products/${product.slug}` },
     openGraph: {
       title: `${product.name} | ${store.storeName}`,
       description,
@@ -34,32 +35,30 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 // Server-rendered (product details + related products) so a crawler sees
-// the real product name/price/description/image in the initial HTML -
-// previously this whole page was client-only and fetched everything after
-// hydration, so it was invisible to non-JS crawlers and had no per-product
-// metadata at all.
+// the real product name/price/description/image in the initial HTML, at a
+// readable /products/<slug> URL.
 export default async function ProductDetailsPage({ params }: Params) {
-  const { id } = await params;
+  const { slug } = await params;
   const queryClient = new QueryClient();
 
   const product = await queryClient
     .fetchQuery({
-      queryKey: [...productKeys.userDetails, id],
-      queryFn: () => getProductByIdForUserApi(id),
+      queryKey: [...productKeys.userDetails, "slug", slug],
+      queryFn: () => getProductBySlugForUserApi(slug),
     })
     .then((r) => r.data)
     .catch(() => null);
 
-  if (product?.categoryId) {
+  if (product) {
     await queryClient.prefetchQuery({
-      queryKey: [...productKeys.related, product.categoryId, id],
-      queryFn: () => getRelatedProductsApi(product.categoryId, id),
+      queryKey: [...productKeys.related, product.category.id, product.id],
+      queryFn: () => getRelatedProductsApi(product.category.id, product.id),
     });
   }
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ProductDetailContent id={id} />
+      <ProductDetailContent slug={slug} />
     </HydrationBoundary>
   );
 }

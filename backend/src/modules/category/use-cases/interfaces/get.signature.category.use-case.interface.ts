@@ -1,5 +1,5 @@
-import type { CategorySignature } from "../../types/category.type.js";
+import type { CategoryUserView } from "../../types/category.type.js";
 
 export interface IGetSignatureCategoryUseCase {
-    execute(): Promise<CategorySignature[]>;
+    execute(): Promise<CategoryUserView[]>;
 }   

@@ -1,5 +1,5 @@
-import type { IdName } from "../../../../core/shared/types/id.name.type.js";
+import type { CategoryUserView } from "../../types/category.type.js";
 
 export interface IGetAllActiveCategoryUseCase {
-  execute(): Promise<IdName[]>;
+  execute(): Promise<CategoryUserView[]>;
 }

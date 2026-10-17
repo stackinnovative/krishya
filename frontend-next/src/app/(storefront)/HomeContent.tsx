@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useFeaturedProducts, useProductList } from "@/modules/products/hooks/useStorefrontProducts";
 import { getBannerUserApi, getHeroUserApi, getTestimonialUserApi } from "@/modules/home-content/api/home-content.api";
-import { getSignatureCategoriesApi } from "@/modules/categories/api/category.api";
 import { useActiveCategories } from "@/modules/categories/hooks/useStorefrontCategories";
 import type { UserProductListItem } from "@/modules/products/types/storefront-product.type";
 import HomeHero, { type HealthNeed } from "@/modules/storefront-content/components/home/HomeHero";
@@ -25,7 +24,7 @@ import { HOME_BLOG_QUERY } from "@/modules/blog/constants";
 import { ABOUT_FALLBACK } from "@/modules/about/constants";
 import { useHomeFaqs } from "@/modules/faq/hooks/useStorefrontFaqs";
 import { fillFaqAnswer } from "@/modules/faq/constants";
-import { categoryKeys, homeContentKeys } from "@/shared/query-keys";
+import { homeContentKeys } from "@/shared/query-keys";
 
 const NEWEST_FILTERS = { search: "", sort: "newest" };
 
@@ -39,7 +38,6 @@ export default function HomeContent() {
   const { data: featured } = useFeaturedProducts();
   const { data: newest } = useProductList(NEWEST_FILTERS);
   const { data: activeCategories } = useActiveCategories();
-  const { data: signature } = useQuery({ queryKey: categoryKeys.signature, queryFn: getSignatureCategoriesApi });
   const { data: testimonials } = useQuery({ queryKey: homeContentKeys.testimonialsUser, queryFn: getTestimonialUserApi });
   const { data: banners } = useQuery({ queryKey: homeContentKeys.bannerUser, queryFn: getBannerUserApi });
   const store = useStoreContact();
@@ -48,9 +46,8 @@ export default function HomeContent() {
   const { data: homeFaqs } = useHomeFaqs();
   const about = aboutRes?.data ?? ABOUT_FALLBACK;
 
-  // Health needs = the active categories, using a signature category's image where one exists.
-  const imageById = new Map((signature?.data ?? []).map((c) => [c.id, c.image]));
-  const needs: HealthNeed[] = (activeCategories?.data ?? []).map((c) => ({ id: c.id, name: c.name, image: imageById.get(c.id) || undefined }));
+  // Health needs = the active categories, in admin's sort order, each with its own icon.
+  const needs: HealthNeed[] = activeCategories?.data ?? [];
 
   // "Bestsellers" are the admin's featured picks; "Featured Products" continues
   // with the rest of them, topped up from the newest arrivals.

@@ -1,10 +1,19 @@
-import type { CategoryProps } from "../types/category.type.js";
+import { toSlug } from "../../../core/utils/to.slug.helper.js";
+import {
+  CATEGORY_ICON_NAMES,
+  CATEGORY_LIMITS,
+  type CategoryIconName,
+  type CategoryProps,
+} from "../types/category.type.js";
 
 
 export class Category {
   public readonly id: string | null;
   public readonly name: string;
+  public readonly slug: string;
   public readonly description: string;
+  public readonly icon: CategoryIconName;
+  public readonly sortOrder: number;
   public readonly isActive: boolean;
 
   constructor(props: CategoryProps) {
@@ -22,9 +31,26 @@ export class Category {
       throw new Error("Category description cannot exceed 200 characters");
     }
 
+    const slug = toSlug(props.slug, CATEGORY_LIMITS.slug);
+    if (!slug) {
+      throw new Error("Category slug needs at least one letter or number");
+    }
+
+    if (!CATEGORY_ICON_NAMES.includes(props.icon)) {
+      throw new Error(`Category icon must be one of: ${CATEGORY_ICON_NAMES.join(", ")}`);
+    }
+
+    const sortOrder = props.sortOrder ?? 0;
+    if (!Number.isInteger(sortOrder) || sortOrder < 0 || sortOrder > CATEGORY_LIMITS.sortOrderMax) {
+      throw new Error(`Category sort order must be a whole number from 0 to ${CATEGORY_LIMITS.sortOrderMax}`);
+    }
+
     this.id = props.id;
     this.name = name;
-    this.description = props.description?.trim();
+    this.slug = slug;
+    this.description = props.description?.trim() ?? "";
+    this.icon = props.icon;
+    this.sortOrder = sortOrder;
     this.isActive = props.isActive ?? true;
   }
 

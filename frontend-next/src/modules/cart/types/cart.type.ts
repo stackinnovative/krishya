@@ -2,8 +2,10 @@ import type { ApiResponse } from "@/shared/types/api.types";
 
 export type AddCartItemPayload = { guestId: string; productId: string; variantId: string; quantity: number };
 
-export type ProductView = { image: string; price: number; name: string };
-export type VariantView = { id: string; size: string };
+/** `mrp` is the struck-through price - equal to `price` when there's no discount. */
+export type ProductView = { image: string; price: number; mrp: number; name: string };
+/** `label` is the quantity as bought - "200 ml", "60 tablets". */
+export type VariantView = { id: string; label: string };
 
 export type CartItemView = { itemId: string; product: ProductView; variant: VariantView; quantity: number };
 
@@ -24,7 +26,7 @@ export type RemoveCartItemPayload = { guestId: string; cartId: string; itemId: s
 
 export type GetCartResponse = ApiResponse<CartView>;
 
-export type CheckoutItemView = { name: string; size: string; quantity: number; price: number; image: string };
+export type CheckoutItemView = { name: string; label: string; quantity: number; price: number; mrp: number; image: string };
 
 export type CheckoutView = {
   cartId: string;

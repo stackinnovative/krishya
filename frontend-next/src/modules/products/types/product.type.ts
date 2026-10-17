@@ -1,64 +1,64 @@
 import type { ApiResponse, GetAllDocResponse } from "@/shared/types/api.types";
+import type { ProductType, VariantUnit } from "../constants/product-options";
 
 export type AdminProductImage = { url: string; publicId: string };
 
-export type IVariant = { size: string; stock: number; price: number; isDefault?: boolean };
+export type ProductIngredient = { name: string; botanicalName?: string };
 
-export type AdminVariantItem = IVariant & {
-  id: string;
+/** What admin sends for one quantity option. `discountPercent` is never sent - the backend works it out from mrp and price. */
+export type VariantPayload = {
+  quantity: number;
+  unit: VariantUnit;
+  mrp: number;
+  price: number;
+  stock: number;
   isActive: boolean;
-  colorOptionId?: string;
-  colorName?: string;
+  isDefault: boolean;
 };
 
-export type AddVariantPayload = Omit<AdminVariantItem, "id" | "isActive" | "colorName"> & { colorOptionId: string };
-export type UpdateVariantPayload = Omit<AdminVariantItem, "id" | "colorOptionId" | "colorName">;
-
-export type AdminColorOptionSummary = {
-  id: string;
-  colorName?: string;
-  hex?: string;
-  images: AdminProductImage[];
+export type AdminVariantItem = Omit<VariantPayload, "isDefault"> & {
+  variantId: string;
+  discountPercent: number;
+  isDefault: boolean;
 };
 
-export type AddColorOptionPayload = {
-  colorName?: string;
-  hex?: string;
-  images: AdminProductImage[];
-  variants: { size: string; price: number; stock: number; isDefault?: boolean }[];
-};
-
-export type EditColorOptionPayload = { colorName?: string; hex?: string; images?: AdminProductImage[] };
-
-export type CreateProductPayload = {
+/** Everything on the product form except variants - what the edit endpoint takes. */
+export type UpdateProductPayload = {
   name: string;
-  description: string;
   categoryId: string;
+  type: ProductType;
+  shortDescription: string;
+  description: string;
+  ingredients: ProductIngredient[];
+  howToUse: string;
+  storage: string;
+  badge: string;
+  images: AdminProductImage[];
   isFeatured: boolean;
-  colorOptions: { colorName: string; hex?: string; images: AdminProductImage[]; variants: IVariant[] }[];
 };
 
-export type UpdateProductPayload = Omit<CreateProductPayload, "colorOptions">;
+export type CreateProductPayload = UpdateProductPayload & { variants: VariantPayload[] };
 
-export type ProductDetails = {
+export type ProductDetails = Omit<UpdateProductPayload, "categoryId"> & {
   id: string;
-  name: string;
-  description: string;
+  slug: string;
   category: { id: string; name: string };
   variants: AdminVariantItem[];
-  colorOptions: AdminColorOptionSummary[];
+  defaultVariantId: string | null;
   isActive: boolean;
-  isFeatured: boolean;
-  createdAt: string;
 };
 
 export type ProductListItem = {
   id: string;
   name: string;
+  slug: string;
+  type: ProductType;
   price: number;
+  mrp: number;
+  discountPercent: number;
   image?: string;
   category: { id: string; name: string };
-  description: string;
+  shortDescription: string;
   isActive: boolean;
   isFeatured: boolean;
 };

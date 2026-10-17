@@ -1,55 +1,25 @@
 import dotenv from "dotenv";
 import mongoose from "mongoose";
 import { CategoryModel } from "../modules/category/infrastructure/category.schema.js";
+import { toSlug } from "../core/utils/to.slug.helper.js";
+import { CATEGORY_LIMITS, type CategoryIconName } from "../modules/category/types/category.type.js";
 
 dotenv.config();
 
 type CategorySeed = {
   name: string;
   description: string;
+  icon: CategoryIconName;
 };
 
+// The "Shop by Health Need" list from the design, in display order.
 const CATEGORY_SEED_DATA: CategorySeed[] = [
-  {
-    name: "Photo Frame",
-    description: "Classic frames for your favourite photos.",
-  },
-  {
-    name: "Name Frame",
-    description: "Custom frames with names or initials.",
-  },
-  {
-    name: "Quote Frame",
-    description: "Frames featuring inspiring quotes.",
-  },
-  {
-    name: "Wall Frame",
-    description: "Decorative frames for wall display.",
-  },
-  {
-    name: "Wood Frame",
-    description: "Premium natural wooden frames.",
-  },
-  {
-    name: "Gift Box",
-    description: "Beautifully packed gift boxes.",
-  },
-  {
-    name: "Gift Hamper",
-    description: "Curated hampers for celebrations.",
-  },
-  {
-    name: "Photo Gift",
-    description: "Personalised gifts with photos.",
-  },
-  {
-    name: "Home Decor",
-    description: "Decor pieces for every home.",
-  },
-  {
-    name: "Keepsake Gift",
-    description: "Meaningful gifts to treasure.",
-  },
+  { name: "Joint & Muscle Care", description: "Oils and preparations for joint comfort and easy movement.", icon: "Bone" },
+  { name: "Digestive Health", description: "Churnams and arishtams that support healthy digestion.", icon: "Soup" },
+  { name: "Hair Care", description: "Keram oils for scalp and hair oiling rituals.", icon: "Sprout" },
+  { name: "Skin Care", description: "Classical oils and packs for daily skincare rituals.", icon: "Sparkles" },
+  { name: "Immunity", description: "Everyday preparations that support natural resilience.", icon: "ShieldPlus" },
+  { name: "Women's Wellness", description: "Traditional formulations for women's health.", icon: "Flower2" },
 ];
 
 const seedCategories = async () => {
@@ -65,7 +35,7 @@ const seedCategories = async () => {
   let createdCount = 0;
   let skippedCount = 0;
 
-  for (const seed of CATEGORY_SEED_DATA) {
+  for (const [index, seed] of CATEGORY_SEED_DATA.entries()) {
     const existing = await CategoryModel.findOne({ name: seed.name });
 
     if (existing) {
@@ -76,7 +46,10 @@ const seedCategories = async () => {
 
     await CategoryModel.create({
       name: seed.name,
+      slug: toSlug(seed.name, CATEGORY_LIMITS.slug),
       description: seed.description,
+      icon: seed.icon,
+      sortOrder: index,
     });
     console.log(`✅ Created category: ${seed.name}`);
     createdCount++;
