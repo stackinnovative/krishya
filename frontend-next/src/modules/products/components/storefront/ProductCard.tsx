@@ -5,12 +5,12 @@ import Image from "next/image";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { useQuickAddToCart } from "@/modules/cart/hooks/useCart";
 import { useToggleWishlist, useWishlistIds } from "@/modules/wishlist/hooks/useWishlist";
-import { HeartIcon, LeafIcon } from "@/modules/storefront-shell/components/icons";
+import { BagIcon, HeartIcon, LeafIcon } from "@/modules/storefront-shell/components/icons";
 import type { UserProductListItem } from "../../types/storefront-product.type";
 import { PRODUCT_TYPE_LABELS } from "../../constants/product-options";
 import PriceTag from "./PriceTag";
 
-/** Storefront product tile (design's "Product Card"): photo + wishlist heart, badge, serif name, short description, price/MRP/discount and an Add to Cart pill. Sizes itself off its own width via a container query, so it reads well in 2-up phone grids and 4-up desktop grids alike. */
+/** Storefront product tile (design's "Product Card"): photo + wishlist heart, badge, serif name, short description, price/MRP/discount and an Add to Cart pill (a round bag icon on narrow cards, so it never overflows). Sizes itself off its own width via a container query, so it reads well in 2-up phone grids and 4-up desktop grids alike. */
 export default function ProductCard({ product, subtitle = product.shortDescription }: { product: UserProductListItem; subtitle?: string }) {
   const { data: wishIds } = useWishlistIds();
   const { mutate: toggleWish, isPending: toggling } = useToggleWishlist();
@@ -74,9 +74,10 @@ export default function ProductCard({ product, subtitle = product.shortDescripti
             type="button"
             onClick={() => quickAdd(product.id, product.name)}
             disabled={adding}
-            className="h-[clamp(38px,10cqw,44px)] min-w-0 whitespace-nowrap rounded-full bg-ka-green px-[clamp(12px,3.4cqw,20px)] text-[clamp(12px,3.2cqw,14px)] font-semibold text-ka-cream hover:bg-ka-green-dark disabled:opacity-60"
+            className="grid h-11 w-11 shrink-0 place-items-center whitespace-nowrap rounded-full bg-ka-green text-ka-cream hover:bg-ka-green-dark disabled:opacity-60 @[16rem]:h-[clamp(38px,10cqw,44px)] @[16rem]:w-auto @[16rem]:px-[clamp(12px,3.4cqw,20px)] @[16rem]:text-[clamp(12px,3.2cqw,14px)] @[16rem]:font-semibold"
           >
-            {adding ? "Adding…" : "Add to Cart"}
+            <BagIcon size={19} strokeWidth={1.8} className="@[16rem]:hidden" />
+            <span className="sr-only @[16rem]:not-sr-only">{adding ? "Adding…" : "Add to Cart"}</span>
           </button>
         </div>
       </div>
