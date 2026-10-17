@@ -174,6 +174,13 @@ export const CheckIcon = (p: IconProps) => (
   </Svg>
 );
 
+export const AlertCircleIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M12 8v4.5M12 16h.01" />
+  </Svg>
+);
+
 export const FilterIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M4 6h16M7 12h10M10 18h4" />

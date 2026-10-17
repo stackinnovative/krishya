@@ -1,7 +1,7 @@
 "use client";
 
-import type { CSSProperties } from "react";
-import { AlertCircle } from "lucide-react";
+import { useState, type CSSProperties } from "react";
+import { AlertCircle, Eye, EyeOff } from "lucide-react";
 import IconPicker, { type IconOption } from "./IconPicker";
 import ImageDropzone, { type ImageFieldValue } from "./ImageDropzone";
 import SearchableSelect from "./SearchableSelect";
@@ -49,23 +49,6 @@ export interface FormFieldProps {
   hint?: string;
 }
 
-/** Letters and combining marks (any language - incl. Devanagari/Tamil/Arabic
- * vowel signs, which are Unicode "marks" rather than "letters") plus
- * numbers, whitespace, and the handful of punctuation marks that show up in
- * real names/headlines - apostrophes, hyphens, ampersands, basic sentence
- * punctuation. Used by callers (FormModal, Settings) to flag keyboard-mash
- * symbols like * ^ $ # @ < > with a validation error - see
- * `containsSpecialChars` below. Not "g" flagged: callers run `.test()` on
- * this repeatedly across fields, and a global regex keeps stale lastIndex
- * state between calls, silently skipping matches. */
-const SPECIAL_CHARS_PATTERN = /[^\p{L}\p{M}\p{N}\s.,'!?&()-]/u;
-
-/** True if `value` has a character outside the safe set above - use to flag
- * "text"/"area" fields (names, headlines, descriptions, quotes) as invalid
- * on save. Not meant for url/email/tel, which follow their own formats. */
-export const containsSpecialChars = (value: unknown): boolean =>
-  typeof value === "string" && SPECIAL_CHARS_PATTERN.test(value);
-
 const baseControlStyle: CSSProperties = {
   width: "100%",
   boxSizing: "border-box",
@@ -104,6 +87,7 @@ export default function FormField({
   hint,
 }: FormFieldProps) {
   const hasError = !!error;
+  const [showPassword, setShowPassword] = useState(false);
   // A <label> forwards clicks on its text to its first button, which would
   // silently pick the first icon - so the icon grid gets a plain wrapper.
   const Wrapper = type === "icon" ? "div" : "label";
@@ -159,6 +143,31 @@ export default function FormField({
         />
       ) : type === "icon" ? (
         <IconPicker options={iconOptions ?? []} value={(value as string) ?? ""} onChange={onChange} />
+      ) : type === "password" ? (
+        // The input comes before the toggle, so clicking the label text still focuses the input.
+        <span className="relative block">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={(value as string | undefined) ?? ""}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+            disabled={disabled}
+            autoComplete={autoComplete}
+            maxLength={maxLength}
+            aria-invalid={hasError}
+            style={{ ...controlStyle, paddingRight: 42 }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword((s) => !s)}
+            disabled={disabled}
+            aria-label={showPassword ? "Hide password" : "Show password"}
+            aria-pressed={showPassword}
+            className="absolute right-1.5 top-1/2 grid h-8 w-8 -translate-y-1/2 place-items-center rounded-full text-[#8a8a8e] hover:text-[#141414] disabled:opacity-50"
+          >
+            {showPassword ? <EyeOff size={16} strokeWidth={2} /> : <Eye size={16} strokeWidth={2} />}
+          </button>
+        </span>
       ) : (
         <input
           type={type === "number" ? "number" : type}
