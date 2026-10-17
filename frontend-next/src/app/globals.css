@@ -35,6 +35,7 @@
   --color-ka-on-gold: #1b2b20;
   --color-ka-wa: #168f4a;
   --color-ka-wa-dark: #127a3f;
+  --color-ka-error: #b3412e;
 }
 
 /* `inline` so font-display / font-body emit var(--font-cormorant) etc.
