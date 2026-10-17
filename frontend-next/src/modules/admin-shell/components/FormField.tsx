@@ -49,23 +49,6 @@ export interface FormFieldProps {
   hint?: string;
 }
 
-/** Letters and combining marks (any language - incl. Devanagari/Tamil/Arabic
- * vowel signs, which are Unicode "marks" rather than "letters") plus
- * numbers, whitespace, and the handful of punctuation marks that show up in
- * real names/headlines - apostrophes, hyphens, ampersands, basic sentence
- * punctuation. Used by callers (FormModal, Settings) to flag keyboard-mash
- * symbols like * ^ $ # @ < > with a validation error - see
- * `containsSpecialChars` below. Not "g" flagged: callers run `.test()` on
- * this repeatedly across fields, and a global regex keeps stale lastIndex
- * state between calls, silently skipping matches. */
-const SPECIAL_CHARS_PATTERN = /[^\p{L}\p{M}\p{N}\s.,'!?&()-]/u;
-
-/** True if `value` has a character outside the safe set above - use to flag
- * "text"/"area" fields (names, headlines, descriptions, quotes) as invalid
- * on save. Not meant for url/email/tel, which follow their own formats. */
-export const containsSpecialChars = (value: unknown): boolean =>
-  typeof value === "string" && SPECIAL_CHARS_PATTERN.test(value);
-
 const baseControlStyle: CSSProperties = {
   width: "100%",
   boxSizing: "border-box",

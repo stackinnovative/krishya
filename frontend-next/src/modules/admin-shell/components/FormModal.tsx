@@ -5,13 +5,14 @@ import { X } from "lucide-react";
 import toast from "react-hot-toast";
 import { whitePillButton } from "../style-helpers";
 import AdminButton from "./AdminButton";
-import FormField, { containsSpecialChars, type FormFieldType } from "./FormField";
+import FormField from "./FormField";
 import type { IconOption } from "./IconPicker";
 import { isPendingImage, type ImageFieldValue } from "./ImageDropzone";
 import { uploadToCloudinary } from "@/lib/cloudinary";
 import { ModalPortal } from "@/shared/ui/modal/ModalPortal";
 import { useModalShell } from "@/shared/ui/modal/useModalShell";
 import { scrollToFirstError } from "@/shared/scrollToFirstError";
+import { useFieldErrors, validateFields } from "@/shared/form-validation";
 import { getApiFieldErrors } from "@/lib/errors";
 
 export type FormFieldDef = (
@@ -31,12 +32,6 @@ export type FormFieldDef = (
   validate?: (value: unknown, values: Record<string, unknown>) => string | null;
 };
 
-const isEmpty = (type: FormFieldType, value: unknown) => {
-  if (type === "image") return !value;
-  if (typeof value === "number") return Number.isNaN(value);
-  return value === undefined || value === null || String(value).trim() === "";
-};
-
 export default function FormModal({
   title,
   fields,
@@ -53,62 +48,31 @@ export default function FormModal({
   onClose: () => void;
 }) {
   const [values, setValues] = useState<Record<string, unknown>>(initialValues);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const { errors, setErrors, clearError } = useFieldErrors();
   const [saving, setSaving] = useState(false);
 
   const set = (key: string, v: unknown) => {
     setValues((prev) => ({ ...prev, [key]: v }));
-    setErrors((prev) => {
-      if (!prev[key]) return prev;
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
+    clearError(key);
   };
 
-  const validate = () => {
-    const next: Record<string, string> = {};
-    for (const f of fields) {
-      const value = values[f.key];
-      if (f.required && isEmpty(f.type, value)) {
-        next[f.key] = `${f.label} is required.`;
-        continue;
-      }
-      // Catches the same minimum the backend enforces (e.g. hero subtitle
-      // needs 5+ chars) before it round-trips as a 400.
-      if (
-        "minLength" in f &&
-        f.minLength &&
-        typeof value === "string" &&
-        value.trim().length > 0 &&
-        value.trim().length < f.minLength
-      ) {
-        next[f.key] = `${f.label} must be at least ${f.minLength} characters.`;
-        continue;
-      }
-      // Backstop for pasted text - the input's own maxLength attribute blocks
-      // typing past the limit, but doesn't stop a paste that overshoots it.
-      if (
-        "maxLength" in f &&
-        f.maxLength &&
-        typeof value === "string" &&
-        value.trim().length > f.maxLength
-      ) {
-        next[f.key] = `${f.label} cannot exceed ${f.maxLength} characters.`;
-        continue;
-      }
-      // Free-form "text" and "area" fields (names, headlines, descriptions,
-      // quotes) reject keyboard-mash symbols so every value carries actual
-      // words; url/email/tel/number keep their own format rules instead.
-      if ((f.type === "text" || f.type === "area") && !f.allowSpecialChars && containsSpecialChars(value)) {
-        next[f.key] = `${f.label} can only contain letters, numbers, and basic punctuation (' - & , . ! ?).`;
-        continue;
-      }
-      const customError = f.validate?.(value, values);
-      if (customError) next[f.key] = customError;
-    }
-    return next;
-  };
+  const validate = () =>
+    validateFields(
+      fields.map((f) => ({
+        key: f.key,
+        label: f.label,
+        required: f.required,
+        isEmpty: f.type === "image" ? (v: unknown) => !v : undefined,
+        minLength: "minLength" in f ? f.minLength : undefined,
+        maxLength: "maxLength" in f ? f.maxLength : undefined,
+        // Free-form "text" and "area" fields (names, headlines, descriptions,
+        // quotes) reject keyboard-mash symbols so every value carries actual
+        // words; url/email/tel/number keep their own format rules instead.
+        plainText: (f.type === "text" || f.type === "area") && !f.allowSpecialChars,
+        validate: f.validate,
+      })),
+      values,
+    );
 
   // Images are cropped locally and held as a pending blob (see ImageDropzone)
   // so nothing hits Cloudinary until the form is actually submitted - this
