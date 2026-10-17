@@ -9,6 +9,8 @@ declare global {
 }
 
 const openRazorpayCheckout = (options: IRazorpayOptions) => {
+  // checkout.js loads after the page is interactive - a very quick click (or a blocked script) would otherwise throw here.
+  if (typeof window.Razorpay === "undefined") return toast.error("Payment window is still loading. Please try again.");
   const rzp = new window.Razorpay(options);
   rzp.on("payment.failed", () => options.onPaymentFailed?.(null));
   rzp.open();

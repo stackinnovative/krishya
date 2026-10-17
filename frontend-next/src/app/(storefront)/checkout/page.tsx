@@ -28,12 +28,6 @@ const STATE_OPTIONS = [
   "Kerala", "Tamil Nadu", "Karnataka", "Andhra Pradesh", "Telangana", "Delhi", "Uttar Pradesh", "Maharashtra", "Gujarat", "Goa",
 ];
 
-const PAYMENT_METHODS = [
-  { label: "UPI", sub: "Google Pay, PhonePe, Paytm, BHIM" },
-  { label: "Credit / Debit Card", sub: "Visa, Mastercard, RuPay" },
-  { label: "Net Banking", sub: "All major Indian banks" },
-];
-
 const fieldsetClass = "m-0 flex min-w-0 flex-col gap-4 rounded-xl border border-ka-sand bg-white p-[clamp(18px,3vw,28px)]";
 const legendClass = "float-left mb-1 w-full p-0 font-display text-2xl font-semibold text-ka-green";
 
@@ -228,45 +222,6 @@ export default function CheckoutPage() {
               </div>
             </fieldset>
 
-            <fieldset className={`${fieldsetClass} gap-3`}>
-              <legend className={legendClass}>3. Payment</legend>
-              <p className="m-0 text-sm leading-relaxed text-ka-body">
-                You&apos;ll choose how to pay in the secure Razorpay window after placing your order.
-              </p>
-              <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-2.5 p-0">
-                {PAYMENT_METHODS.map((m) => (
-                  <li key={m.label} className="flex flex-col gap-0.5 rounded-[10px] border-[1.5px] border-ka-line bg-white px-4 py-3.5">
-                    <span className="text-[15px] font-semibold text-ka-green">{m.label}</span>
-                    <span className="text-[13px] text-ka-muted">{m.sub}</span>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-2 flex flex-col gap-1.5" data-invalid={!!errors.acceptedTerms || undefined}>
-                <label className="flex items-start gap-2.5 text-sm text-ka-ink">
-                  <input
-                    type="checkbox"
-                    checked={form.acceptedTerms}
-                    onChange={(e) => {
-                      setForm((f) => ({ ...f, acceptedTerms: e.target.checked }));
-                      clearError("acceptedTerms");
-                    }}
-                    aria-invalid={!!errors.acceptedTerms}
-                    className="mt-0.5 h-4 w-4 flex-none accent-ka-green"
-                  />
-                  <span>
-                    I accept the{" "}
-                    <Link href="/policies/terms" target="_blank" className="font-semibold text-ka-green underline">
-                      terms &amp; conditions
-                    </Link>{" "}
-                    and{" "}
-                    <Link href="/policies/returns" target="_blank" className="font-semibold text-ka-green underline">
-                      returns policy
-                    </Link>
-                  </span>
-                </label>
-                <FieldError message={errors.acceptedTerms} />
-              </div>
-            </fieldset>
           </div>
 
           <aside className="flex w-full flex-col gap-3.5 rounded-xl bg-ka-sand p-[clamp(20px,3vw,28px)] ka:sticky ka:top-[108px] ka:w-auto ka:max-w-[420px] ka:flex-[1_1_320px]">
@@ -309,12 +264,38 @@ export default function CheckoutPage() {
               <span className="text-base font-semibold text-ka-green">Total</span>
               <span className="font-display text-[32px] font-bold text-ka-green">{formatCurrency(cart.total)}</span>
             </div>
-            <Button type="submit" className="mt-1.5 h-[54px]! text-[15.5px]!" loading={isPending} loadingText="Starting payment…">
+            {/* Right above the button it unlocks, so an unticked box and its error are never off-screen from the click. */}
+            <div className="mt-1 flex flex-col gap-1.5" data-invalid={!!errors.acceptedTerms || undefined}>
+              <label className="flex items-start gap-2.5 text-[13.5px] leading-snug text-ka-ink">
+                <input
+                  type="checkbox"
+                  checked={form.acceptedTerms}
+                  onChange={(e) => {
+                    setForm((f) => ({ ...f, acceptedTerms: e.target.checked }));
+                    clearError("acceptedTerms");
+                  }}
+                  aria-invalid={!!errors.acceptedTerms}
+                  className="mt-0.5 h-4 w-4 flex-none accent-ka-green"
+                />
+                <span>
+                  I accept the{" "}
+                  <Link href="/policies/terms" target="_blank" className="font-semibold text-ka-green underline">
+                    terms &amp; conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/policies/returns" target="_blank" className="font-semibold text-ka-green underline">
+                    returns policy
+                  </Link>
+                </span>
+              </label>
+              <FieldError message={errors.acceptedTerms} />
+            </div>
+            <Button type="submit" className="h-[54px]! text-[15.5px]!" loading={isPending} loadingText="Starting payment…">
               Place Order · {formatCurrency(cart.total)}
             </Button>
-            <span className="flex items-center justify-center gap-2 text-[12.5px] text-ka-body">
-              <LockIcon size={14} strokeWidth={1.8} className="text-ka-green" />
-              Payments are 256-bit SSL encrypted
+            <span className="flex items-center justify-center gap-2 text-center text-[12.5px] text-ka-body">
+              <LockIcon size={14} strokeWidth={1.8} className="flex-none text-ka-green" />
+              Secure payment via Razorpay · UPI, cards, net banking
             </span>
           </aside>
         </form>
