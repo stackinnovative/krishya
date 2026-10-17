@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ObjectIdSchema } from "../../../core/utils/object.id.validation.js";
+import { toTitleCase } from "../../../core/utils/to.title.case.helper.js";
 import { PRODUCT_LIMITS as L, PRODUCT_TYPES } from "../types/product.type.js";
 import { ImageSchema } from "./image.dto.js";
 import { VariantArraySchema } from "./variant.dto.js";
@@ -12,7 +13,8 @@ const IngredientSchema = z.object({
     .string()
     .trim()
     .min(1, "Ingredient name is required")
-    .max(L.ingredientName, `Ingredient name must not exceed ${L.ingredientName} characters`),
+    .max(L.ingredientName, `Ingredient name must not exceed ${L.ingredientName} characters`)
+    .transform(toTitleCase),
   botanicalName: optionalText("Botanical name", L.botanicalName),
 });
 
@@ -22,7 +24,8 @@ export const ProductContentSchema = z.object({
     .string()
     .trim()
     .min(L.nameMin, `Product name must be at least ${L.nameMin} characters`)
-    .max(L.name, `Product name must not exceed ${L.name} characters`),
+    .max(L.name, `Product name must not exceed ${L.name} characters`)
+    .transform(toTitleCase),
 
   categoryId: ObjectIdSchema.trim(),
 

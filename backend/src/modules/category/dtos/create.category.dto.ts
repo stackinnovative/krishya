@@ -1,12 +1,14 @@
 import { z } from "zod";
 import { CATEGORY_ICON_NAMES, CATEGORY_LIMITS } from "../types/category.type.js";
+import { toTitleCase } from "../../../core/utils/to.title.case.helper.js";
 
 export const CreateCategorySchema = z.object({
   name: z
     .string()
     .trim()
     .min(2, "Category name must be at least 2 characters")
-    .max(100, "Category name must not exceed 100 characters"),
+    .max(100, "Category name must not exceed 100 characters")
+    .transform(toTitleCase),
 
   description: z
     .string()
