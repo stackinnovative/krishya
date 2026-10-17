@@ -10,14 +10,19 @@ import { useMutation } from "@tanstack/react-query";
 import { getGuestId } from "@/lib/guest";
 import { env } from "@/lib/env";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
+import { getApiFieldErrors } from "@/lib/errors";
 import { formatCurrency } from "@/lib/format";
 import { openRazorpayCheckoutFunction, openRazorpayCheckoutTestFunction } from "@/lib/razorpay";
 import { useCart } from "@/modules/cart/hooks/useCart";
 import { createOrderApi, verifyPaymentApi } from "@/modules/orders/api/order.api";
+import { CHECKOUT_RULES, normalizeIndianPhone, type CheckoutForm } from "@/modules/orders/utils/checkout-validation";
 import Button from "@/modules/storefront-shell/components/Button";
+import StoreField, { FieldError, storeInputClass as inputClass } from "@/modules/storefront-shell/components/StoreField";
 import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { SectionDecor } from "@/modules/storefront-shell/components/decor";
 import { CheckIcon, LeafIcon, LockIcon } from "@/modules/storefront-shell/components/icons";
+import { useFieldErrors, validateFields } from "@/shared/form-validation";
+import { scrollToFirstError } from "@/shared/scrollToFirstError";
 
 const STATE_OPTIONS = [
   "Kerala", "Tamil Nadu", "Karnataka", "Andhra Pradesh", "Telangana", "Delhi", "Uttar Pradesh", "Maharashtra", "Gujarat", "Goa",
@@ -29,14 +34,11 @@ const PAYMENT_METHODS = [
   { label: "Net Banking", sub: "All major Indian banks" },
 ];
 
-const inputClass =
-  "h-12 w-full rounded-lg border border-ka-line bg-ka-cream px-3.5 text-[15px] font-normal text-ka-ink outline-none focus:border-ka-sage focus:ring-2 focus:ring-ka-sage/40";
-const labelClass = "flex flex-col gap-1.5 text-[13px] font-semibold text-ka-green";
 const fieldsetClass = "m-0 flex min-w-0 flex-col gap-4 rounded-xl border border-ka-sand bg-white p-[clamp(18px,3vw,28px)]";
 const legendClass = "float-left mb-1 w-full p-0 font-display text-2xl font-semibold text-ka-green";
 
 /** Only ever used to skip typing through this form by hand while testing against Razorpay's test mode - never shown once NEXT_PUBLIC_PAYMENT_MODE is "live". */
-const SAMPLE_CHECKOUT_DATA = {
+const SAMPLE_CHECKOUT_DATA: CheckoutForm = {
   name: "Test User",
   email: "test@example.com",
   phone: "9999999999",
@@ -54,24 +56,34 @@ export default function CheckoutPage() {
   const cart = cartRes?.data;
   const { storeName } = useStoreContact();
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<CheckoutForm>({
     name: "", email: "", phone: "", addressLine1: "", addressLine2: "", city: "", state: STATE_OPTIONS[0]!, pincode: "", acceptedTerms: false,
   });
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const { errors, setErrors, clearError } = useFieldErrors();
+  const set = (key: keyof CheckoutForm) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setForm((f) => ({ ...f, [key]: e.target.value }));
+    clearError(key);
+  };
 
   const { mutateAsync: createOrder, isPending } = useMutation({ mutationFn: createOrderApi });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cart) return;
-    if (!form.acceptedTerms) return toast.error("Please accept the terms to continue.");
+    const validationErrors = validateFields(CHECKOUT_RULES, form);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
+    }
+    const phone = normalizeIndianPhone(form.phone);
 
     try {
-      const res = await createOrder({ guestId: getGuestId(), cartId: cart.id, ...form });
+      const res = await createOrder({ guestId: getGuestId(), cartId: cart.id, ...form, phone });
       const order = res.data;
       if (!order) throw new Error("no order");
 
-      const details = { storeName, prefill: { name: form.name, email: form.email, contact: form.phone } };
+      const details = { storeName, prefill: { name: form.name, email: form.email, contact: phone } };
       const goToSuccess = (orderId: string) => router.push(`/checkout/success/${orderId}?guestId=${getGuestId()}`);
 
       if (env.paymentMode === "test") {
@@ -79,8 +91,15 @@ export default function CheckoutPage() {
       } else {
         openRazorpayCheckoutFunction(order, details, goToSuccess);
       }
-    } catch {
-      toast.error("Could not start checkout. Try again.");
+    } catch (err) {
+      // The backend's own validation ({ errors: { field: msg } }) goes under the matching input, same as client-side errors.
+      const inline = Object.fromEntries(Object.entries(getApiFieldErrors(err) ?? {}).filter(([key]) => key in form));
+      if (Object.keys(inline).length > 0) {
+        setErrors(inline);
+        scrollToFirstError();
+      } else {
+        toast.error("Could not start checkout. Try again.");
+      }
     }
   };
 
@@ -98,7 +117,15 @@ export default function CheckoutPage() {
           No account needed
         </span>
         {env.paymentMode === "test" && (
-          <Button type="button" variant="outline" className="ml-auto h-10! text-sm!" onClick={() => setForm(SAMPLE_CHECKOUT_DATA)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="ml-auto h-10! text-sm!"
+            onClick={() => {
+              setForm(SAMPLE_CHECKOUT_DATA);
+              setErrors({});
+            }}
+          >
             Fill sample data
           </Button>
         )}
@@ -114,75 +141,90 @@ export default function CheckoutPage() {
           </Link>
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="flex flex-wrap items-start gap-[clamp(24px,4vw,56px)]">
+        <form onSubmit={handleSubmit} noValidate className="flex flex-wrap items-start gap-[clamp(24px,4vw,56px)]">
           <div className="flex min-w-0 flex-[1_1_520px] flex-col gap-7">
             <fieldset className={fieldsetClass}>
               <legend className={legendClass}>1. Contact</legend>
-              <label className={labelClass}>
-                Full name
-                <input required autoComplete="name" placeholder="e.g. Lakshmi Menon" value={form.name} onChange={set("name")} className={inputClass} />
-              </label>
+              <StoreField label="Full name" required error={errors.name}>
+                <input autoComplete="name" maxLength={60} placeholder="e.g. Lakshmi Menon" value={form.name} onChange={set("name")} aria-invalid={!!errors.name} className={inputClass} />
+              </StoreField>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-                <label className={labelClass}>
-                  Phone (WhatsApp)
+                <StoreField label="Phone (WhatsApp)" required error={errors.phone}>
                   <input
-                    required
                     type="tel"
                     autoComplete="tel"
                     inputMode="tel"
                     placeholder="+91 98XXX XXXXX"
                     value={form.phone}
                     onChange={set("phone")}
+                    aria-invalid={!!errors.phone}
                     className={inputClass}
                   />
-                </label>
-                <label className={labelClass}>
-                  Email
-                  <input required type="email" autoComplete="email" placeholder="you@example.com" value={form.email} onChange={set("email")} className={inputClass} />
-                </label>
+                </StoreField>
+                <StoreField label="Email" required error={errors.email}>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    maxLength={100}
+                    placeholder="you@example.com"
+                    value={form.email}
+                    onChange={set("email")}
+                    aria-invalid={!!errors.email}
+                    className={inputClass}
+                  />
+                </StoreField>
               </div>
             </fieldset>
 
             <fieldset className={fieldsetClass}>
               <legend className={legendClass}>2. Delivery address</legend>
-              <label className={`${labelClass} max-w-[220px]`}>
-                Pincode
+              <StoreField label="Pincode" required error={errors.pincode} className="max-w-[220px]">
                 <input
-                  required
                   inputMode="numeric"
                   autoComplete="postal-code"
-                  pattern="[0-9]{6}"
                   maxLength={6}
-                  title="6-digit pincode"
                   placeholder="682001"
                   value={form.pincode}
                   onChange={set("pincode")}
+                  aria-invalid={!!errors.pincode}
                   className={inputClass}
                 />
-              </label>
-              <label className={labelClass}>
-                Address
-                <input required autoComplete="address-line1" placeholder="House name, street" value={form.addressLine1} onChange={set("addressLine1")} className={inputClass} />
-              </label>
-              <label className={labelClass}>
-                Landmark (optional)
-                <input autoComplete="address-line2" placeholder="Near…" value={form.addressLine2} onChange={set("addressLine2")} className={inputClass} />
-              </label>
+              </StoreField>
+              <StoreField label="Address" required error={errors.addressLine1}>
+                <input
+                  autoComplete="address-line1"
+                  maxLength={120}
+                  placeholder="House name, street"
+                  value={form.addressLine1}
+                  onChange={set("addressLine1")}
+                  aria-invalid={!!errors.addressLine1}
+                  className={inputClass}
+                />
+              </StoreField>
+              <StoreField label="Landmark (optional)" error={errors.addressLine2}>
+                <input
+                  autoComplete="address-line2"
+                  maxLength={120}
+                  placeholder="Near…"
+                  value={form.addressLine2}
+                  onChange={set("addressLine2")}
+                  aria-invalid={!!errors.addressLine2}
+                  className={inputClass}
+                />
+              </StoreField>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
-                <label className={labelClass}>
-                  City
-                  <input required autoComplete="address-level2" placeholder="Kochi" value={form.city} onChange={set("city")} className={inputClass} />
-                </label>
-                <label className={labelClass}>
-                  State
-                  <select required autoComplete="address-level1" value={form.state} onChange={set("state")} className={inputClass}>
+                <StoreField label="City" required error={errors.city}>
+                  <input autoComplete="address-level2" maxLength={60} placeholder="Kochi" value={form.city} onChange={set("city")} aria-invalid={!!errors.city} className={inputClass} />
+                </StoreField>
+                <StoreField label="State" required error={errors.state}>
+                  <select autoComplete="address-level1" value={form.state} onChange={set("state")} aria-invalid={!!errors.state} className={inputClass}>
                     {STATE_OPTIONS.map((s) => (
                       <option key={s} value={s}>
                         {s}
                       </option>
                     ))}
                   </select>
-                </label>
+                </StoreField>
               </div>
             </fieldset>
 
@@ -199,24 +241,31 @@ export default function CheckoutPage() {
                   </li>
                 ))}
               </ul>
-              <label className="mt-2 flex items-start gap-2.5 text-sm text-ka-ink">
-                <input
-                  type="checkbox"
-                  checked={form.acceptedTerms}
-                  onChange={(e) => setForm((f) => ({ ...f, acceptedTerms: e.target.checked }))}
-                  className="mt-0.5 h-4 w-4 flex-none accent-ka-green"
-                />
-                <span>
-                  I accept the{" "}
-                  <Link href="/policies/terms" target="_blank" className="font-semibold text-ka-green underline">
-                    terms &amp; conditions
-                  </Link>{" "}
-                  and{" "}
-                  <Link href="/policies/returns" target="_blank" className="font-semibold text-ka-green underline">
-                    returns policy
-                  </Link>
-                </span>
-              </label>
+              <div className="mt-2 flex flex-col gap-1.5" data-invalid={!!errors.acceptedTerms || undefined}>
+                <label className="flex items-start gap-2.5 text-sm text-ka-ink">
+                  <input
+                    type="checkbox"
+                    checked={form.acceptedTerms}
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, acceptedTerms: e.target.checked }));
+                      clearError("acceptedTerms");
+                    }}
+                    aria-invalid={!!errors.acceptedTerms}
+                    className="mt-0.5 h-4 w-4 flex-none accent-ka-green"
+                  />
+                  <span>
+                    I accept the{" "}
+                    <Link href="/policies/terms" target="_blank" className="font-semibold text-ka-green underline">
+                      terms &amp; conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link href="/policies/returns" target="_blank" className="font-semibold text-ka-green underline">
+                      returns policy
+                    </Link>
+                  </span>
+                </label>
+                <FieldError message={errors.acceptedTerms} />
+              </div>
             </fieldset>
           </div>
 
