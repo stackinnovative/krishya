@@ -8,6 +8,7 @@ import { handleError } from "../../../core/errors/custom.error.js";
 import type { Response, Request } from "express";
 import { cookieOptions, setAccessTokenCookie, setRefreshTokenCookie } from "../../../core/utils/auth.helpers.js";
 import type { IUserRefreshTokenUseCase } from "../use-cases/interfaces/user.refresh.token.use-case.interface.js";
+import type { IUserLogoutUseCase } from "../use-cases/interfaces/user.logout.use-case.interface.js";
 
 @injectable()
 export class AuthController implements IAuthController {
@@ -15,7 +16,9 @@ export class AuthController implements IAuthController {
     @inject('IGetCurrentUserUseCase')
     private readonly _getCurrentUserUseCase: IGetCurrentUserUseCase,
     @inject('IUserRefreshTokenUseCase')
-    private readonly _userRefreshTokenUseCase: IUserRefreshTokenUseCase
+    private readonly _userRefreshTokenUseCase: IUserRefreshTokenUseCase,
+    @inject('IUserLogoutUseCase')
+    private readonly _userLogoutUseCase: IUserLogoutUseCase
   ) { }
 
   async getCurrentUser(req: AuthRequest, res: Response): Promise<void> {
@@ -35,6 +38,8 @@ export class AuthController implements IAuthController {
 
   async logoutUserController(req: Request, res: Response): Promise<void> {
     try {
+      await this._userLogoutUseCase.execute(req.cookies.refresh_token);
+
       res.cookie("access_token", "", {
         ...cookieOptions,
         maxAge: 0,
