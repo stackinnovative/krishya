@@ -1,4 +1,5 @@
-import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios, { isAxiosError, type AxiosError, type InternalAxiosRequestConfig } from "axios";
+import toast from "react-hot-toast";
 import { env } from "./env";
 import { raw } from "./raw-client";
 import { logout } from "./logout";
@@ -45,7 +46,12 @@ api.interceptors.response.use(
       } catch (refreshErr) {
         isRefreshing = false;
         processQueue(refreshErr);
-        logout();
+        // A 429 means "slow down", not "session over" - the refresh token is still good, so keep the admin on the page.
+        if (isAxiosError(refreshErr) && refreshErr.response?.status === 429) {
+          toast.error("Too many requests. Please wait a minute and try again.");
+        } else {
+          logout();
+        }
         return Promise.reject(refreshErr);
       }
     }
