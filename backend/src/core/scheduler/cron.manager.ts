@@ -4,8 +4,12 @@ import { AutoCancelOrderUseCase } from "../../modules/order/use-cases/auto-cance
 
 export function startCronJobs() {
     cron.schedule("*/30 * * * *", async () => {
-
-        const useCase = container.resolve(AutoCancelOrderUseCase);
-        await useCase.execute();
+        // An escaped rejection here would be unhandled and can take the whole server down.
+        try {
+            const useCase = container.resolve(AutoCancelOrderUseCase);
+            await useCase.execute();
+        } catch (error) {
+            console.error("Auto-cancel job failed:", error);
+        }
     });
 }

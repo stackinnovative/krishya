@@ -101,7 +101,7 @@ export class PaymentRepository implements IPaymentRepository {
     }
 
     async autoCancelPayment(orderIds: string[], session?: ClientSession): Promise<void> {
-        const result = await PaymentModel.updateMany(
+        await PaymentModel.updateMany(
             { orderId: { $in: orderIds }, status: "created" },
             {
                 $set: {
@@ -111,10 +111,7 @@ export class PaymentRepository implements IPaymentRepository {
             },
             session ? { session } : {}
         );
-
-        if (result.matchedCount === 0) {
-            throw new Error("Payment not found");
-        }
+        // No match is fine: an order whose Razorpay call failed never got a payment record, and must still be cancelled.
     }
 
     //fail payment
