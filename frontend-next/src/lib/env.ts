@@ -10,6 +10,8 @@ export const env = {
   paymentMode: process.env.NEXT_PUBLIC_PAYMENT_MODE ?? "test",
   razorpayKeyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
   razorpayTestKeyId: process.env.NEXT_PUBLIC_RAZORPAY_TEST_KEY_ID ?? "",
+  /** Shows the "Fill sample data" button on checkout - only ever honoured while paymentMode is "test". */
+  checkoutSampleData: process.env.NEXT_PUBLIC_CHECKOUT_SAMPLE_DATA === "true",
   contactEmail: process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "",
   contactPhone: process.env.NEXT_PUBLIC_CONTACT_PHONE ?? "",
   facebookUrl: process.env.NEXT_PUBLIC_FACEBOOK_URL ?? "",

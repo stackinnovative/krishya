@@ -31,7 +31,7 @@ const STATE_OPTIONS = [
 const fieldsetClass = "m-0 flex min-w-0 flex-col gap-4 rounded-xl border border-ka-sand bg-white p-[clamp(18px,3vw,28px)]";
 const legendClass = "float-left mb-1 w-full p-0 font-display text-2xl font-semibold text-ka-green";
 
-/** Only ever used to skip typing through this form by hand while testing against Razorpay's test mode - never shown once NEXT_PUBLIC_PAYMENT_MODE is "live". */
+/** Only ever used to skip typing through this form by hand while testing against Razorpay's test mode - shown only when NEXT_PUBLIC_CHECKOUT_SAMPLE_DATA is "true", and never once NEXT_PUBLIC_PAYMENT_MODE is "live". */
 const SAMPLE_CHECKOUT_DATA: CheckoutForm = {
   name: "Test User",
   email: "test@example.com",
@@ -43,6 +43,7 @@ const SAMPLE_CHECKOUT_DATA: CheckoutForm = {
   pincode: "682001",
   acceptedTerms: true,
 };
+const showSampleDataButton = env.paymentMode === "test" && env.checkoutSampleData;
 
 export default function CheckoutPage() {
   const router = useRouter();
@@ -110,7 +111,7 @@ export default function CheckoutPage() {
           <CheckIcon size={14} strokeWidth={2} />
           No account needed
         </span>
-        {env.paymentMode === "test" && (
+        {showSampleDataButton && (
           <Button
             type="button"
             variant="outline"
