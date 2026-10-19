@@ -6,11 +6,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import toast from "react-hot-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getGuestId } from "@/lib/guest";
 import { env } from "@/lib/env";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
-import { getApiFieldErrors } from "@/lib/errors";
+import { getApiErrorMessage, getApiFieldErrors } from "@/lib/errors";
 import { formatCurrency } from "@/lib/format";
 import { openRazorpayCheckoutFunction, openRazorpayCheckoutTestFunction } from "@/lib/razorpay";
 import { useCart } from "@/modules/cart/hooks/useCart";
@@ -22,6 +22,7 @@ import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContac
 import { SectionDecor } from "@/modules/storefront-shell/components/decor";
 import { CheckIcon, LeafIcon, LockIcon } from "@/modules/storefront-shell/components/icons";
 import { useFieldErrors, validateFields } from "@/shared/form-validation";
+import { cartKeys } from "@/shared/query-keys";
 import { scrollToFirstError } from "@/shared/scrollToFirstError";
 
 const STATE_OPTIONS = [
@@ -47,6 +48,7 @@ const showSampleDataButton = env.paymentMode === "test" && env.checkoutSampleDat
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   // isPending, not isLoading: the server has no guestId so its query is disabled - only isPending is true on both sides, keeping hydration in sync.
   const { data: cartRes, isPending: isLoading } = useCart();
   const cart = cartRes?.data;
@@ -94,7 +96,10 @@ export default function CheckoutPage() {
         setErrors(inline);
         scrollToFirstError();
       } else {
-        toast.error("Could not start checkout. Try again.");
+        // The backend says exactly what went wrong (cart empty, out of stock, maintenance...). The cart may also have
+        // changed since this page loaded, so refetch it - an emptied cart then shows the "Your cart is empty" state.
+        toast.error(getApiErrorMessage(err, "Could not start checkout. Try again."));
+        queryClient.invalidateQueries({ queryKey: cartKeys.cart });
       }
     }
   };
