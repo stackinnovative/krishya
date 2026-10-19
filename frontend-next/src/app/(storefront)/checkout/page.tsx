@@ -47,7 +47,8 @@ const showSampleDataButton = env.paymentMode === "test" && env.checkoutSampleDat
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: cartRes, isLoading } = useCart();
+  // isPending, not isLoading: the server has no guestId so its query is disabled - only isPending is true on both sides, keeping hydration in sync.
+  const { data: cartRes, isPending: isLoading } = useCart();
   const cart = cartRes?.data;
   const { storeName } = useStoreContact();
 
