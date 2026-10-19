@@ -142,7 +142,8 @@ export default function RevenuePage() {
   } = useRevenueReport({ ...baseQuery, detail: true, page: detailPage, limit: detailPageSize }, rangeReady && view === "detail");
 
   const summary = data?.data.summary;
-  const rows = data?.data.dailyData ?? [];
+  // The backend sends buckets newest first; the overview chart and table both read oldest → newest, like a time axis.
+  const rows = [...(data?.data.dailyData ?? [])].reverse();
   const granularity = data?.data.granularity ?? "day";
   const maxRev = Math.max(1, ...rows.map((r) => r.revenue));
   const rangeLabel = range === "custom" ? customRangeLabel : RANGES.find((r) => r.key === range)?.label ?? "";
@@ -246,7 +247,7 @@ export default function RevenuePage() {
               </div>
               <AdminTable
                 columns={buildColumns(granularity)}
-                rows={[...rows].reverse()}
+                rows={rows}
                 getRowKey={(r) => r.date}
                 minWidth={520}
                 compact
