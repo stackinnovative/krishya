@@ -15,6 +15,7 @@ import type { IVerifyPaymentUseCase } from "./interfaces/verify.payment.use-case
 import type { IWhatsAppService } from "../../../core/ports/whatsapp.service.interface.js";
 import type { IEmailService } from "../../../core/ports/email.service.interface.js";
 import { notifyOrderConfirmed } from "../utils/notify.order.confirmed.js";
+import { confirmPaidOrder, notifyPaidOrderNeedsRefund } from "../utils/confirm.paid.order.js";
 
 @injectable()
 export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
@@ -150,15 +151,21 @@ export class VerifyPaymentUseCase implements IVerifyPaymentUseCase {
                 session,
             });
 
-            //  UPDATE ORDER STATUS
-            await this._orderRepository.confirmOrder(payment.orderId, session)
+            //  UPDATE ORDER STATUS (revives it if the auto-cancel job got there first)
+            const outcome = await confirmPaidOrder(this._orderRepository, this._productRepository, order, session);
 
-            //empty cart
-            await this._cartRepository.emptyCart(payment.guestId!, session)
+            //empty cart - only once the order really went through
+            if (outcome === "confirmed") {
+                await this._cartRepository.emptyCart(payment.guestId!, session)
+            }
 
             await session.commitTransaction();
 
-            notifyOrderConfirmed(this._whatsAppService, this._emailService, order);
+            if (outcome === "confirmed") {
+                notifyOrderConfirmed(this._whatsAppService, this._emailService, order);
+            } else {
+                notifyPaidOrderNeedsRefund(this._emailService, order);
+            }
 
         } catch (error) {
             await session.abortTransaction();

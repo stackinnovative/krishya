@@ -13,6 +13,7 @@ import type { Order } from "../entities/order.entity.js";
 import type { IWhatsAppService } from "../../../core/ports/whatsapp.service.interface.js";
 import type { IEmailService } from "../../../core/ports/email.service.interface.js";
 import { notifyOrderConfirmed } from "../utils/notify.order.confirmed.js";
+import { confirmPaidOrder, notifyPaidOrderNeedsRefund, type PaidOrderOutcome } from "../utils/confirm.paid.order.js";
 
 @injectable()
 export class HandleRazorpayWebhookUseCase
@@ -47,32 +48,25 @@ export class HandleRazorpayWebhookUseCase
         const paymentEntity = event.payload.payment.entity;
 
         const session = await mongoose.startSession();
-        let confirmedOrder: Order | null = null;
+        let captured: { order: Order; outcome: PaidOrderOutcome } | null = null;
         try {
             const payment = await this._paymentRepository
                 .findByProviderOrderId(paymentEntity.order_id, session);
 
-            if (!payment) {
-                await session.abortTransaction();
-                return;
-
-            }
+            // Not one of ours - nothing to do (no transaction has been started yet, so nothing to abort).
+            if (!payment) return;
 
             // STRONG IDEMPOTENCY
             const mappedStatus = mapRazorpayStatus(paymentEntity.status);
 
-            if (payment.status === mappedStatus) {
-                await session.abortTransaction();
-                return;
-            }
-
+            if (payment.status === mappedStatus) return;
 
             session.startTransaction();
 
             switch (event.event) {
 
                 case "payment.captured":
-                    confirmedOrder = await this.handleCaptured(
+                    captured = await this.handleCaptured(
                         payment,
                         paymentEntity,
                         session
@@ -83,12 +77,14 @@ export class HandleRazorpayWebhookUseCase
             }
             await session.commitTransaction();
 
-            if (confirmedOrder) {
-                notifyOrderConfirmed(this._whatsAppService, this._emailService, confirmedOrder);
+            if (captured?.outcome === "confirmed") {
+                notifyOrderConfirmed(this._whatsAppService, this._emailService, captured.order);
+            } else if (captured?.outcome === "refund_needed") {
+                notifyPaidOrderNeedsRefund(this._emailService, captured.order);
             }
 
         } catch (error) {
-            await session.abortTransaction();
+            if (session.inTransaction()) await session.abortTransaction();
             throw error;
         } finally {
             session.endSession();
@@ -99,14 +95,16 @@ export class HandleRazorpayWebhookUseCase
         payment: Payment,
         entity: RazorpayWebhookEvent["payload"]["payment"]["entity"],
         session: mongoose.ClientSession
-    ): Promise<Order | null> {
+    ): Promise<{ order: Order; outcome: PaidOrderOutcome } | null> {
 
         const order = await this._orderRepository
             .findById(payment.orderId, session);
 
         if (!order) return null;
 
-        if (order.orderStatus === "confirmed") return null;
+        // Only an unpaid ("created") or auto-cancelled order can be confirmed by a payment - never move an
+        // order the admin already accepted/dispatched back to "confirmed".
+        if (order.orderStatus !== "created" && order.orderStatus !== "cancelled") return null;
 
         const expectedAmount = order.totalAmount * 100;
 
@@ -130,19 +128,16 @@ export class HandleRazorpayWebhookUseCase
 
         await this._paymentRepository.save(newPayment, session);
 
-        await this._orderRepository.changeStatus(
-            payment.orderId,
-            "confirmed",
-            session
-        );
+        // Revives the order if the auto-cancel job got there first.
+        const outcome = await confirmPaidOrder(this._orderRepository, this._productRepository, order, session);
 
-        if (payment.guestId) {
+        if (outcome === "confirmed" && payment.guestId) {
             await this._cartRepository.emptyCart(
                 payment.guestId,
                 session
             );
         }
 
-        return order;
+        return { order, outcome };
     }
 }

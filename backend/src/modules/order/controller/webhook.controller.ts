@@ -41,8 +41,10 @@ export class RazorpayWebhookController implements IHandleRazorpayWebHookControll
         try {
             await this._handleRazorpayWebhookUseCase.execute(event);
             res.status(200).json({ received: true });
-        } catch {
-            res.status(200).json({ received: true });
+        } catch (error) {
+            // A non-2xx makes Razorpay retry - a paid order must never be lost to a transient DB error.
+            console.error("Razorpay webhook processing failed:", error);
+            res.status(500).json({ received: false });
         }
     }
 }

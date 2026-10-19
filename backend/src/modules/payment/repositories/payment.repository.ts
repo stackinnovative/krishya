@@ -137,7 +137,8 @@ export class PaymentRepository implements IPaymentRepository {
         const { paymentId, providerPaymentId, currency, amount, session, paymentMode } = payload;
 
         const result = await PaymentModel.updateOne(
-            { _id: paymentId, status: { $in: ["created", "authorized"] } },
+            // "failed" too: the auto-cancel job marks unpaid orders' payments failed, but Razorpay can still capture one afterwards - its word wins.
+            { _id: paymentId, status: { $in: ["created", "authorized", "failed"] } },
             { $set: { status: "captured", providerPaymentId, currency, amount, paymentMode } },
             session ? { session } : {}
         );

@@ -172,6 +172,19 @@ export class OrderRepository implements IOrderRepository {
     }
   }
 
+  // confirm an order whose payment landed after it was cancelled (its stock has already been re-reserved by the caller)
+  async reconfirmCancelledOrder(orderId: string, session?: ClientSession): Promise<void> {
+    const result = await OrderModel.updateOne(
+      { _id: orderId, orderStatus: "cancelled" },
+      { $set: { orderStatus: "confirmed", confirmedAt: new Date() }, $unset: { cancelledAt: "", cancelReason: "" } },
+      session ? { session } : {},
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error(ResponseMessages.ORDER_NOT_FOUND);
+    }
+  }
+
   // cancel order
   async cancelOrder(orderId: string, session?: ClientSession): Promise<void> {
     const result = await OrderModel.updateOne(
