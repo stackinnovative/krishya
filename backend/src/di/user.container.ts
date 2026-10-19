@@ -7,6 +7,8 @@ import type { IGetCurrentUserUseCase } from "../modules/user/use-cases/interface
 import { GetCurrentUserUseCase } from "../modules/user/use-cases/get.current.user.use-case.js";
 import type { IUserRefreshTokenUseCase } from "../modules/user/use-cases/interfaces/user.refresh.token.use-case.interface.js";
 import { UserRefreshTokenUseCase } from "../modules/user/use-cases/user.refresh.token.use-case.js";
+import type { IUserLogoutUseCase } from "../modules/user/use-cases/interfaces/user.logout.use-case.interface.js";
+import { UserLogoutUseCase } from "../modules/user/use-cases/user.logout.use-case.js";
 import type { IGetAdminUsersUseCase } from "../modules/user/use-cases/interfaces/get.admin.users.use-case.interface.js";
 import { GetAdminUsersUseCase } from "../modules/user/use-cases/get.admin.users.use-case.js";
 import type { IGetAdminUserDetailUseCase } from "../modules/user/use-cases/interfaces/get.admin.user.detail.use-case.interface.js";
@@ -35,6 +37,10 @@ export const registerUserDependencies = () => {
   container.register<IUserRefreshTokenUseCase>("IUserRefreshTokenUseCase", {
     useClass: UserRefreshTokenUseCase
   })
+
+  container.register<IUserLogoutUseCase>("IUserLogoutUseCase", {
+    useClass: UserLogoutUseCase,
+  });
 
   container.register<IGetAdminUsersUseCase>("IGetAdminUsersUseCase", {
     useClass: GetAdminUsersUseCase,

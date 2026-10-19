@@ -9,8 +9,10 @@ interface ValidationErrorBody {
  * { message, errors: { field: msg } } validation response, falling back to
  * a generic message for anything else (network failure, 500, etc.). */
 export const getApiErrorMessage = (err: unknown, fallback: string): string => {
-  if (isAxiosError<ValidationErrorBody>(err)) {
+  if (isAxiosError<ValidationErrorBody | string>(err)) {
     const data = err.response?.data;
+    // Rate limiters (express-rate-limit) reply with a plain-text body, not JSON.
+    if (typeof data === "string") return data || fallback;
     const firstFieldError = data?.errors && Object.values(data.errors)[0];
     return firstFieldError || data?.message || fallback;
   }

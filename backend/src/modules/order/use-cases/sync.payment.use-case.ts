@@ -12,6 +12,8 @@ import { mapPaymentMode } from "../../../core/utils/get.payment.method.js";
 import type { IWhatsAppService } from "../../../core/ports/whatsapp.service.interface.js";
 import type { IEmailService } from "../../../core/ports/email.service.interface.js";
 import { notifyOrderConfirmed } from "../utils/notify.order.confirmed.js";
+import { confirmPaidOrder, notifyPaidOrderNeedsRefund } from "../utils/confirm.paid.order.js";
+import type { IProductRepository } from "../../product/repositories/product.repository.interface.js";
 
 @injectable()
 export class SyncPaymentUseCase implements ISyncPaymentUseCase {
@@ -29,6 +31,9 @@ export class SyncPaymentUseCase implements ISyncPaymentUseCase {
 
         @inject("IEmailService")
         private readonly _emailService: IEmailService,
+
+        @inject("IProductRepository")
+        private readonly _productRepository: IProductRepository,
     ) { }
 
     async execute(localOrderId: string): Promise<{ status: string }> {
@@ -48,6 +53,11 @@ export class SyncPaymentUseCase implements ISyncPaymentUseCase {
         }
 
 
+        // Already handled: paid after cancellation and flagged for a refund.
+        if (payment.status === "captured") {
+            return { status: order.orderStatus ?? "cancelled" };
+        }
+
         const razorpayOrderId = payment.providerOrderId;
 
         const razorpayPayment = await this._paymentGateway.fetchPaymentsByOrderId(
@@ -65,8 +75,8 @@ export class SyncPaymentUseCase implements ISyncPaymentUseCase {
             session.startTransaction();
 
             try {
-                //confirm order
-                await this._orderRepository.confirmOrder(localOrderId, session);
+                //confirm order (revives it if the auto-cancel job got there first)
+                const outcome = await confirmPaidOrder(this._orderRepository, this._productRepository, order, session);
 
                 //captured payment
                 await this._paymentRepository.confirmPayment({
@@ -79,12 +89,17 @@ export class SyncPaymentUseCase implements ISyncPaymentUseCase {
                     session,
                 });
 
-                // Clear Cart
-                if (order.guestId) {
+                // Clear Cart - only once the order really went through
+                if (outcome === "confirmed" && order.guestId) {
                     await this._cartRepository.emptyCart(order.guestId, session);
                 }
 
                 await session.commitTransaction();
+
+                if (outcome === "refund_needed") {
+                    notifyPaidOrderNeedsRefund(this._emailService, order);
+                    return { status: "cancelled" };
+                }
 
                 notifyOrderConfirmed(this._whatsAppService, this._emailService, order);
 

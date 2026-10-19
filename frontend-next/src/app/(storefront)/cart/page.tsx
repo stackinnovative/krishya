@@ -9,7 +9,8 @@ import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContac
 import { ArrowRightIcon, BagIcon, LeafIcon, LockIcon, TrashIcon, TruckIcon } from "@/modules/storefront-shell/components/icons";
 
 export default function CartPage() {
-  const { data, isLoading } = useCart();
+  // isPending, not isLoading: the server has no guestId so its query is disabled - only isPending is true on both sides, keeping hydration in sync.
+  const { data, isPending: isLoading } = useCart();
   const { mutate: updateCount, isPending: updatingCount, variables: updateVars } = useUpdateCartCount();
   const { mutate: removeItem, isPending: removing, variables: removeVars } = useRemoveCartItem();
   const { freeAbove, deliveryCharge } = useStoreContact();

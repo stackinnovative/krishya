@@ -1,3 +1,4 @@
+import { isAxiosError } from "axios";
 import api from "@/lib/api-client";
 import { raw } from "@/lib/raw-client";
 import type { ApiResponse } from "@/shared/types/api.types";
@@ -15,9 +16,17 @@ export const loginApi = async ({
   return response.data;
 };
 
+/** On a page reload the access cookie may already have expired while the refresh one is still valid - refresh once before giving up on the session. */
 export const getCurrentUserApi = async (): Promise<AuthUser | null> => {
-  const response = await raw.post<LoginResponse>("/auth/me");
-  return response.data.data?.user ?? null;
+  try {
+    const response = await raw.post<LoginResponse>("/auth/me");
+    return response.data.data?.user ?? null;
+  } catch (err) {
+    if (!isAxiosError(err) || err.response?.status !== 401) throw err;
+    await raw.post("/auth/refresh");
+    const response = await raw.post<LoginResponse>("/auth/me");
+    return response.data.data?.user ?? null;
+  }
 };
 
 export const logoutUserApi = async (): Promise<ApiResponse> => {

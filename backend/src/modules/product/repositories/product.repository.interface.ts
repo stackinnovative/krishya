@@ -32,6 +32,7 @@ export interface IProductRepository {
   findRelatedProducts(categoryId: string, excludeProductId?: string): Promise<UserProductListView[]>;
   findByCategoryIds(categoryIds: string[], limit: number): Promise<UserProductListView[]>;
   findByIds(ids: string[]): Promise<UserProductListView[]>;
-  decrementStock(params: StockUpdateProps): Promise<void>;
+  /** False when the variant doesn't have enough stock - nothing is changed in that case. */
+  decrementStock(params: StockUpdateProps): Promise<boolean>;
   incrementStock(params: StockUpdateProps): Promise<void>;
 }

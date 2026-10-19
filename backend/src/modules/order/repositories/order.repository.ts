@@ -30,10 +30,11 @@ const { ObjectId } = Types;
 export class OrderRepository implements IOrderRepository {
   /* ================= CREATE ================= */
 
-  async create(orderEntity: Order): Promise<Order> {
+  async create(orderEntity: Order, session?: ClientSession): Promise<Order> {
     const persistenceData = OrderMapper.toPersistence(orderEntity);
 
-    const created = await OrderModel.create(persistenceData);
+    // The array form is the only one Model.create accepts a session with.
+    const [created] = await OrderModel.create([persistenceData], session ? { session } : {});
 
     const domainOrder = OrderMapper.toDomain(created);
 
@@ -163,6 +164,19 @@ export class OrderRepository implements IOrderRepository {
     const result = await OrderModel.updateOne(
       { _id: orderId, orderStatus: "created" },
       { $set: { orderStatus: "confirmed", confirmedAt: new Date() } },
+      session ? { session } : {},
+    );
+
+    if (result.modifiedCount === 0) {
+      throw new Error(ResponseMessages.ORDER_NOT_FOUND);
+    }
+  }
+
+  // confirm an order whose payment landed after it was cancelled (its stock has already been re-reserved by the caller)
+  async reconfirmCancelledOrder(orderId: string, session?: ClientSession): Promise<void> {
+    const result = await OrderModel.updateOne(
+      { _id: orderId, orderStatus: "cancelled" },
+      { $set: { orderStatus: "confirmed", confirmedAt: new Date() }, $unset: { cancelledAt: "", cancelReason: "" } },
       session ? { session } : {},
     );
 

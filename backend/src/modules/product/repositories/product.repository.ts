@@ -335,17 +335,24 @@ export class ProductRepository implements IProductRepository {
     return mapList(documents);
   }
 
-  async decrementStock(params: StockUpdateProps): Promise<void> {
+  /** Atomic check-and-decrement: only matches when the variant still has `quantity` in stock, so two shoppers racing
+   * for the last unit can't both succeed. Returns false (and changes nothing) when there isn't enough stock. */
+  async decrementStock(params: StockUpdateProps): Promise<boolean> {
     const { productId, variantId, quantity, session } = params;
 
-    await ProductModel.updateOne(
-      { _id: new ObjectId(productId) },
+    const result = await ProductModel.updateOne(
+      {
+        _id: new ObjectId(productId),
+        variants: { $elemMatch: { _id: new ObjectId(variantId), stock: { $gte: quantity } } },
+      },
       { $inc: { "variants.$[variant].stock": -quantity } },
       {
         arrayFilters: [{ "variant._id": new ObjectId(variantId) }],
         ...(session && { session }),
       },
     );
+
+    return result.modifiedCount === 1;
   }
 
   async incrementStock(params: StockUpdateProps): Promise<void> {

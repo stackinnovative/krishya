@@ -39,6 +39,8 @@ export default function RevenueHeroCard({ range }: { range: RevenueRange }) {
 
   const bars = revenueChart.data?.data?.series.data ?? [];
   const maxBar = Math.max(1, ...bars);
+  // The headline must match the selected range - the motivation summary's metric is a fixed 24h/7d window, so sum the range-filtered chart instead.
+  const rangeRevenue = bars.reduce((sum, v) => sum + v, 0);
   const targetPct = motivation.data?.data?.target?.progressPercentage ?? 0;
 
   return (
@@ -57,7 +59,7 @@ export default function RevenueHeroCard({ range }: { range: RevenueRange }) {
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="text-[36px] font-bold leading-none tracking-[-.03em]">
-                {motivation.data?.data?.metric.formatted ?? "—"}
+                {revenueChart.data?.data ? formatCurrency(rangeRevenue) : "—"}
               </div>
               <div className="mt-1.5 text-[11px] text-[#8a8a8e]">Revenue · {RANGE_LABEL[range]}</div>
             </div>

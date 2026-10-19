@@ -11,7 +11,7 @@ import type { OrderStatus } from "../types/order.type.js";
 import type { ClientSession } from "mongoose";
 
 export interface IOrderRepository {
-  create(orderEntity: Order): Promise<Order>;
+  create(orderEntity: Order, session?: ClientSession): Promise<Order>;
 
   save(orderEntity: Order): Promise<Order>;
 
@@ -26,6 +26,7 @@ export interface IOrderRepository {
   findPendingOlderThan(date: Date): Promise<Order[]>;
   autoCancelOlderThan(orderIds: string[], session?: ClientSession): Promise<void>;
   confirmOrder(orderId: string, session?: ClientSession): Promise<void>;
+  reconfirmCancelledOrder(orderId: string, session?: ClientSession): Promise<void>;
   cancelOrder(orderId: string, session?: ClientSession): Promise<void>;
   getSummary(orderId: string, guestId: string): Promise<OrderSummaryView | null>;
   getAdminOrderList(allDoc: IGetAllDocDB): Promise<AdminOrderListItem[]>;

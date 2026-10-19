@@ -1,4 +1,5 @@
 import { inject, injectable } from "tsyringe";
+import mongoose from "mongoose";
 import type { ICreateOrderUseCase } from "./interfaces/create.order.use-case.interface.js";
 import type { IOrderRepository } from "../repositories/order.repository.interface.js";
 import type { CreateOrderRequestDto } from "../dtos/create.order.dto.js";
@@ -198,12 +199,6 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
                 mrp: variant.mrp,
                 image: product.images[0]?.url,
             });
-
-            await this._productRepository.decrementStock({
-                productId: cartItem.productId,
-                variantId: cartItem.variantId,
-                quantity: cartItem.quantity,
-            });
         }
 
         /* =========================================================
@@ -257,16 +252,49 @@ export class CreateOrderUseCase implements ICreateOrderUseCase {
         });
 
         /* =========================================================
-           STEP 5 — SAVE ORDER
+           STEP 5 — RESERVE STOCK + SAVE ORDER (one transaction)
+           Each decrement only succeeds if the stock is still there, and a
+           failure on any item rolls back the ones before it - so a race
+           for the last unit, or a failed save, never leaks or oversells
+           stock. If the Razorpay call below then fails, the order stays
+           "created" and the auto-cancel job gives the stock back.
         ========================================================= */
 
-        const createdOrder = await this._orderRepository.create(orderEntity);
+        const session = await mongoose.startSession();
+        let createdOrder: Order;
+        try {
+            session.startTransaction();
 
-        if (!createdOrder.id) {
-            throw new CustomError(
-                ResponseMessages.FAILED_TO_CREATE_ORDER,
-                HttpStatusCode.INTERNAL_SERVER_ERROR,
-            );
+            for (const item of validatedItems) {
+                const reserved = await this._productRepository.decrementStock({
+                    productId: item.productId,
+                    variantId: item.variantId,
+                    quantity: item.quantity,
+                    session,
+                });
+                if (!reserved) {
+                    throw new CustomError(
+                        ResponseMessages.PRODUCT_OUT_OF_STOCK,
+                        HttpStatusCode.BAD_REQUEST,
+                    );
+                }
+            }
+
+            createdOrder = await this._orderRepository.create(orderEntity, session);
+
+            if (!createdOrder.id) {
+                throw new CustomError(
+                    ResponseMessages.FAILED_TO_CREATE_ORDER,
+                    HttpStatusCode.INTERNAL_SERVER_ERROR,
+                );
+            }
+
+            await session.commitTransaction();
+        } catch (error) {
+            await session.abortTransaction();
+            throw error;
+        } finally {
+            await session.endSession();
         }
 
         /* =========================================================

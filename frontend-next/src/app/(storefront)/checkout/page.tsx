@@ -6,11 +6,11 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
 import toast from "react-hot-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { getGuestId } from "@/lib/guest";
 import { env } from "@/lib/env";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
-import { getApiFieldErrors } from "@/lib/errors";
+import { getApiErrorMessage, getApiFieldErrors } from "@/lib/errors";
 import { formatCurrency } from "@/lib/format";
 import { openRazorpayCheckoutFunction, openRazorpayCheckoutTestFunction } from "@/lib/razorpay";
 import { useCart } from "@/modules/cart/hooks/useCart";
@@ -22,6 +22,7 @@ import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContac
 import { SectionDecor } from "@/modules/storefront-shell/components/decor";
 import { CheckIcon, LeafIcon, LockIcon } from "@/modules/storefront-shell/components/icons";
 import { useFieldErrors, validateFields } from "@/shared/form-validation";
+import { cartKeys } from "@/shared/query-keys";
 import { scrollToFirstError } from "@/shared/scrollToFirstError";
 
 const STATE_OPTIONS = [
@@ -31,7 +32,7 @@ const STATE_OPTIONS = [
 const fieldsetClass = "m-0 flex min-w-0 flex-col gap-4 rounded-xl border border-ka-sand bg-white p-[clamp(18px,3vw,28px)]";
 const legendClass = "float-left mb-1 w-full p-0 font-display text-2xl font-semibold text-ka-green";
 
-/** Only ever used to skip typing through this form by hand while testing against Razorpay's test mode - never shown once NEXT_PUBLIC_PAYMENT_MODE is "live". */
+/** Only ever used to skip typing through this form by hand while testing against Razorpay's test mode - shown only when NEXT_PUBLIC_CHECKOUT_SAMPLE_DATA is "true", and never once NEXT_PUBLIC_PAYMENT_MODE is "live". */
 const SAMPLE_CHECKOUT_DATA: CheckoutForm = {
   name: "Test User",
   email: "test@example.com",
@@ -43,10 +44,13 @@ const SAMPLE_CHECKOUT_DATA: CheckoutForm = {
   pincode: "682001",
   acceptedTerms: true,
 };
+const showSampleDataButton = env.paymentMode === "test" && env.checkoutSampleData;
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { data: cartRes, isLoading } = useCart();
+  const queryClient = useQueryClient();
+  // isPending, not isLoading: the server has no guestId so its query is disabled - only isPending is true on both sides, keeping hydration in sync.
+  const { data: cartRes, isPending: isLoading } = useCart();
   const cart = cartRes?.data;
   const { storeName } = useStoreContact();
 
@@ -92,7 +96,10 @@ export default function CheckoutPage() {
         setErrors(inline);
         scrollToFirstError();
       } else {
-        toast.error("Could not start checkout. Try again.");
+        // The backend says exactly what went wrong (cart empty, out of stock, maintenance...). The cart may also have
+        // changed since this page loaded, so refetch it - an emptied cart then shows the "Your cart is empty" state.
+        toast.error(getApiErrorMessage(err, "Could not start checkout. Try again."));
+        queryClient.invalidateQueries({ queryKey: cartKeys.cart });
       }
     }
   };
@@ -110,7 +117,7 @@ export default function CheckoutPage() {
           <CheckIcon size={14} strokeWidth={2} />
           No account needed
         </span>
-        {env.paymentMode === "test" && (
+        {showSampleDataButton && (
           <Button
             type="button"
             variant="outline"
