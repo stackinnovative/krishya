@@ -11,7 +11,7 @@ import type { OrderStatus } from "../types/order.type.js";
 import type { ClientSession } from "mongoose";
 
 export interface IOrderRepository {
-  create(orderEntity: Order): Promise<Order>;
+  create(orderEntity: Order, session?: ClientSession): Promise<Order>;
 
   save(orderEntity: Order): Promise<Order>;
 

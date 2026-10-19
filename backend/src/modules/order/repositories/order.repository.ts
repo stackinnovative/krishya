@@ -30,10 +30,11 @@ const { ObjectId } = Types;
 export class OrderRepository implements IOrderRepository {
   /* ================= CREATE ================= */
 
-  async create(orderEntity: Order): Promise<Order> {
+  async create(orderEntity: Order, session?: ClientSession): Promise<Order> {
     const persistenceData = OrderMapper.toPersistence(orderEntity);
 
-    const created = await OrderModel.create(persistenceData);
+    // The array form is the only one Model.create accepts a session with.
+    const [created] = await OrderModel.create([persistenceData], session ? { session } : {});
 
     const domainOrder = OrderMapper.toDomain(created);
 
