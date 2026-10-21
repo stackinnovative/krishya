@@ -1,15 +1,17 @@
 import express from "express";
 import cors from 'cors';
 import cookieParser from "cookie-parser";
+import { env } from "../config/env.js";
 
 const app = express();
 
-const PROD_ORIGINS = [
-  "https://artspace-w3xj.onrender.com",
-  "https://basic-ecom-1.onrender.com",
-  "https://www.artspaces.in",
-  "https://artspaces.in",
-];
+// Every request reaches Express through proxies (Render's load balancer, and
+// the Next.js /api/proxy rewrite), so without this req.ip is the proxy's IP
+// for every visitor and the per-IP rate limiters throttle the whole store as
+// one client. Trusting exactly that many hops makes Express read the real
+// client from X-Forwarded-For, while anything a client prepends itself
+// beyond those hops is still ignored - so the header can't be spoofed.
+app.set("trust proxy", env.TRUST_PROXY);
 
 // Matches http(s)://localhost or 127.0.0.1 on any port - dev servers hop
 // ports constantly (Vite on 5173, Next falling back to 3001/3002/... when
@@ -24,7 +26,9 @@ app.use(cors({
   origin: (origin, callback) => {
     // No Origin header (server-to-server calls, curl, the Razorpay webhook) - nothing to check.
     if (!origin) return callback(null, true);
-    if (isLocalDevOrigin(origin) || PROD_ORIGINS.includes(origin)) return callback(null, true);
+    // The deployed frontend's origin(s) come from CORS_ORIGINS - the Next /api/proxy rewrite forwards the
+    // browser's Origin header, so every POST/PATCH from the live site is checked against this list.
+    if (isLocalDevOrigin(origin) || env.CORS_ORIGINS.includes(origin)) return callback(null, true);
     callback(new Error(`CORS: origin "${origin}" is not allowed`));
   },
   credentials: true,
