@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import { Download } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import { downloadInvoiceApi, getOrderSummaryApi } from "@/modules/orders/api/order.api";
+import { usePaymentSync } from "@/modules/orders/hooks/usePaymentSync";
 import { SectionDecor } from "@/modules/storefront-shell/components/decor";
 import { CheckIcon, WhatsAppIcon } from "@/modules/storefront-shell/components/icons";
 
@@ -34,6 +35,7 @@ function OrderSuccessContent({ params }: { params: Promise<{ orderId: string }> 
   const { orderId } = use(params);
   const searchParams = useSearchParams();
   const guestId = searchParams.get("guestId") ?? "";
+  usePaymentSync(orderId);
 
   const { data, isLoading } = useQuery({
     queryKey: ["order-summary", orderId, guestId],
