@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Link, { useLinkStatus } from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { LogOut } from "lucide-react";
@@ -13,6 +13,18 @@ import { useSettings } from "@/modules/settings/hooks/useSettings";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import { DEFAULT_STORE_NAME } from "@/lib/contact";
 import ConfirmModal from "./ConfirmModal";
+
+/**
+ * Small spinner on the nav item being opened. There's no route-level
+ * loading.tsx (it blanked the whole screen on every tab change), so the
+ * current page stays up until the next one is ready - this shows the click
+ * registered meanwhile. Must render inside the Link (useLinkStatus).
+ */
+function NavPendingSpinner() {
+  const { pending } = useLinkStatus();
+  if (!pending) return null;
+  return <span className="ml-auto h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent opacity-70" />;
+}
 
 export default function AdminSidebar({ open, onNavigate }: { open: boolean; onNavigate: () => void }) {
   const pathname = usePathname();
@@ -75,6 +87,7 @@ export default function AdminSidebar({ open, onNavigate }: { open: boolean; onNa
             >
               <Icon size={17} strokeWidth={1.7} />
               <span>{item.label}</span>
+              <NavPendingSpinner />
             </Link>
           );
         })}

@@ -32,7 +32,7 @@ export const useCheckoutItems = () => {
   return useQuery({ queryKey: [...cartKeys.checkoutItems, guestId], queryFn: () => getCheckoutApi(guestId), enabled: !!guestId });
 };
 
-const invalidateCartViews = (queryClient: ReturnType<typeof useQueryClient>) => {
+export const invalidateCartViews = (queryClient: ReturnType<typeof useQueryClient>) => {
   queryClient.invalidateQueries({ queryKey: cartKeys.cart });
   queryClient.invalidateQueries({ queryKey: cartKeys.count });
   queryClient.invalidateQueries({ queryKey: cartKeys.checkoutItems });

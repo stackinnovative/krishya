@@ -16,6 +16,7 @@ import { openRazorpayCheckoutFunction, openRazorpayCheckoutTestFunction } from "
 import { useCart } from "@/modules/cart/hooks/useCart";
 import { createOrderApi, verifyPaymentApi } from "@/modules/orders/api/order.api";
 import { CHECKOUT_RULES, normalizeIndianPhone, type CheckoutForm } from "@/modules/orders/utils/checkout-validation";
+import PaymentConfirmingOverlay from "@/modules/orders/components/PaymentConfirmingOverlay";
 import Button from "@/modules/storefront-shell/components/Button";
 import StoreField, { FieldError, storeInputClass as inputClass } from "@/modules/storefront-shell/components/StoreField";
 import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
@@ -64,6 +65,8 @@ export default function CheckoutPage() {
   };
 
   const { mutateAsync: createOrder, isPending } = useMutation({ mutationFn: createOrderApi });
+  // True from Razorpay reporting success until the success page replaces this one.
+  const [confirmingPayment, setConfirmingPayment] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -82,10 +85,24 @@ export default function CheckoutPage() {
       if (!order) throw new Error("no order");
 
       const details = { storeName, prefill: { name: form.name, email: form.email, contact: phone } };
-      const goToSuccess = (orderId: string) => router.push(`/checkout/success/${orderId}?guestId=${getGuestId()}`);
+      const successUrl = (orderId: string) => `/checkout/success/${orderId}?guestId=${getGuestId()}`;
+      // Load the success page while the shopper is still paying, so the switch after payment is instant.
+      router.prefetch(successUrl(String((order.notes as Record<string, string>).appOrderId)));
+      const goToSuccess = (orderId: string) => {
+        setConfirmingPayment(true);
+        router.push(successUrl(orderId));
+      };
 
       if (env.paymentMode === "test") {
-        openRazorpayCheckoutTestFunction(order, details, goToSuccess, (paymentResponse) => verifyPaymentApi(paymentResponse));
+        openRazorpayCheckoutTestFunction(order, details, goToSuccess, async (paymentResponse) => {
+          setConfirmingPayment(true);
+          try {
+            await verifyPaymentApi(paymentResponse);
+          } catch (err) {
+            setConfirmingPayment(false);
+            throw err;
+          }
+        });
       } else {
         openRazorpayCheckoutFunction(order, details, goToSuccess);
       }
@@ -109,6 +126,7 @@ export default function CheckoutPage() {
   return (
     <section className="relative isolate mx-auto max-w-[1200px] overflow-clip px-4 pb-[clamp(56px,7vw,104px)] pt-[clamp(28px,4.4vw,64px)] sm:px-[clamp(20px,4vw,56px)]">
       <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />
+      {confirmingPayment && <PaymentConfirmingOverlay />}
       <SectionDecor variant="b" />
 
       <div className="mb-[clamp(24px,3vw,40px)] flex flex-wrap items-center gap-3.5">
