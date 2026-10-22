@@ -14,7 +14,8 @@ import AdminTable, { type AdminTableColumn } from "@/modules/admin-shell/compone
 import TruncatedText from "@/modules/admin-shell/components/TruncatedText";
 import SearchableSelect from "@/modules/admin-shell/components/SearchableSelect";
 import { blackPillButton, iconButtonStyle, whitePillButton } from "@/modules/admin-shell/style-helpers";
-import { downloadCsv } from "@/modules/admin-shell/utils/csv";
+import { downloadCsv, storeCsvFileName } from "@/modules/admin-shell/utils/csv";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { useAdminCategories, useSaveCategory, useToggleCategoryStatus } from "../hooks/useCategories";
 import type { CategoryListItem } from "../types/category.type";
 import { CATEGORY_ICON_MAP, CATEGORY_ICON_OPTIONS, type CategoryIconName } from "../constants/category-icons";
@@ -55,6 +56,7 @@ export default function CategoriesPageContent({
   sort: CategorySortValue;
   onSortChange: (v: CategorySortValue) => void;
 }) {
+  const { storeName } = useStoreContact();
   const [filter, setFilter] = useState<Filter>("All");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -108,7 +110,7 @@ export default function CategoriesPageContent({
 
   const exportCsv = () => {
     downloadCsv(
-      "artspace-categories.csv",
+      storeCsvFileName(storeName, "categories"),
       ["Name", "Slug", "Icon", "Sort order", "Description", "Status"],
       categories.map((c) => [c.name, c.slug, c.icon, String(c.sortOrder), c.description ?? "", c.isActive ? "Active" : "Inactive"]),
     );

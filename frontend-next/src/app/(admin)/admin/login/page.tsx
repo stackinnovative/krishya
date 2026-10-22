@@ -90,7 +90,7 @@ function AdminLoginForm() {
             required
             value={form.email}
             onChange={(v) => set("email", v as string)}
-            placeholder="admin@artspace.in"
+            placeholder="admin@krishayayurveda.in"
             error={errors.email}
             autoComplete="username"
           />

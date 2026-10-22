@@ -8,8 +8,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * that defines "what a brand-new store looks like" instead of two copies drifting apart.
  */
 export const SETTINGS_DEFAULTS: Omit<SettingsProps, "id"> = {
-    storeName: "Artspace",
-    email: "hello@artspaces.in",
+    storeName: "Krishay Ayurveda",
+    email: "hello@krishayayurveda.in",
     phone: "",
     logo: null,
     deliveryCharge: 60,

@@ -16,7 +16,8 @@ import AdminTable, { type AdminTableColumn } from "@/modules/admin-shell/compone
 import TruncatedText from "@/modules/admin-shell/components/TruncatedText";
 import SearchableSelect from "@/modules/admin-shell/components/SearchableSelect";
 import { blackPillButton, iconButtonStyle, softPillButton, whitePillButton } from "@/modules/admin-shell/style-helpers";
-import { downloadCsv } from "@/modules/admin-shell/utils/csv";
+import { downloadCsv, storeCsvFileName } from "@/modules/admin-shell/utils/csv";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { useAdminProducts, useToggleProductStatus } from "@/modules/products/hooks/useAdminProducts";
 import { useAdminCategories } from "@/modules/categories/hooks/useCategories";
 import ProductWizard from "@/modules/products/components/wizard/ProductWizard";
@@ -53,6 +54,7 @@ function ProductThumb({ image, size }: { image?: string; size: number }) {
 }
 
 export default function ProductsPage() {
+  const { storeName } = useStoreContact();
   const [search, setSearch] = useState("");
   // A status pill (All/Featured/Active/Inactive) or a category id - one pill row, one choice, like Orders.
   const [filter, setFilter] = useState<string>("All");
@@ -147,7 +149,7 @@ export default function ProductsPage() {
 
   const exportCsv = () => {
     downloadCsv(
-      "artspace-products.csv",
+      storeCsvFileName(storeName, "products"),
       ["Name", "Category", "Type", "Price", "MRP", "Discount %", "Featured", "Status"],
       products.map((p) => [
         p.name,

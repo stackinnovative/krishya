@@ -1,3 +1,8 @@
+import { toSlug } from "@/modules/blog/blog-form";
+
+/** "Krishay Ayurveda" + "orders" -> "krishay-ayurveda-orders.csv" - exports carry the store name from Business Settings. */
+export const storeCsvFileName = (storeName: string, name: string) => `${toSlug(storeName)}-${name}.csv`;
+
 function escapeCsvCell(value: string): string {
   if (/[",\n]/.test(value)) {
     return `"${value.replace(/"/g, '""')}"`;

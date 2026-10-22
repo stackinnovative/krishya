@@ -13,7 +13,8 @@ import Pagination from "@/modules/admin-shell/components/Pagination";
 import AdminTable, { type AdminTableColumn } from "@/modules/admin-shell/components/AdminTable";
 import TruncatedText from "@/modules/admin-shell/components/TruncatedText";
 import { whitePillButton } from "@/modules/admin-shell/style-helpers";
-import { downloadCsv } from "@/modules/admin-shell/utils/csv";
+import { downloadCsv, storeCsvFileName } from "@/modules/admin-shell/utils/csv";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { formatDate } from "@/lib/format";
 import { useAdminOrders } from "@/modules/orders/hooks/useAdminOrders";
 import { ORDER_STATUS_LABEL } from "@/modules/orders/utils/order-status";
@@ -36,6 +37,7 @@ const ORDER_SORT_OPTIONS = [
 type OrderSortValue = (typeof ORDER_SORT_OPTIONS)[number]["value"];
 
 export default function OrdersPage() {
+  const { storeName } = useStoreContact();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"All" | OrderStatus>("All");
   const [sort, setSort] = useState<OrderSortValue>("newest");
@@ -88,7 +90,7 @@ export default function OrdersPage() {
 
   const exportCsv = () => {
     downloadCsv(
-      "artspace-orders.csv",
+      storeCsvFileName(storeName, "orders"),
       ["Order Number", "Customer Name", "Customer Phone", "Date", "Items", "Total", "Status"],
       orders.map((o) => [o.orderNumber, o.customerName, o.customerPhone, formatDate(o.createdAt), o.itemsCount, o.totalAmount, ORDER_STATUS_LABEL[o.orderStatus]]),
     );
