@@ -12,7 +12,8 @@ import FilterPills, { type FilterPillOption } from "@/modules/admin-shell/compon
 import CustomDateRangeModal from "@/modules/admin-shell/components/CustomDateRangeModal";
 import Pagination from "@/modules/admin-shell/components/Pagination";
 import { barColor, whitePillButton } from "@/modules/admin-shell/style-helpers";
-import { downloadCsv } from "@/modules/admin-shell/utils/csv";
+import { downloadCsv, storeCsvFileName } from "@/modules/admin-shell/utils/csv";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getAdminRevenueReportApi } from "@/modules/reports/api/reports.api";
 import { useRevenueReport } from "@/modules/reports/hooks/useRevenueReport";
@@ -99,6 +100,7 @@ function RevenueOverviewSkeleton() {
 }
 
 export default function RevenuePage() {
+  const { storeName } = useStoreContact();
   const [range, setRange] = useState<ReportDateRangeOption>("this_month");
   const [customFrom, setCustomFrom] = useState("");
   const [customTo, setCustomTo] = useState("");
@@ -156,7 +158,7 @@ export default function RevenuePage() {
       // showing.
       const res = await getAdminRevenueReportApi({ ...baseQuery, detail: true });
       const all = res.data.dailyData;
-      downloadCsv("artspace-revenue-full.csv", ["Date", "Orders", "Revenue"], all.map((r) => [r.date, r.orders, r.revenue]));
+      downloadCsv(storeCsvFileName(storeName, "revenue-full"), ["Date", "Orders", "Revenue"], all.map((r) => [r.date, r.orders, r.revenue]));
     } finally {
       setExportingDetail(false);
     }

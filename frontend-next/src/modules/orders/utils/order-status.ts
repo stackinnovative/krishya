@@ -2,7 +2,7 @@ import type { OrderStatus } from "../types/order.type";
 
 /**
  * The imported design's statuses (Pending/Processing/Shipped/Delivered/
- * Cancelled) are a generic mockup vocabulary; Artspace's real backend order
+ * Cancelled) are a generic mockup vocabulary; the real backend order
  * lifecycle is created -> confirmed -> accepted -> dispatched -> delivered,
  * or cancelled at any point (see backend/src/modules/order). This maps the
  * real statuses onto display labels and the design's colour system so the

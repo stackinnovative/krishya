@@ -15,7 +15,8 @@ import FormModal, { type FormFieldDef } from "@/modules/admin-shell/components/F
 import StatusBadge from "@/modules/admin-shell/components/StatusBadge";
 import ConfirmModal from "@/modules/admin-shell/components/ConfirmModal";
 import { blackPillButton, whitePillButton } from "@/modules/admin-shell/style-helpers";
-import { downloadCsv } from "@/modules/admin-shell/utils/csv";
+import { downloadCsv, storeCsvFileName } from "@/modules/admin-shell/utils/csv";
+import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import { formatDate } from "@/lib/format";
 import { useAdminUsers, useCreateAdminUser, useToggleUserStatus } from "@/modules/users/hooks/useAdminUsers";
 import UserDetailModal from "@/modules/users/components/UserDetailModal";
@@ -68,6 +69,7 @@ function RoleBadge({ role }: { role: "admin" | "user" }) {
 }
 
 export default function UsersPage() {
+  const { storeName } = useStoreContact();
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<UserSortValue>("newest");
   const [filter, setFilter] = useState<UserFilter>("all");
@@ -127,7 +129,7 @@ export default function UsersPage() {
 
   const exportCsv = () => {
     downloadCsv(
-      "artspace-users.csv",
+      storeCsvFileName(storeName, "users"),
       ["Name", "Email", "Role", "Status", "Phone", "City", "State", "Joined"],
       users.map((u) => [
         u.name,
