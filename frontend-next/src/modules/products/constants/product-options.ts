@@ -1,5 +1,5 @@
 /** Mirrors backend/src/modules/product/types/product.type.ts PRODUCT_TYPES, VARIANT_UNITS and PRODUCT_LIMITS exactly. */
-export const PRODUCT_TYPES = ["thailam", "churnam", "arishtam", "gulika", "keram", "face-pack"] as const;
+export const PRODUCT_TYPES = ["thailam", "keram", "face-pack"] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
 const PRODUCT_TYPE_VALUES: readonly string[] = PRODUCT_TYPES;
@@ -9,9 +9,6 @@ export const isProductType = (v: string | null | undefined): v is ProductType =>
 /** How each form reads on cards, filters and the product page (as in the design: "Thailam · Oil"). */
 export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
   thailam: "Thailam · Oil",
-  churnam: "Churnam · Powder",
-  arishtam: "Arishtam · Liquid",
-  gulika: "Gulika · Tablet",
   keram: "Keram · Hair Oil",
   "face-pack": "Herbal Face Pack",
 };
