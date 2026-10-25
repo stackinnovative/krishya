@@ -55,7 +55,7 @@ export const FAQ_SEED: { group: string; faqs: { question: string; answer: string
             },
             {
                 question: "What is the shelf life?",
-                answer: "Oils and churnams are best used within 2–3 years of manufacture. The manufacturing and expiry dates are printed on every pack.",
+                answer: "Our oils can be used for up to 3 years from the date of manufacture. The manufacturing and expiry dates are printed on every bottle.",
             },
             {
                 question: "Are the products suitable during pregnancy?",
