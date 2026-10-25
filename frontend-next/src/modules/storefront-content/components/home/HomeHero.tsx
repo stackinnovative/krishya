@@ -67,15 +67,15 @@ const toSlides = ({ heroes, storeName, defaultSpotlight }: Props): Slide[] =>
     : [
         {
           id: "default",
-          eyebrow: "Authentic Kerala Ayurveda",
+          eyebrow: "Since 1948",
           title: storeName,
-          subtitle: "Pure Kerala remedies, made by hand in small batches. From the House of Cochin Arya Vaidyasala.",
+          subtitle: "Classical Ayurvedic wisdom, thoughtfully curated for today. From the house of Cochin Arya Vaidyasala.",
           image: DEFAULT_HERO_IMAGE,
           buttonLabel: "Shop Now",
           buttonUrl: "/products",
           secondaryLabel: "Our Story",
           secondaryUrl: "/about",
-          badgeText: "AYUSH Certified",
+          badgeText: "GMP Certified",
           spotlightLabel: "Bestseller",
           spotlightItem: defaultSpotlight,
         },
@@ -311,9 +311,9 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
 
       <div className="grid grid-cols-2 gap-2.5">
         {[
-          { icon: <ShieldIcon size={18} strokeWidth={1.5} />, label: "AYUSH Certified" },
+          { icon: <ShieldIcon size={18} strokeWidth={1.5} />, label: "GMP Certified" },
           { icon: <SproutIcon size={18} strokeWidth={1.5} />, label: "100% Natural" },
-          { icon: <MortarIcon size={18} strokeWidth={1.5} />, label: "Kerala Recipes" },
+          { icon: <MortarIcon size={18} strokeWidth={1.5} />, label: "Since 1948" },
           { icon: <LockIcon size={18} strokeWidth={1.5} />, label: "Secure Payments" },
         ].map((t) => (
           <span key={t.label} className="flex items-center gap-2 rounded-xl bg-ka-mint p-3 text-[12.5px] font-semibold text-ka-green">
@@ -340,9 +340,9 @@ export function NeedCircle({ need, className, iconSize }: { need: HealthNeed; cl
 }
 
 const TRUST_ITEMS = [
-  { icon: <ShieldCheckIcon size={22} strokeWidth={1.5} />, title: "AYUSH Certified", sub: "Licensed manufacturing" },
+  { icon: <ShieldCheckIcon size={22} strokeWidth={1.5} />, title: "GMP Certified", sub: "Good manufacturing practice" },
   { icon: <SproutIcon size={22} strokeWidth={1.5} />, title: "100% Natural Herbs", sub: "No synthetic colours" },
-  { icon: <MortarIcon size={22} strokeWidth={1.5} />, title: "Traditional Kerala Recipes", sub: "From classical texts" },
+  { icon: <MortarIcon size={22} strokeWidth={1.5} />, title: "Classical Formulations", sub: "A heritage since 1948" },
   { icon: <LockIcon size={22} strokeWidth={1.5} />, title: "Secure Payments", sub: "UPI, cards & net banking" },
 ];
 
