@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: storeName,
       template: `%s | ${storeName}`,
     },
-    description: "Authentic Kerala Ayurveda - classical thailams, churnams, arishtams and hair oils, made by hand in small batches and delivered across India.",
+    description: "Ayurvedic wellness from the house of Cochin Arya Vaidyasala - skincare oils, hair oils and face packs, delivered across India.",
   };
 }
 

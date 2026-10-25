@@ -29,7 +29,7 @@ export class GetAllProductForUserUseCase implements IGetAllProductForUserUseCase
       query.category = filters.categoryId;
     }
 
-    /* ---------- type filter (thailam, churnam ...) ---------- */
+    /* ---------- type filter (thailam, keram ...) ---------- */
     if (PRODUCT_TYPES.includes(filters.type)) {
       query.type = filters.type;
     }

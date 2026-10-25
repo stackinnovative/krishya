@@ -67,15 +67,15 @@ const toSlides = ({ heroes, storeName, defaultSpotlight }: Props): Slide[] =>
     : [
         {
           id: "default",
-          eyebrow: "Authentic Kerala Ayurveda",
+          eyebrow: "Since 1948",
           title: storeName,
-          subtitle: "Pure Kerala remedies, made by hand in small batches. From the House of Cochin Arya Vaidyasala.",
+          subtitle: "Classical Ayurvedic wisdom, thoughtfully curated for today. From the house of Cochin Arya Vaidyasala.",
           image: DEFAULT_HERO_IMAGE,
           buttonLabel: "Shop Now",
           buttonUrl: "/products",
           secondaryLabel: "Our Story",
           secondaryUrl: "/about",
-          badgeText: "AYUSH Certified",
+          badgeText: "GMP Certified",
           spotlightLabel: "Bestseller",
           spotlightItem: defaultSpotlight,
         },
@@ -208,7 +208,7 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
         className="flex h-12 items-center gap-2.5 rounded-full border border-ka-line-soft bg-white px-4 text-left text-[14.5px] text-ka-grey shadow-[0_4px_14px_-10px_rgba(31,77,58,.4)]"
       >
         <SearchIcon size={19} strokeWidth={1.7} className="flex-none text-ka-green" />
-        Search oils, churnams, hair care…
+        Search oils, face packs, hair care…
       </button>
 
       <div className="relative overflow-hidden rounded-3xl bg-ka-mint px-[22px] pt-7" aria-roledescription={slides.length > 1 ? "carousel" : undefined}>
@@ -311,9 +311,9 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
 
       <div className="grid grid-cols-2 gap-2.5">
         {[
-          { icon: <ShieldIcon size={18} strokeWidth={1.5} />, label: "AYUSH Certified" },
+          { icon: <ShieldIcon size={18} strokeWidth={1.5} />, label: "GMP Certified" },
           { icon: <SproutIcon size={18} strokeWidth={1.5} />, label: "100% Natural" },
-          { icon: <MortarIcon size={18} strokeWidth={1.5} />, label: "Kerala Recipes" },
+          { icon: <MortarIcon size={18} strokeWidth={1.5} />, label: "Since 1948" },
           { icon: <LockIcon size={18} strokeWidth={1.5} />, label: "Secure Payments" },
         ].map((t) => (
           <span key={t.label} className="flex items-center gap-2 rounded-xl bg-ka-mint p-3 text-[12.5px] font-semibold text-ka-green">
@@ -340,9 +340,9 @@ export function NeedCircle({ need, className, iconSize }: { need: HealthNeed; cl
 }
 
 const TRUST_ITEMS = [
-  { icon: <ShieldCheckIcon size={22} strokeWidth={1.5} />, title: "AYUSH Certified", sub: "Licensed manufacturing" },
+  { icon: <ShieldCheckIcon size={22} strokeWidth={1.5} />, title: "GMP Certified", sub: "Good manufacturing practice" },
   { icon: <SproutIcon size={22} strokeWidth={1.5} />, title: "100% Natural Herbs", sub: "No synthetic colours" },
-  { icon: <MortarIcon size={22} strokeWidth={1.5} />, title: "Traditional Kerala Recipes", sub: "From classical texts" },
+  { icon: <MortarIcon size={22} strokeWidth={1.5} />, title: "Classical Formulations", sub: "A heritage since 1948" },
   { icon: <LockIcon size={22} strokeWidth={1.5} />, title: "Secure Payments", sub: "UPI, cards & net banking" },
 ];
 

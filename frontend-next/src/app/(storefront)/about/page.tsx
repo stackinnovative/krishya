@@ -168,7 +168,7 @@ export default async function AboutPage() {
         <SectionDecor variant="b" />
         <div className="mx-auto flex max-w-[760px] flex-col items-center gap-[18px] px-[clamp(20px,4vw,56px)] text-center">
           <h2 className={H2}>Bring Kerala Ayurveda home</h2>
-          <p className="m-0 text-base leading-[1.6] text-ka-body">Explore our range of thailams, churnams, arishtams and more.</p>
+          <p className="m-0 text-base leading-[1.6] text-ka-body">Explore our range of Ayurvedic oils, face packs and more.</p>
           <Link href="/products" className="flex h-[52px] items-center whitespace-nowrap rounded-lg bg-ka-green px-8 text-[15px] font-semibold text-ka-cream hover:bg-ka-green-dark">
             Shop the Collection
           </Link>

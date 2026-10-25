@@ -2,7 +2,7 @@ import { Types, type ClientSession } from "mongoose";
 import type { IdName } from "../../../core/shared/types/id.name.type.js";
 
 /** The form a preparation comes in - the second shop filter next to category. Labels live on the frontend. */
-export const PRODUCT_TYPES = ["thailam", "churnam", "arishtam", "gulika", "keram", "face-pack"] as const;
+export const PRODUCT_TYPES = ["thailam", "keram", "face-pack"] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
 /** What a variant's quantity is counted in: 200 ml, 100 g, 60 tablets. */
