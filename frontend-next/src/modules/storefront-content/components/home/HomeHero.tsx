@@ -208,7 +208,7 @@ function MobileHero({ slides, loading, needs, active, goTo }: { slides: Slide[];
         className="flex h-12 items-center gap-2.5 rounded-full border border-ka-line-soft bg-white px-4 text-left text-[14.5px] text-ka-grey shadow-[0_4px_14px_-10px_rgba(31,77,58,.4)]"
       >
         <SearchIcon size={19} strokeWidth={1.7} className="flex-none text-ka-green" />
-        Search oils, churnams, hair care…
+        Search oils, face packs, hair care…
       </button>
 
       <div className="relative overflow-hidden rounded-3xl bg-ka-mint px-[22px] pt-7" aria-roledescription={slides.length > 1 ? "carousel" : undefined}>

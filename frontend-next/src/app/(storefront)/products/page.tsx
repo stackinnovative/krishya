@@ -7,7 +7,7 @@ import { prefetchShopPage, toProductType } from "./prefetch";
 
 export const metadata: Metadata = {
   title: "Shop",
-  description: "Classical Kerala Ayurveda preparations - thailams, churnams, arishtams and hair oils - chosen by health need.",
+  description: "Ayurvedic wellness products - skincare oils, hair oils and face packs - chosen by health need.",
 };
 
 type Search = { searchParams: Promise<{ categoryId?: string; type?: string; search?: string; sort?: string }> };

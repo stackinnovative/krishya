@@ -10,7 +10,7 @@ import { useProductSearch } from "@/modules/products/hooks/useStorefrontProducts
 import { useStorefrontUI } from "./StorefrontUIProvider";
 import { CloseIcon, LeafIcon, SearchIcon } from "./icons";
 
-const POPULAR_SEARCHES = ["Hair oil", "Thailam", "Digestion", "Arishtam"];
+const POPULAR_SEARCHES = ["Hair oil", "Skincare oil", "Face pack", "Massage oil"];
 const DEBOUNCE_MS = 250;
 
 /** Drop-down product search opened from the header search button. Enter (or "See all results") hands the query to the Shop page. */
@@ -63,7 +63,7 @@ function SearchPanel({ onClose }: { onClose: () => void }) {
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search oils, churnams, hair care…"
+              placeholder="Search oils, face packs, hair care…"
               aria-label="Search products"
               enterKeyHint="search"
               className="min-w-0 flex-1 border-none bg-transparent py-1.5 font-display text-[clamp(22px,3vw,30px)] text-ka-green outline-none placeholder:text-ka-green/45"
