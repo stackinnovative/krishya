@@ -15,7 +15,6 @@ type CategorySeed = {
 // The "Shop by Health Need" list from the design, in display order.
 const CATEGORY_SEED_DATA: CategorySeed[] = [
   { name: "Joint & Muscle Care", description: "Oils and preparations for joint comfort and easy movement.", icon: "Bone" },
-  { name: "Digestive Health", description: "Churnams and arishtams that support healthy digestion.", icon: "Soup" },
   { name: "Hair Care", description: "Keram oils for scalp and hair oiling rituals.", icon: "Sprout" },
   { name: "Skin Care", description: "Classical oils and packs for daily skincare rituals.", icon: "Sparkles" },
   { name: "Immunity", description: "Everyday preparations that support natural resilience.", icon: "ShieldPlus" },
