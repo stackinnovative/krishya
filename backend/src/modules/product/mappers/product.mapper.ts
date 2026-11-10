@@ -25,7 +25,7 @@ export type ProductRecord = {
   name: string;
   slug: string;
   category: Id | PopulatedCategory | null;
-  type: ProductType;
+  type?: ProductType | undefined;
   shortDescription: string;
   description: string;
   ingredients?: IIngredient[];
@@ -45,8 +45,8 @@ export type ProductRecord = {
 /** The non-variant fields a details edit writes - variants change only through their own endpoints, so an edit never overwrites live stock. */
 export type ProductDetailsPersistence = Pick<
   ProductRecord,
-  "name" | "type" | "shortDescription" | "description" | "ingredients" | "howToUse" | "storage" | "badge" | "images" | "isActive" | "isFeatured"
-> & { category: Types.ObjectId };
+  "name" | "shortDescription" | "description" | "ingredients" | "howToUse" | "storage" | "badge" | "images" | "isActive" | "isFeatured"
+> & { category: Types.ObjectId; type?: ProductType };
 
 export type ProductPersistence = ProductDetailsPersistence & {
   slug: string;
@@ -131,7 +131,7 @@ export class ProductMapper {
     return {
       name: product.name,
       category: new Types.ObjectId(product.category),
-      type: product.type,
+      ...(product.type ? { type: product.type } : {}),
       shortDescription: product.shortDescription,
       description: product.description,
       ingredients: product.ingredients,

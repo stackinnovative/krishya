@@ -70,7 +70,7 @@ export default function ProductWizard({ productId, onClose }: { productId: strin
     setDetails({
       name: p.name,
       categoryId: p.category.id,
-      type: p.type,
+      type: p.type ?? "",
       shortDescription: p.shortDescription,
       description: p.description,
       badge: p.badge,
@@ -117,7 +117,10 @@ export default function ProductWizard({ productId, onClose }: { productId: strin
     if (n > step) {
       for (let i = step; i < n; i++) {
         const v = validateStepIndex(i);
-        if (v !== true) return toast.error(v);
+        if (v !== true) {
+          setStep(i);
+          return toast.error(v);
+        }
       }
     }
     setStep(n);
@@ -172,7 +175,7 @@ export default function ProductWizard({ productId, onClose }: { productId: strin
         details: {
           name: details.name.trim(),
           categoryId: details.categoryId,
-          type: details.type as ProductType,
+          type: (details.type || undefined) as ProductType | undefined,
           shortDescription: details.shortDescription.trim(),
           description: details.description.trim(),
           ingredients: tabs.ingredients
@@ -243,23 +246,29 @@ export default function ProductWizard({ productId, onClose }: { productId: strin
           <div className="mt-[18px] flex items-center gap-2 overflow-x-auto pb-1.5">
             {STEPS.map((label, i) => (
               <div key={label} className="flex items-center gap-2">
-                <div
-                  onClick={() => !isSubmitting && goStep(i)}
-                  className="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full text-[11.5px] font-bold"
-                  style={{
-                    background: i <= step ? "#141414" : "#eeeeec",
-                    color: i <= step ? "#fff" : "#8a8a8e",
-                    cursor: isSubmitting ? "not-allowed" : "pointer",
-                  }}
+                <button
+                  type="button"
+                  onClick={() => goStep(i)}
+                  disabled={isSubmitting}
+                  aria-current={i === step ? "step" : undefined}
+                  className="flex items-center gap-2 disabled:cursor-not-allowed"
                 >
-                  {i + 1}
-                </div>
-                <span
-                  className="hidden whitespace-nowrap text-xs font-semibold xs:inline"
-                  style={{ color: i === step ? "#141414" : "#8a8a8e" }}
-                >
-                  {label}
-                </span>
+                  <span
+                    className="flex h-[26px] w-[26px] flex-none items-center justify-center rounded-full text-[11.5px] font-bold"
+                    style={{
+                      background: i <= step ? "#141414" : "#eeeeec",
+                      color: i <= step ? "#fff" : "#8a8a8e",
+                    }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span
+                    className="hidden whitespace-nowrap text-xs font-semibold xs:inline"
+                    style={{ color: i === step ? "#141414" : "#8a8a8e" }}
+                  >
+                    {label}
+                  </span>
+                </button>
                 {i < STEPS.length - 1 && <div className="h-0.5 min-w-[12px] flex-1" style={{ background: i < step ? "#141414" : "#eeeeec" }} />}
               </div>
             ))}
@@ -296,7 +305,6 @@ export default function ProductWizard({ productId, onClose }: { productId: strin
                   onChange={(v) => setDetails((d) => ({ ...d, type: v as ProductType }))}
                   options={PRODUCT_TYPE_OPTIONS}
                   placeholder="Choose a type"
-                  required
                   error={detailsErrors.type}
                 />
               </div>

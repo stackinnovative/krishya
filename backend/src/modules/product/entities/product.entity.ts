@@ -26,7 +26,7 @@ export type ProductVariant = {
 export type ProductContent = {
   name: string;
   category: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   shortDescription: string;
   description: string;
   ingredients?: IIngredient[] | undefined;
@@ -86,7 +86,7 @@ export class Product {
   public readonly name: string;
   public readonly slug: string;
   public readonly category: string;
-  public readonly type: ProductType;
+  public readonly type: ProductType | undefined;
   public readonly shortDescription: string;
   public readonly description: string;
   public readonly ingredients: IIngredient[];
@@ -107,7 +107,7 @@ export class Product {
 
     if (!props.category) throw new Error("Product category is required");
 
-    if (!PRODUCT_TYPES.includes(props.type)) {
+    if (props.type && !PRODUCT_TYPES.includes(props.type)) {
       throw new Error(`Product type must be one of: ${PRODUCT_TYPES.join(", ")}`);
     }
 
@@ -127,7 +127,9 @@ export class Product {
       };
     });
 
-    if (props.images.length < 1 || props.images.length > L.imagesMax) {
+    // Drafts (inactive products) can be saved without photos; live products still need one.
+    const isActive = props.isActive ?? true;
+    if (props.images.length > L.imagesMax || (isActive && props.images.length < 1)) {
       throw new Error(`Product needs 1 to ${L.imagesMax} photos`);
     }
     this.images = props.images.map((image) => {
@@ -147,7 +149,7 @@ export class Product {
     this.type = props.type;
     this.variants = props.variants.map(checkVariant);
     this.defaultVariantId = props.defaultVariantId ?? null;
-    this.isActive = props.isActive ?? true;
+    this.isActive = isActive;
     this.isFeatured = props.isFeatured ?? false;
   }
 

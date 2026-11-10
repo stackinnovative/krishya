@@ -15,7 +15,7 @@ export const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {
 
 export const PRODUCT_TYPE_OPTIONS = PRODUCT_TYPES.map((value) => ({ value, label: PRODUCT_TYPE_LABELS[value] }));
 
-export const VARIANT_UNITS = ["ml", "g", "tablets", "capsules"] as const;
+export const VARIANT_UNITS = ["ml", "g", "tablets", "capsules", "set"] as const;
 export type VariantUnit = (typeof VARIANT_UNITS)[number];
 
 export const PRODUCT_LIMITS = {

@@ -56,10 +56,10 @@ const productSchema = new Schema<IProduct>(
       required: true,
     },
 
+    // Optional: combos mix oils, face packs and powders, so they have no single type.
     type: {
       type: String,
       enum: PRODUCT_TYPES,
-      required: true,
     },
 
     shortDescription: {
@@ -98,7 +98,11 @@ const productSchema = new Schema<IProduct>(
         },
       ],
       validate: {
-        validator: (v: IImage[]) => v.length > 0,
+        // Drafts (inactive products) can be saved without photos; live products still need one.
+        validator: function (v: IImage[]) {
+          const isDraft = "isActive" in this && this.isActive === false;
+          return v.length > 0 || isDraft;
+        },
         message: "At least one product photo is required",
       },
     },

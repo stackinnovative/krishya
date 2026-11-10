@@ -29,7 +29,8 @@ export const ProductContentSchema = z.object({
 
   categoryId: ObjectIdSchema.trim(),
 
-  type: z.enum(PRODUCT_TYPES, { message: "Select a product type" }),
+  // Optional: combos have no single product type.
+  type: z.enum(PRODUCT_TYPES, { message: "Select a product type" }).optional(),
 
   shortDescription: z
     .string()

@@ -39,7 +39,7 @@ export default function ProductViewModal({
               <div>
                 <div className="text-[20px] font-bold tracking-[-.01em]">{p.name}</div>
                 <div className="mt-[3px] text-[12.5px] text-[#8a8a8e]">
-                  {p.category.name} · {PRODUCT_TYPE_LABELS[p.type]} · {p.isFeatured ? "Featured" : "Standard"}
+                  {p.category.name}{p.type && ` · ${PRODUCT_TYPE_LABELS[p.type]}`} ·{p.isFeatured ? "Featured" : "Standard"}
                   {p.badge && <> · {p.badge}</>}
                 </div>
               </div>

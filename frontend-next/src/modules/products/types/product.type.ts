@@ -26,7 +26,7 @@ export type AdminVariantItem = Omit<VariantPayload, "isDefault"> & {
 export type UpdateProductPayload = {
   name: string;
   categoryId: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   shortDescription: string;
   description: string;
   ingredients: ProductIngredient[];
@@ -52,7 +52,7 @@ export type ProductListItem = {
   id: string;
   name: string;
   slug: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   price: number;
   mrp: number;
   discountPercent: number;
