@@ -6,7 +6,7 @@ import { X, Pencil, ImagePlus } from "lucide-react";
 import toast from "react-hot-toast";
 import { getOptimizedImageUrl } from "@/lib/cloudinary";
 import ImageCropModal from "./ImageCropModal";
-import { isPendingImage, type ImageFieldValue } from "./ImageDropzone";
+import { formatAspectRatio, isPendingImage, type ImageFieldValue } from "./ImageDropzone";
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -164,6 +164,7 @@ export default function MultiImageField({
         <button type="button" onClick={() => inputRef.current?.click()} className={tileClass}>
           <ImagePlus size={16} />
           Add photo
+          <span className="text-[9.5px] font-normal text-[#a0a0a4]">{formatAspectRatio(aspectRatio)}</span>
         </button>
       )}
 

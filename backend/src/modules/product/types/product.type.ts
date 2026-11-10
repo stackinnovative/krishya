@@ -5,8 +5,8 @@ import type { IdName } from "../../../core/shared/types/id.name.type.js";
 export const PRODUCT_TYPES = ["thailam", "keram", "face-pack"] as const;
 export type ProductType = (typeof PRODUCT_TYPES)[number];
 
-/** What a variant's quantity is counted in: 200 ml, 100 g, 60 tablets. */
-export const VARIANT_UNITS = ["ml", "g", "tablets", "capsules"] as const;
+/** What a variant's quantity is counted in: 200 ml, 100 g, 60 tablets, 1 set (combos). */
+export const VARIANT_UNITS = ["ml", "g", "tablets", "capsules", "set"] as const;
 export type VariantUnit = (typeof VARIANT_UNITS)[number];
 
 export const PRODUCT_LIMITS = {
@@ -99,7 +99,7 @@ type ProductContent = {
   id: string;
   name: string;
   slug: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   shortDescription: string;
   description: string;
   ingredients: IIngredient[];
@@ -129,7 +129,7 @@ export type UserProductListView = {
   id: string;
   name: string;
   slug: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   shortDescription: string;
   badge: string;
   image: string;
@@ -144,7 +144,7 @@ export type ProductListView = {
   id: string;
   name: string;
   slug: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   price: number;
   mrp: number;
   discountPercent: number;

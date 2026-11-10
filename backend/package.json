@@ -48,6 +48,7 @@
     "seed:admin": "tsx src/scripts/seed-admin.ts",
     "seed:categories": "tsx src/scripts/seed-categories.ts",
     "seed:tags": "tsx src/scripts/seed-tags.ts",
+    "seed:products": "tsx src/scripts/seed-products.ts",
     "migrate:product-images": "tsx src/scripts/migrate-product-card-feature-image.ts",
     "migrate:tote-bag-child-names": "tsx src/scripts/migrate-tote-bag-child-names.ts",
     "migrate:title-case-names": "tsx src/scripts/migrate-title-case-names.ts"

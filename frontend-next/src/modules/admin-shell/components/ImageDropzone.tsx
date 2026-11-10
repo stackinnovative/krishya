@@ -31,6 +31,15 @@ export type ImageFieldValue = ImageValue | PendingImage;
 export const isPendingImage = (v: ImageFieldValue | null | undefined): v is PendingImage =>
   !!v && "pending" in v && v.pending === true;
 
+/** Turns a width / height ratio into a label such as "1:1" or "4:5" for the empty upload placeholder. */
+export const formatAspectRatio = (ratio: number): string => {
+  for (let height = 1; height <= 12; height++) {
+    const width = Math.round(ratio * height);
+    if (Math.abs(width / height - ratio) < 0.01) return `${width}:${height}`;
+  }
+  return ratio.toFixed(2);
+};
+
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 interface CropTarget {
@@ -229,6 +238,7 @@ export default function ImageDropzone({
       >
         <ImagePlus size={20} />
         <span className="text-[12.5px] font-medium">Tap to upload a photo</span>
+        <span className="text-[11px] text-[#a0a0a4]">Ratio {formatAspectRatio(aspectRatio)}</span>
       </button>
 
       {cropModal}

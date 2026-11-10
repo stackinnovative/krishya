@@ -95,7 +95,7 @@ export default function ProductsPage() {
           <div className="min-w-0 flex-1">
             <TruncatedText text={p.name} className="text-[13px] font-semibold" />
             <div className="text-[11px] text-[#8a8a8e]">
-              {PRODUCT_TYPE_LABELS[p.type]} · {p.isFeatured ? "Featured" : "Standard"}
+              {p.type ? PRODUCT_TYPE_LABELS[p.type] : "-"} · {p.isFeatured ? "Featured" : "Standard"}
             </div>
           </div>
         </div>
@@ -154,7 +154,7 @@ export default function ProductsPage() {
       products.map((p) => [
         p.name,
         p.category?.name ?? "",
-        PRODUCT_TYPE_LABELS[p.type],
+        p.type ? PRODUCT_TYPE_LABELS[p.type] : "-",
         p.price,
         p.mrp,
         p.discountPercent,

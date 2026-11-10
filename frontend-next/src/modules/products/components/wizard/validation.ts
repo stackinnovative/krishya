@@ -10,7 +10,6 @@ export function validateDetails(details: WizardDetails): Record<string, string> 
   else if (name.length < L.nameMin || name.length > L.name) errors.name = `Product name must be between ${L.nameMin} and ${L.name} characters.`;
 
   if (!details.categoryId) errors.categoryId = "Choose a category.";
-  if (!details.type) errors.type = "Choose a product type.";
 
   const short = details.shortDescription.trim();
   if (!short) errors.shortDescription = "Short description is required.";

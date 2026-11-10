@@ -19,7 +19,7 @@ export type UserProductDetails = {
   id: string;
   name: string;
   slug: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   category: { id: string; name: string; slug: string };
   shortDescription: string;
   description: string;
@@ -37,7 +37,7 @@ export type UserProductListItem = {
   id: string;
   name: string;
   slug: string;
-  type: ProductType;
+  type?: ProductType | undefined;
   shortDescription: string;
   badge: string;
   image: string;

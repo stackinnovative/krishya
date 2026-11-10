@@ -175,7 +175,7 @@ export default function ProductDetailContent({ slug }: { slug: string }) {
           <div className="flex flex-col gap-5">
             <div className="flex flex-col gap-2.5">
               <span className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[.16em] text-ka-muted">
-                {categoryName} · {PRODUCT_TYPE_LABELS[product.type]}
+                {categoryName}{product.type && ` · ${PRODUCT_TYPE_LABELS[product.type]}`}
                 {product.badge && <span className="rounded-full bg-ka-gold px-2.5 py-1 text-[11px] font-bold tracking-[.08em] text-ka-green">{product.badge}</span>}
               </span>
               <h1 className="m-0 font-display text-[clamp(36px,3.8vw,54px)] font-medium leading-[1.05] text-ka-green">{product.name}</h1>
