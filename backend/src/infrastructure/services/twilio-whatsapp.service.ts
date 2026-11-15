@@ -43,13 +43,17 @@ export class TwilioWhatsAppService implements IWhatsAppService {
 
     try {
       // Business-initiated WhatsApp messages must use an approved Content
-      // Template. This template is a fixed test message with no variables;
-      // once the real order-confirmation template is approved, pass its
-      // variables here via contentVariables (JSON string of "1", "2", ...).
+      // Template. Body is "Hi {{1}}, thank you for your order #{{2}} at
+      // Krishay Ayurveda! Total: ₹{{3}}. ..."
       const message = await twilioClient.messages.create({
         from: this.toWhatsAppAddress(this.fromNumber),
         to: this.toWhatsAppAddress(to),
         contentSid: this.orderConfirmationTemplateSid,
+        contentVariables: JSON.stringify({
+          "1": data.customerName,
+          "2": data.orderNumber,
+          "3": data.totalAmount.toString(),
+        }),
       });
 
       console.log("WhatsApp order confirmation sent. SID:", message.sid);
