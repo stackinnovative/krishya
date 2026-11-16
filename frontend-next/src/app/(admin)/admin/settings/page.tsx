@@ -150,6 +150,7 @@ export default function SettingsPage() {
       storeName: draft.storeName,
       email: draft.email,
       phone: draft.phone,
+      address: draft.address,
       logo,
       deliveryCharge: draft.deliveryCharge,
       freeAbove: draft.freeAbove,
@@ -200,6 +201,7 @@ export default function SettingsPage() {
                       <FormField label="Store name" value={draft.storeName} onChange={(v) => set("storeName", v as string)} required error={errors.storeName} />
                       <FormField label="Support email" type="email" value={draft.email} onChange={(v) => set("email", v as string)} required error={errors.email} />
                       <FormField label="Phone / WhatsApp" type="tel" value={draft.phone} onChange={(v) => set("phone", v as string)} />
+                      <FormField label="Business address" type="area" rows={3} value={draft.address} onChange={(v) => set("address", v as string)} />
                     </div>
                   </AdminCard>
                 </div>

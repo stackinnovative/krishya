@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { STORE_ADDRESS } from "@/lib/contact";
 import { useStoreContact } from "@/modules/storefront-shell/hooks/useStoreContact";
 import SocialLinks from "@/modules/storefront-shell/components/SocialLinks";
 import { CheckIcon, MapPinIcon, WhatsAppIcon } from "@/modules/storefront-shell/components/icons";
@@ -16,7 +15,7 @@ const EMPTY = { name: "", phone: "", email: "", message: "" };
  * pushes everywhere) instead of pretending to submit it somewhere.
  */
 export default function ContactPanel() {
-  const { email, phone, whatsapp, socialLinks } = useStoreContact();
+  const { email, phone, address, whatsapp, socialLinks } = useStoreContact();
   const [form, setForm] = useState(EMPTY);
   const [sent, setSent] = useState(false);
   const set = (key: keyof typeof EMPTY) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setForm((f) => ({ ...f, [key]: e.target.value }));
@@ -108,7 +107,7 @@ export default function ContactPanel() {
           </div>
           <div className={card}>
             <span className={cardLabel}>ADDRESS</span>
-            <span className="whitespace-pre-line text-[15px] leading-[1.55] text-ka-green">{STORE_ADDRESS}</span>
+            <span className="whitespace-pre-line text-[15px] leading-[1.55] text-ka-green">{address}</span>
           </div>
           <div className={card}>
             <span className={cardLabel}>HOURS</span>
@@ -126,7 +125,7 @@ export default function ContactPanel() {
           )}
         </div>
         <a
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(STORE_ADDRESS)}`}
+          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
           target="_blank"
           rel="noopener noreferrer"
           className="grid h-[200px] place-items-center rounded-xl border border-ka-sage bg-ka-mint text-center sm:h-[260px]"
