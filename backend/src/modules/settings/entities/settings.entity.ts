@@ -11,6 +11,7 @@ export const SETTINGS_DEFAULTS: Omit<SettingsProps, "id"> = {
     storeName: "Krishay Ayurveda",
     email: "hello@krishayayurveda.in",
     phone: "",
+    address: "",
     logo: null,
     deliveryCharge: 60,
     freeAbove: 999,
@@ -100,6 +101,7 @@ export class Settings {
     public readonly storeName: string;
     public readonly email: string;
     public readonly phone: string;
+    public readonly address: string;
     public readonly logo: SettingsLogo | null;
     public readonly deliveryCharge: number;
     public readonly freeAbove: number;
@@ -113,6 +115,11 @@ export class Settings {
         const storeName = props.storeName.trim();
         const email = props.email.trim();
         const phone = props.phone?.trim() ?? "";
+        const address = props.address?.trim() ?? "";
+
+        if (address.length > 300) {
+            throw new Error("Address cannot exceed 300 characters");
+        }
 
         if (!storeName || storeName.length < 2 || storeName.length > 100) {
             throw new Error("Store name must be between 2 and 100 characters");
@@ -177,6 +184,7 @@ export class Settings {
         this.storeName = storeName;
         this.email = email;
         this.phone = phone;
+        this.address = address;
         this.logo = props.logo ?? null;
         this.deliveryCharge = props.deliveryCharge;
         this.freeAbove = props.freeAbove;

@@ -18,6 +18,7 @@ export interface ISettings extends Document {
     storeName: string;
     email: string;
     phone: string;
+    address: string;
     logo: { url: string; publicId: string } | null;
     deliveryCharge: number;
     freeAbove: number;
@@ -33,6 +34,7 @@ const settingsSchema = new Schema<ISettings>(
         storeName: { type: String, required: true, trim: true, default: SETTINGS_DEFAULTS.storeName },
         email: { type: String, required: true, trim: true, default: SETTINGS_DEFAULTS.email },
         phone: { type: String, trim: true, default: SETTINGS_DEFAULTS.phone },
+        address: { type: String, trim: true, default: SETTINGS_DEFAULTS.address },
         logo: {
             type: new Schema(
                 { url: { type: String, required: true }, publicId: { type: String, required: true } },

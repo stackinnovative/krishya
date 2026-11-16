@@ -1,4 +1,4 @@
-import { CONTACT_EMAIL, CONTACT_PHONE, DEFAULT_STORE_NAME } from "@/lib/contact";
+import { CONTACT_EMAIL, CONTACT_PHONE, DEFAULT_STORE_NAME, STORE_ADDRESS } from "@/lib/contact";
 import { formatCurrency } from "@/lib/format";
 import type { SettingsView, SocialLink } from "./types/settings.type";
 
@@ -13,6 +13,8 @@ export type StoreInfo = {
   storeName: string;
   email: string;
   phone: string;
+  /** Business address shown on the contact page; env value is only a fallback. */
+  address: string;
   /** Uploaded admin logo; null means use the bundled brand mark. */
   logoUrl: string | null;
   deliveryCharge: number;
@@ -25,6 +27,7 @@ export const toStoreInfo = (settings: SettingsView | null | undefined): StoreInf
   storeName: settings?.storeName?.trim() || DEFAULT_STORE_NAME,
   email: settings?.email?.trim() || CONTACT_EMAIL,
   phone: settings?.phone?.trim() || CONTACT_PHONE,
+  address: settings?.address?.trim() || STORE_ADDRESS,
   logoUrl: settings?.logo?.url || null,
   deliveryCharge: settings?.deliveryCharge ?? 0,
   freeAbove: settings?.freeAbove ?? 0,

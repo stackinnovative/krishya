@@ -24,6 +24,7 @@ export type SettingsView = {
   storeName: string;
   email: string;
   phone: string;
+  address: string;
   logo: SettingsLogo | null;
   deliveryCharge: number;
   freeAbove: number;

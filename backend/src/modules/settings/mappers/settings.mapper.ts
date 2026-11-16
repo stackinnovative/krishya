@@ -17,6 +17,7 @@ export class SettingsMapper {
             storeName: settingsModelData.storeName,
             email: settingsModelData.email,
             phone: settingsModelData.phone ?? "",
+            address: settingsModelData.address ?? "",
             logo: settingsModelData.logo
                 ? { url: settingsModelData.logo.url, publicId: settingsModelData.logo.publicId }
                 : null,
@@ -43,6 +44,7 @@ export class SettingsMapper {
             storeName: settingsEntity.storeName,
             email: settingsEntity.email,
             phone: settingsEntity.phone,
+            address: settingsEntity.address,
             logo: settingsEntity.logo,
             deliveryCharge: settingsEntity.deliveryCharge,
             freeAbove: settingsEntity.freeAbove,
@@ -60,6 +62,7 @@ export class SettingsMapper {
             storeName: settingsEntity.storeName,
             email: settingsEntity.email,
             phone: settingsEntity.phone,
+            address: settingsEntity.address,
             logo: settingsEntity.logo,
             deliveryCharge: settingsEntity.deliveryCharge,
             freeAbove: settingsEntity.freeAbove,

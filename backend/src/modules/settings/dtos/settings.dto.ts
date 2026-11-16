@@ -42,6 +42,7 @@ export const UpdateSettingsSchema = z.object({
         .max(100, "Store name cannot exceed 100 characters"),
     email: z.string().email("Enter a valid support email address"),
     phone: z.string().max(20, "Phone number looks too long").optional().default(""),
+    address: z.string().max(300, "Address cannot exceed 300 characters").optional().default(""),
     logo: SettingsLogoSchema.nullable().optional().default(null),
     deliveryCharge: z.number().min(0, "Delivery charge cannot be negative"),
     freeAbove: z.number().min(0, "Free delivery threshold cannot be negative"),
