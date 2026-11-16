@@ -32,6 +32,7 @@ export class UpdateSettingsUseCase implements IUpdateSettingsUseCase {
             storeName: dto.storeName,
             email: dto.email,
             phone: dto.phone ?? "",
+            address: dto.address ?? "",
             logo: dto.logo ?? null,
             deliveryCharge: dto.deliveryCharge,
             freeAbove: dto.freeAbove,
