@@ -82,7 +82,6 @@ export function notifyOrderConfirmed(
   // TWILIO_ADMIN_ORDER_ALERT_TEMPLATE_SID and ADMIN_WHATSAPP_NUMBER are set.
   whatsAppService
     .sendAdminOrderAlert({
-      orderId: order.id!,
       orderNumber: order.orderNumber,
       customerName: order.userSnapshot.name,
       totalAmount: order.totalAmount,

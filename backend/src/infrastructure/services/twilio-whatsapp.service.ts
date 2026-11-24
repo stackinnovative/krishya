@@ -86,9 +86,8 @@ export class TwilioWhatsAppService implements IWhatsAppService {
 
     try {
       // Template body is "New order received! Order ID: {{1}}, Customer:
-      // {{2}}, Amount: ₹{{3}}" with a "View Order" button linking to
-      // https://artspaces.in/admin/orderDetails/{{4}} - {{4}} is the raw
-      // order _id (the admin details page route param), not orderNumber.
+      // {{2}}, Amount: ₹{{3}}" with a static "View Order" button linking to
+      // https://www.krishayayurveda.in/admin/orders - the admin has no per-order page yet.
       const message = await twilioClient.messages.create({
         from: this.toWhatsAppAddress(this.fromNumber),
         to: this.toWhatsAppAddress(to),
@@ -97,7 +96,6 @@ export class TwilioWhatsAppService implements IWhatsAppService {
           "1": data.orderNumber,
           "2": data.customerName,
           "3": data.totalAmount.toString(),
-          "4": data.orderId,
         }),
       });
 
