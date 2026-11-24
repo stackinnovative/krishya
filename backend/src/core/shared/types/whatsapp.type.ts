@@ -25,8 +25,6 @@ export type OrderConfirmationWhatsAppData = {
 /** Sent to the fixed admin WhatsApp number (ADMIN_WHATSAPP_NUMBER), not a
  * per-order recipient - no `to` field, unlike OrderConfirmationWhatsAppData. */
 export type AdminOrderAlertWhatsAppData = {
-    /** Raw order _id - used to build the admin "View Order" deep link, not the human-readable orderNumber. */
-    orderId: string;
     orderNumber: string;
     customerName: string;
     totalAmount: number;
